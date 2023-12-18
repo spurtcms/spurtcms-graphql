@@ -1,0 +1,216 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+directive @auth on FIELD_DEFINITION | OBJECT
+
+scalar Time
+
+scalar Map
+
+type PageAndPagegroups{
+	Pages:      [Pages!]!
+	SubPages:   [Subpages!]!
+	Pagegroups: [Pagegroups!]!
+}
+
+type Pagegroups{
+    GroupId:    Int!
+    NewGroupId: Int!
+    Name:       String!
+    OrderIndex: Int! 
+}
+
+type Pages {
+    PgId:       Int!
+    NewPgId:    Int!
+    Name:       String!
+    Content:    String! 
+    Pgroupid:   Int!
+    NewGrpId:   Int!
+    OrderIndex: Int! 
+    ParentId:   Int!
+}
+
+type Subpages {
+    SpgId:       Int!
+    NewSpId:     Int!
+    Name:        String!
+    Content:     String!
+    ParentId:    Int!
+    NewParentId: Int!
+    PgroupId:    Int!
+    NewPgroupId: Int!
+    OrderIndex:  Int! 
+}
+
+type TblSpacesAliases  {
+	id:                Int!
+	spacesId:          Int!
+	languageId:        Int!
+	spacesName:        String!
+	spacesSlug:        String!
+	spacesDescription: String!
+	imagePath:         String!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time            
+	modifiedBy:        Int!                      
+	deletedOn:         Time               
+	deletedBy:         Int!                    
+	isDeleted:         Int!                     
+	pageCategoryId:    Int!                     
+	parentId:          Int!                      
+	createdDate:       String!                 
+	modifiedDate:      String!                 
+	categoryNames:     [TblCategory!]!
+	categoryId:        Int!                      
+	fullSpaceAccess:   Boolean!                     
+}
+
+type TblCategory {
+    id:                 Int!
+    categoryName:       String!
+    categorySlug:       String!
+    description:        String!
+    imagePath:          String!
+    createdOn:          Time!
+    createdBy:          Int!
+    modifiedOn:         Time! 
+    modifiedBy:         Int!       
+    isDeleted:          Int!
+    deletedOn:          Time! 
+    deletedBy:          Int!      
+    parentId:           Int!
+    createdDate:        String!  
+    modifiedDate:       String!   
+    dateString:         String!  
+    parentCategoryName: String!   
+    parent:             [String!]! 
+    parentWithChild:    [Result!]! 
+}
+
+type Result {
+	categoryName: String!
+}
+
+type SpacesDetails{
+	spaces: [TblSpacesAliases!]!
+	count: Int!
+}
+
+type MemberNotesHighlight {
+	id:                        Int! 
+	memberId:                  Int!
+	pageId:                    Int!
+	notesHighlightsContent:    String!
+	notesHighlightsType:       String!
+	highlightsConfiguration:   Map! 
+	createdBy:                 Int!
+	createdOn:                 Time!
+	modifiedOn:                Time 
+	modifiedBy:                Int       
+	deletedOn:                 Time 
+	deletedBy:                 Int       
+	isDeleted:                 Int!
+}
+
+type Member{
+    id:               Int! 
+    uuid:             String!
+    firstName:        String!
+    lastName:         String!
+    email:            String!
+    mobileNo:         String!
+    isActive:         Int!
+    profileImage:     String!
+    profileImagePath: String!
+    lastLogin:        Int!
+    isDeleted:        Int!
+    deletedOn:        Time 
+    deletedBy:        Int      
+    createdOn:        Time! 
+    createdDate:      String    
+    createdBy:        Int!
+    modifiedOn:       Time 
+    modifiedBy:       Int       
+    memberGroupId:    Int!
+    group:            [MemberGroup!] 
+    password:         String!
+    username:         String!    
+    otp:              Int       
+    otpExpiry:        Time 
+}
+
+type MemberGroup{
+	id:           Int! 
+	name:         String!
+	slug:         String!
+	description:  String!
+	isActive:     Int!
+	isDeleted:    Int!
+	createdOn:    Time! 
+	createdBy:    Int!
+	modifiedOn:   Time 
+	modifiedBy:   Int      
+	dateString:   String   
+}
+
+type Query{
+    pageslist(spaceid: Int!): PageAndPagegroups!
+    spacesList(filter: Filter!): SpacesDetails!
+    PageContent(pageid: Int!): String!
+    getNotesOrHighlights(pageid: Int!,contentType: String!): [MemberNotesHighlight!]! @auth
+}
+
+type Mutation{
+    memberLogin(input: LoginCredentials!): String!
+    memberRegister(input: MemberDetails!): Boolean!
+    memberUpdate(memberdata: MemberDetails!): Boolean! @auth
+    updateHighlights(highlights: Highlights!): Boolean! @auth
+    updateNotes(pageid: Int!,notes: String!): Boolean! @auth
+    deleteNotesOrHighlights(contentId: Int!): Boolean! @auth
+    sendOtpToMail(email: String!): Boolean!
+    resetPassword(otp: Int!,newPassword: String!,email: String!): Boolean! 
+}
+
+input LoginCredentials{
+    email: String!
+    password: String!
+}
+
+input MemberDetails{
+    firstName:        String!
+    lastName:         String!
+    mobile:           String!
+    email:            String!
+    password:         String!
+    isActive:         Int
+    profileImage:     String
+    profileImagePath: String
+    username:         String
+    groupId:          Int
+    
+}
+
+input Filter{
+    limit: Int!
+    offset: Int!
+    keyword: String
+    categoryId: Int
+}
+
+input Highlights{
+    pageid:        Int!
+    content:       String!
+    startOffset:   Int!
+    endOffset:     Int!
+    selectPara:    String!
+    contentColor:  String!
+}
+
+
+
+
+
+
