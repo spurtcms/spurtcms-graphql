@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spurtcms/spurtcms-content/lms"
 	"github.com/spurtcms/spurtcms-core/auth"
 	"github.com/spurtcms/spurtcms-core/member"
 	"gorm.io/gorm"
@@ -30,8 +29,6 @@ var(
 	Mem member.MemberAuth
 	Auth *auth.Authorization
 	Flag bool
-	Pg lms.MemberPage
-	Sp lms.MemberSpace
 )
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {

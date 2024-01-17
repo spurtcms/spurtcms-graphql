@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"gqlserver/graph/model"
 )
 
@@ -21,22 +22,7 @@ func (r *mutationResolver) MemberRegister(ctx context.Context, input model.Membe
 
 // MemberUpdate is the resolver for the memberUpdate field.
 func (r *mutationResolver) MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error) {
-	return UpdateMember(r.DB, ctx, memberdata)
-}
-
-// UpdateHighlights is the resolver for the updateHighlights field.
-func (r *mutationResolver) UpdateHighlights(ctx context.Context, highlights model.Highlights) (bool, error) {
-	return UpdateHighlights(r.DB, ctx, highlights)
-}
-
-// UpdateNotes is the resolver for the updateNotes field.
-func (r *mutationResolver) UpdateNotes(ctx context.Context, pageid int, notes string) (bool, error) {
-	return UpdateNotes(r.DB, ctx, pageid, notes)
-}
-
-// DeleteNotesOrHighlights is the resolver for the deleteNotesOrHighlights field.
-func (r *mutationResolver) DeleteNotesOrHighlights(ctx context.Context, contentID int) (bool, error) {
-	return DeleteNotesOrHighlights(r.DB, ctx, contentID)
+	panic(fmt.Errorf("not implemented: MemberUpdate - memberUpdate"))
 }
 
 // SendOtpToMail is the resolver for the sendOtpToMail field.
@@ -49,24 +35,14 @@ func (r *mutationResolver) ResetPassword(ctx context.Context, otp int, newPasswo
 	return ResetPassword(r.DB, otp, newPassword, email)
 }
 
-// Pageslist is the resolver for the pageslist field.
-func (r *queryResolver) Pageslist(ctx context.Context, spaceid int) (model.PageAndPagegroups, error) {
-	return Pagelist(r.DB, spaceid)
+// Channellist is the resolver for the channellist field.
+func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error) {
+	return Channellist(r.DB, ctx, limit, offset)
 }
 
-// SpacesList is the resolver for the spacesList field.
-func (r *queryResolver) SpacesList(ctx context.Context, filter model.Filter) (model.SpacesDetails, error) {
-	return Spacelist(r.DB, filter)
-}
-
-// PageContent is the resolver for the PageContent field.
-func (r *queryResolver) PageContent(ctx context.Context, pageid int) (string, error) {
-	return PageContent(r.DB, ctx, pageid)
-}
-
-// GetHighlights is the resolver for the getHighlights field.
-func (r *queryResolver) GetNotesOrHighlights(ctx context.Context, pageid int, contentType string) ([]model.MemberNotesHighlight, error) {
-	return GetNotesOrHighlights(r.DB, ctx, pageid, contentType)
+// ChannelEntriesList is the resolver for the channelEntriesList field.
+func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, channelEntryID *int, limit int, offset int) (model.ChannelEntryDetails, error) {
+	return ChannelEntriesList(r.DB, ctx, channelID, channelEntryID, limit, offset)
 }
 
 // Mutation returns MutationResolver implementation.
