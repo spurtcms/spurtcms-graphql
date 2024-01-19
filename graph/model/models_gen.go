@@ -111,27 +111,27 @@ type TblChannel struct {
 }
 
 type TblChannelEntries struct {
-	ID              int           `json:"id"`
-	Title           string        `json:"title"`
-	Slug            string        `json:"slug"`
-	Description     string        `json:"description"`
-	UserID          int           `json:"userId"`
-	ChannelID       int           `json:"channelId"`
-	Status          int           `json:"status"`
-	IsActive        int           `json:"isActive"`
-	IsDeleted       int           `json:"isDeleted"`
-	DeletedBy       int           `json:"deletedBy"`
-	DeletedOn       time.Time     `json:"deletedOn"`
-	CreatedOn       time.Time     `json:"createdOn"`
-	CreatedBy       int           `json:"createdBy"`
-	ModifiedBy      int           `json:"modifiedBy"`
-	ModifiedOn      time.Time     `json:"modifiedOn"`
-	CoverImage      string        `json:"coverImage"`
-	ThumbnailImage  string        `json:"thumbnailImage"`
-	MetaTitle       string        `json:"metaTitle"`
-	MetaDescription string        `json:"metaDescription"`
-	Keyword         string        `json:"keyword"`
-	CategoriesID    string        `json:"categoriesId"`
-	RelatedArticles string        `json:"relatedArticles"`
-	Categories      []TblCategory `json:"categories" gorm:"-"`
+	ID              int             `json:"id"`
+	Title           string          `json:"title"`
+	Slug            string          `json:"slug"`
+	Description     string          `json:"description"`
+	UserID          int             `json:"userId"`
+	ChannelID       int             `json:"channelId"`
+	Status          int             `json:"status"`
+	IsActive        int             `json:"isActive"`
+	IsDeleted       int             `json:"isDeleted"`
+	DeletedBy       *int            `json:"deletedBy,omitempty"`
+	DeletedOn       *time.Time      `json:"deletedOn,omitempty"`
+	CreatedOn       time.Time       `json:"createdOn"`
+	CreatedBy       int             `json:"createdBy"`
+	ModifiedBy      *int            `json:"modifiedBy,omitempty"`
+	ModifiedOn      *time.Time      `json:"modifiedOn,omitempty"`
+	CoverImage      string          `json:"coverImage"`
+	ThumbnailImage  string          `json:"thumbnailImage"`
+	MetaTitle       string          `json:"metaTitle"`
+	MetaDescription string          `json:"metaDescription"`
+	Keyword         string          `json:"keyword"`
+	CategoriesID    string          `json:"categoriesId"`
+	RelatedArticles string          `json:"relatedArticles"`
+	Categories      [][]TblCategory `json:"categories" gorm:"-"`
 }

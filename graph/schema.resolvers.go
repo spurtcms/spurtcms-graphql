@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"gqlserver/graph/model"
 )
 
@@ -22,7 +21,7 @@ func (r *mutationResolver) MemberRegister(ctx context.Context, input model.Membe
 
 // MemberUpdate is the resolver for the memberUpdate field.
 func (r *mutationResolver) MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error) {
-	panic(fmt.Errorf("not implemented: MemberUpdate - memberUpdate"))
+	return MemberUpdate(r.DB,ctx,memberdata)
 }
 
 // SendOtpToMail is the resolver for the sendOtpToMail field.

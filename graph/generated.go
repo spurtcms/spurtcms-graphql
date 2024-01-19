@@ -5200,14 +5200,11 @@ func (ec *executionContext) _TblChannelEntries_deletedBy(ctx context.Context, fi
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TblChannelEntries_deletedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5244,14 +5241,11 @@ func (ec *executionContext) _TblChannelEntries_deletedOn(ctx context.Context, fi
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TblChannelEntries_deletedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5376,14 +5370,11 @@ func (ec *executionContext) _TblChannelEntries_modifiedBy(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TblChannelEntries_modifiedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5420,14 +5411,11 @@ func (ec *executionContext) _TblChannelEntries_modifiedOn(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TblChannelEntries_modifiedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5777,9 +5765,9 @@ func (ec *executionContext) _TblChannelEntries_categories(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]model.TblCategory)
+	res := resTmp.([][]model.TblCategory)
 	fc.Result = res
-	return ec.marshalNTblCategory2ᚕgqlserverᚋgraphᚋmodelᚐTblCategoryᚄ(ctx, field.Selections, res)
+	return ec.marshalNTblCategory2ᚕᚕgqlserverᚋgraphᚋmodelᚐTblCategoryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TblChannelEntries_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8487,14 +8475,8 @@ func (ec *executionContext) _TblChannelEntries(ctx context.Context, sel ast.Sele
 			}
 		case "deletedBy":
 			out.Values[i] = ec._TblChannelEntries_deletedBy(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "deletedOn":
 			out.Values[i] = ec._TblChannelEntries_deletedOn(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "createdOn":
 			out.Values[i] = ec._TblChannelEntries_createdOn(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8507,14 +8489,8 @@ func (ec *executionContext) _TblChannelEntries(ctx context.Context, sel ast.Sele
 			}
 		case "modifiedBy":
 			out.Values[i] = ec._TblChannelEntries_modifiedBy(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "modifiedOn":
 			out.Values[i] = ec._TblChannelEntries_modifiedOn(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "coverImage":
 			out.Values[i] = ec._TblChannelEntries_coverImage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9000,6 +8976,50 @@ func (ec *executionContext) marshalNTblCategory2ᚕgqlserverᚋgraphᚋmodelᚐT
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNTblCategory2gqlserverᚋgraphᚋmodelᚐTblCategory(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTblCategory2ᚕᚕgqlserverᚋgraphᚋmodelᚐTblCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v [][]model.TblCategory) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTblCategory2ᚕgqlserverᚋgraphᚋmodelᚐTblCategoryᚄ(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

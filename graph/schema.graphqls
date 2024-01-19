@@ -88,12 +88,12 @@ type TblChannelEntries{
 	status:               Int!
 	isActive:             Int!
 	isDeleted:            Int! 
-	deletedBy:            Int!       
-	deletedOn:            Time! 
+	deletedBy:            Int       
+	deletedOn:            Time 
 	createdOn:            Time!
 	createdBy:            Int!
-	modifiedBy:           Int!     
-	modifiedOn:           Time! 
+	modifiedBy:           Int     
+	modifiedOn:           Time 
 	coverImage:           String!
 	thumbnailImage:       String!
 	metaTitle:            String!
@@ -101,7 +101,7 @@ type TblChannelEntries{
 	keyword:              String!
 	categoriesId:         String!
 	relatedArticles:      String!
-	categories:           [TblCategory!]!
+	categories:           [[TblCategory!]!]!
 }
 
 type TblCategory{
@@ -148,8 +148,7 @@ input MemberDetails{
     profileImage:     String
     profileImagePath: String
     username:         String
-    groupId:          Int
-    
+    groupId:          Int 
 }
 
 

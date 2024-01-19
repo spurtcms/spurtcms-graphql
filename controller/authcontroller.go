@@ -215,7 +215,7 @@ func SendOtpToMail(db *gorm.DB, ctx context.Context, email string) (bool, error)
 	           </head>
 	        <body>
 		          <div class="container">
-			        <p>Hello `+member.Username+`,</p>
+			        <p>Hello `+member.FirstName+` `+member.LastName+`,</p>
                     <p>Your OTP for password reset is:</p>
                     <div class="otp">[`+otp+`]</div>
                     <p class="note">Note: This OTP is valid for only 5 minutes. Please do not share it with anyone.</p>

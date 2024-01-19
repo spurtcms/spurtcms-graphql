@@ -27,16 +27,16 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	}
 
-	memberid,roleid,err := member.VerifyToken(token,os.Getenv("JWT_SECRET"))
+	memberid,groupid,err := member.VerifyToken(token,os.Getenv("JWT_SECRET"))
 
 	if err != nil {
 
-		return nil, fmt.Errorf("unauthorized: %v", err)
+		return nil, fmt.Errorf("Unauthorized: %v", err)
 	}
 
 	c.Set("memberid",memberid)
 
-	c.Set("roleid",roleid)
+	c.Set("groupid",groupid)
 
 	c.Set("token",token)
 
