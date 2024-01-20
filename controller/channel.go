@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"gqlserver/graph/model"
 	"strconv"
 	"strings"
@@ -38,34 +39,49 @@ func Channellist(db *gorm.DB,ctx context.Context,limit,offset int)(model.Channel
 
 		return channelDetails,nil
 
+	}
+
+	var final_error error
+
+	if listerr!=nil{
+
+		final_error = listerr
+
 	}else{
 
-		if listerr!=nil{
+		final_error = counterr
 
-			return model.ChannelDetails{},listerr
-
-		}else{
-
-			return model.ChannelDetails{},counterr
-
-		}
 	}
+
+	return model.ChannelDetails{},final_error
 }
 
-func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channelEntryID *int, limit ,offset int) (model.ChannelEntryDetails, error) {
+func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channelEntryID *int, limit ,offset *int) (model.ChannelEntryDetails, error) {
 
 	c,_ := ctx.Value(ContextKey).(*gin.Context)
 
 	memberid := c.GetInt("memberid")
 
-	if channelEntryID!=nil{
+	if channelEntryID!=nil || (channelID!=nil && channelEntryID!=nil) && limit==nil && offset==nil {
 
 		var channelEntry model.TblChannelEntries
 
-		entryerr := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
-		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-		Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ? and tbl_channel_entries.id = ?",memberid,channelID,channelEntryID).
-		First(&channelEntry).Error
+		var entryerr error
+
+		if channelID!=nil{
+
+		   entryerr = db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+		   Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
+		   Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ? and tbl_channel_entries.id = ?",memberid,channelID,channelEntryID).
+		   First(&channelEntry).Error
+
+		}else{
+
+		  entryerr = db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+		  Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
+		  Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.id = ?",memberid,channelEntryID).
+		  First(&channelEntry).Error
+		}
 
 		if entryerr==nil{
 
@@ -149,13 +165,11 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 
 			return channelEntryDetails,nil
 
-		}else{
-
-			return model.ChannelEntryDetails{},entryerr
 		}
-		
 
-	}else{
+		return model.ChannelEntryDetails{},entryerr	
+
+	} else if channelEntryID==nil && channelID!=nil && limit!=nil && offset!=nil{
 
 		var channelEntries []model.TblChannelEntries
 
@@ -163,7 +177,7 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 
 		entrieserr := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
 		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-		Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ?",memberid,channelID).
+		Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ?",memberid,channelID).Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc").
 		Find(&channelEntries).Error
 
 		counterr := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
@@ -264,20 +278,149 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 
 			return  channelEntriesDetails,nil
 
+		}
+
+		var final_error error
+
+		if entrieserr!=nil{
+
+			final_error = entrieserr
+
 		}else{
 
-			if entrieserr!=nil{
+			final_error = counterr
+			
+		}
 
-				return model.ChannelEntryDetails{},entrieserr
+		return model.ChannelEntryDetails{},final_error
 
-			}else{
+	}else if channelID==nil && channelEntryID==nil && limit!=nil && offset!=nil{
 
-				return model.ChannelEntryDetails{},counterr
-			}
+		var channelEntries []model.TblChannelEntries
+
+		var count int64
+
+		entrieserr := db.Debug().Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
+		Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ?",memberid).Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc").
+		Find(&channelEntries).Error
+
+		counterr := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
+		Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ?",memberid).
+		Count(&count).Error
+
+		if entrieserr==nil && counterr==nil{
+
+			var final_entries_list []model.TblChannelEntries
+
+		    for _,entry := range channelEntries{
+
+				var indivCategories [][]model.TblCategory
+
+				splittedArr := strings.Split(entry.CategoriesID, ",")
+	
+				var parentCatId int
+	
+				for _, catId := range splittedArr{
+	
+					var indivCategory []model.TblCategory
+	
+					conv_id,_ := strconv.Atoi(catId)
+	
+					var category model.TblCategory
+	
+					caterr := db.Table("tbl_categories").Where("is_deleted = 0 and id = ?",conv_id).First(&category).Error
+	
+					if caterr==nil{
+	
+						indivCategory = append(indivCategory, category)
+	
+						parentCatId = category.ParentID
+	
+						if parentCatId!=0{
+
+							var count int
+	
+							LOOP2:
+							  
+							   for{
+ 
+								  count = count + 1 //count increment used to check how many times the loop gets executed
+	
+								  var parentCategory model.TblCategory
+	
+								   caterr = db.Table("tbl_categories").Where("is_deleted = 0 and id = ?",parentCatId).First(&parentCategory).Error
+	
+								   if caterr==nil{
+									  
+									   indivCategory = append(indivCategory, parentCategory)
+	
+									   parentCatId = parentCategory.ParentID
+	
+									   if parentCatId!=0{
+										  
+										   goto LOOP2
+	
+									   }else if count>49{ //mannuall condition to break the loop in overlooping situations
+
+										  break //use to break the loop if infinite loop doesn't break , So forcing the loop to break at overlooping conditions 
+
+									   }else{
+	
+										  break
+	
+									   }
+									   
+								   }else{
+	
+									   indivCategory = append(indivCategory, model.TblCategory{})
+	
+									   break
+	
+								   }
+							   }
+						}
+	
+					}else{
+	
+						indivCategory = append(indivCategory, model.TblCategory{})
+					}
+	
+					indivCategories = append(indivCategories, indivCategory)
+	
+				}
+
+				entry.Categories = indivCategories
+
+			    final_entries_list = append(final_entries_list, entry)
+
+		    }
+
+			channelEntrieslist := &model.ChannelEntries{ChannelEntryList: final_entries_list,Count: int(count)}
+
+			channelEntriesDetails := model.ChannelEntryDetails{ChannelEntryList: channelEntrieslist,ChannelEntry: nil}
+
+			return  channelEntriesDetails,nil
+		}
+
+		var final_error error
+
+		if entrieserr!=nil{
+
+			final_error = entrieserr
+
+		}else{
+
+			final_error = counterr
 
 		}
 
+		return model.ChannelEntryDetails{},final_error
+		
 	}
+
+	return model.ChannelEntryDetails{},errors.New("unable to fetch data")
 
 }
 

@@ -6,7 +6,6 @@ require (
 	github.com/99designs/gqlgen v0.17.40
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
-	github.com/spurtcms/spurtcms-core v1.0.17
 	github.com/vektah/gqlparser/v2 v2.5.10
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
@@ -45,6 +44,8 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sosodev/duration v1.1.0 // indirect
+	github.com/spurtcms/pkgcontent v1.0.40 // indirect
+	github.com/spurtcms/pkgcore v1.0.34 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/urfave/cli/v2 v2.25.5 // indirect

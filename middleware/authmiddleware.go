@@ -9,7 +9,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gin-gonic/gin"
 	
-	"github.com/spurtcms/spurtcms-core/member"
+	"github.com/spurtcms/pkgcore/member"
 )
 
 // Implement the AuthMiddleware function

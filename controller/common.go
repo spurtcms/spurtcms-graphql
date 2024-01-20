@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spurtcms/spurtcms-core/auth"
-	"github.com/spurtcms/spurtcms-core/member"
+	"github.com/spurtcms/pkgcore/auth"
+	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 
-	spurtcore "github.com/spurtcms/spurtcms-core"
+	spurtcore "github.com/spurtcms/pkgcore"
 )
 
 type key string
@@ -28,7 +28,6 @@ var ProfileImagePath = "Uploads/ProfileImages/"
 var(
 	Mem member.MemberAuth
 	Auth *auth.Authorization
-	Flag bool
 )
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {

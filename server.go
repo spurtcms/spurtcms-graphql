@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gqlserver/controller"
 	ginhandler "gqlserver/ginHandler"
 	"log"
 	"os"
@@ -23,15 +24,19 @@ func main() {
 	port := os.Getenv("PORT")
 
 	if port == "" {
-		
+
 		port = defaultPort
 	}
 
 	r := gin.Default()
 
-	r.POST("/query",ginhandler.GraphQLHandler())
+	r.LoadHTMLGlob("view/*")
 
-	r.GET("/",ginhandler.PlaygroundHandler())
+	r.POST("/query", ginhandler.GraphQLHandler())
 
-	r.Run(":"+port)
+	r.GET("/play", controller.GetPlayGroundView)
+
+	r.GET("/", ginhandler.PlaygroundHandler())
+
+	r.Run(":" + port)
 }

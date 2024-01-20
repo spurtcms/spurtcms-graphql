@@ -41,7 +41,7 @@ func Channellist(db *gorm.DB,ctx context.Context,limit, offset int) (model.Chann
 	return controller.Channellist(db,ctx,limit,offset)
 }
 
-func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channelEntryID *int, limit ,offset int) (model.ChannelEntryDetails, error) {
+func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channelEntryID *int, limit ,offset *int) (model.ChannelEntryDetails, error) {
 	return controller.ChannelEntriesList(db,ctx,channelID,channelEntryID,limit,offset)
 }
 

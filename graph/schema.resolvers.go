@@ -21,7 +21,7 @@ func (r *mutationResolver) MemberRegister(ctx context.Context, input model.Membe
 
 // MemberUpdate is the resolver for the memberUpdate field.
 func (r *mutationResolver) MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error) {
-	return MemberUpdate(r.DB,ctx,memberdata)
+	return MemberUpdate(r.DB, ctx, memberdata)
 }
 
 // SendOtpToMail is the resolver for the sendOtpToMail field.
@@ -40,7 +40,7 @@ func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) 
 }
 
 // ChannelEntriesList is the resolver for the channelEntriesList field.
-func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, channelEntryID *int, limit int, offset int) (model.ChannelEntryDetails, error) {
+func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, channelEntryID *int, limit *int, offset *int) (model.ChannelEntryDetails, error) {
 	return ChannelEntriesList(r.DB, ctx, channelID, channelEntryID, limit, offset)
 }
 

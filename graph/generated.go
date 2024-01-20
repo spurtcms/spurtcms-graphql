@@ -114,7 +114,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		ChannelEntriesList func(childComplexity int, channelID *int, channelEntryID *int, limit int, offset int) int
+		ChannelEntriesList func(childComplexity int, channelID *int, channelEntryID *int, limit *int, offset *int) int
 		ChannelList        func(childComplexity int, limit int, offset int) int
 	}
 
@@ -184,7 +184,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
-	ChannelEntriesList(ctx context.Context, channelID *int, channelEntryID *int, limit int, offset int) (model.ChannelEntryDetails, error)
+	ChannelEntriesList(ctx context.Context, channelID *int, channelEntryID *int, limit *int, offset *int) (model.ChannelEntryDetails, error)
 }
 
 type executableSchema struct {
@@ -563,7 +563,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ChannelEntriesList(childComplexity, args["channelId"].(*int), args["channelEntryId"].(*int), args["limit"].(int), args["offset"].(int)), true
+		return e.complexity.Query.ChannelEntriesList(childComplexity, args["channelId"].(*int), args["channelEntryId"].(*int), args["limit"].(*int), args["offset"].(*int)), true
 
 	case "Query.channelList":
 		if e.complexity.Query.ChannelList == nil {
@@ -1161,19 +1161,19 @@ func (ec *executionContext) field_Query_channelEntriesList_args(ctx context.Cont
 		}
 	}
 	args["channelEntryId"] = arg1
-	var arg2 int
+	var arg2 *int
 	if tmp, ok := rawArgs["limit"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["limit"] = arg2
-	var arg3 int
+	var arg3 *int
 	if tmp, ok := rawArgs["offset"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
-		arg3, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3550,7 +3550,7 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["channelEntryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int))
+			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["channelEntryId"].(*int), fc.Args["limit"].(*int), fc.Args["offset"].(*int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {

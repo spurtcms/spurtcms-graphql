@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spurtcms/spurtcms-core/member"
+	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 )
 
@@ -21,8 +21,6 @@ func MemberLogin(db *gorm.DB ,input model.LoginCredentials) (string, error) {
 
 		return "",err
 	}
-
-	Flag = true
 	
 	Auth = GetAuthorization(token,db)
 
@@ -256,6 +254,4 @@ func ResetPassword(db *gorm.DB, otp int, newPassword, email string) (bool, error
 
 	return isPswdChanged,nil
 }
-
-
 
