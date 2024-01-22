@@ -101,11 +101,11 @@
 }`,
 variables:`{
   "limit": 10,
-  "offset": 0,
+  "offset": 0
 }`,
-// headers:`{
-//   "Authorization":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcnlfdGltZSI6MTcwNTY3NzQ5OSwiZ3JvdXBfaWQiOjEsIm1lbWJlcl9pZCI6MTN9.cLPVDsuzOwRF4uERopBIi7lVHgElnaiDU_WgwWwi_ZE",
-// }`
+headers:{
+  "Authorization":"{{.AuthToken}}"
+}
 
             },
           ],

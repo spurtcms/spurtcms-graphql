@@ -49,4 +49,8 @@ func MemberUpdate(db *gorm.DB,ctx context.Context, memberdata model.MemberDetail
 	return controller.UpdateMember(db,ctx,memberdata)
 }
 
+func ChannelDetail(db *gorm.DB,ctx context.Context, channelID int) (model.TblChannel, error) {
+	return controller.ChannelDetail(db,ctx,channelID)
+}
+
 

@@ -131,7 +131,7 @@ func SendOtpToMail(db *gorm.DB, ctx context.Context, email string) (bool, error)
 
 	if err!=nil || !isValidMember{
 
-		return isValidMember,errors.New("Invalid Email!")
+		return isValidMember,err
 	}
 
 	randNum := rand.Intn(900000) + 100000
@@ -228,7 +228,7 @@ func SendOtpToMail(db *gorm.DB, ctx context.Context, email string) (bool, error)
 
 	if send_err!=nil {
 
-		return false,errors.New("Failed to send otp!")
+		return false,send_err
 	}
 
 	return true,nil

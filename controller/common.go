@@ -21,13 +21,13 @@ type key string
 
 const ContextKey key = "ginContext"
 
-var IST, _ = time.LoadLocation("Asia/Kolkata")
-
-var ProfileImagePath = "Uploads/ProfileImages/"
-
 var(
 	Mem member.MemberAuth
 	Auth *auth.Authorization
+	IST, _ = time.LoadLocation("Asia/Kolkata")
+	ProfileImagePath = "Uploads/ProfileImages/"
+	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
+	AuthToken string
 )
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {

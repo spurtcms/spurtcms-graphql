@@ -90,12 +90,8 @@ github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/sergi/go-diff v1.3.1 h1:xkr+Oxo4BOQKmkn/B9eMK0g5Kg/983T9DqqPHwYqD+8=
 github.com/sosodev/duration v1.1.0 h1:kQcaiGbJaIsRqgQy7VGlZrVw1giWO+lDoX3MCPnpVO4=
 github.com/sosodev/duration v1.1.0/go.mod h1:RQIBBX0+fMLc/D9+Jb/fwvVmo0eZvDDEERAikUR6SDg=
-github.com/spurtcms/pkgcontent v1.0.40 h1:V2k2k0gMWsTEvgPdvuGFFOrFpq3uLqIzvZdRLlteFV8=
-github.com/spurtcms/pkgcontent v1.0.40/go.mod h1:PdHqFIOYfc80Hq8g+sno6bMsTksbCfdq1WolojsgH1I=
 github.com/spurtcms/pkgcore v1.0.34 h1:6FVE92oW7nm+PfLWLz9sb1dJxlURWiix/ZaGOZIZE7g=
 github.com/spurtcms/pkgcore v1.0.34/go.mod h1:Q3vgk/jS9mzbqvb3WHW5YWJYtzIn4Uqr/xFmfrGT4vg=
-github.com/spurtcms/spurtcms-core v1.0.17 h1:e8G2NAguLlVQgNzNCB9i0nqee6EoKPWaaf61R8B6vaA=
-github.com/spurtcms/spurtcms-core v1.0.17/go.mod h1:rzKpVEpSvC1um3qHMlNSIHCRRVWDPrBySykdXLzS/JA=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/objx v0.5.0/go.mod h1:Yh+to48EsGEfYuaHDzXPcE3xhTkx73EhmCGUpEOglKo=

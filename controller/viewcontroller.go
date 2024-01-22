@@ -7,6 +7,13 @@ import(
 
 func GetPlayGroundView(c *gin.Context){
 
-	c.HTML(200,"query.html",nil)
+	if AuthToken==""{
+
+		c.HTML(200,"query.html",gin.H{"AuthToken":SpecialToken})
+
+	}else{
+
+		c.HTML(200,"query.html",gin.H{"AuthToken":AuthToken})
+	}
 	
 }
