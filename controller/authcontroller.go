@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spurtcms/spurtcms-core/member"
+	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 )
 
@@ -21,8 +21,6 @@ func MemberLogin(db *gorm.DB ,input model.LoginCredentials) (string, error) {
 
 		return "",err
 	}
-
-	Flag = true
 	
 	Auth = GetAuthorization(token,db)
 
@@ -133,7 +131,7 @@ func SendOtpToMail(db *gorm.DB, ctx context.Context, email string) (bool, error)
 
 	if err!=nil || !isValidMember{
 
-		return isValidMember,errors.New("Invalid Email!")
+		return isValidMember,err
 	}
 
 	randNum := rand.Intn(900000) + 100000
@@ -215,7 +213,7 @@ func SendOtpToMail(db *gorm.DB, ctx context.Context, email string) (bool, error)
 	           </head>
 	        <body>
 		          <div class="container">
-			        <p>Hello `+member.Username+`,</p>
+			        <p>Hello `+member.FirstName+` `+member.LastName+`,</p>
                     <p>Your OTP for password reset is:</p>
                     <div class="otp">[`+otp+`]</div>
                     <p class="note">Note: This OTP is valid for only 5 minutes. Please do not share it with anyone.</p>
@@ -230,7 +228,7 @@ func SendOtpToMail(db *gorm.DB, ctx context.Context, email string) (bool, error)
 
 	if send_err!=nil {
 
-		return false,errors.New("Failed to send otp!")
+		return false,send_err
 	}
 
 	return true,nil
@@ -256,6 +254,4 @@ func ResetPassword(db *gorm.DB, otp int, newPassword, email string) (bool, error
 
 	return isPswdChanged,nil
 }
-
-
 

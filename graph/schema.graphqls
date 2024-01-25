@@ -8,113 +8,6 @@ scalar Time
 
 scalar Map
 
-type PageAndPagegroups{
-	Pages:      [Pages!]!
-	SubPages:   [Subpages!]!
-	Pagegroups: [Pagegroups!]!
-}
-
-type Pagegroups{
-    GroupId:    Int!
-    NewGroupId: Int!
-    Name:       String!
-    OrderIndex: Int! 
-}
-
-type Pages {
-    PgId:       Int!
-    NewPgId:    Int!
-    Name:       String!
-    Content:    String! 
-    Pgroupid:   Int!
-    NewGrpId:   Int!
-    OrderIndex: Int! 
-    ParentId:   Int!
-}
-
-type Subpages {
-    SpgId:       Int!
-    NewSpId:     Int!
-    Name:        String!
-    Content:     String!
-    ParentId:    Int!
-    NewParentId: Int!
-    PgroupId:    Int!
-    NewPgroupId: Int!
-    OrderIndex:  Int! 
-}
-
-type TblSpacesAliases  {
-	id:                Int!
-	spacesId:          Int!
-	languageId:        Int!
-	spacesName:        String!
-	spacesSlug:        String!
-	spacesDescription: String!
-	imagePath:         String!
-	createdOn:         Time!
-	createdBy:         Int!
-	modifiedOn:        Time            
-	modifiedBy:        Int!                      
-	deletedOn:         Time               
-	deletedBy:         Int!                    
-	isDeleted:         Int!                     
-	pageCategoryId:    Int!                     
-	parentId:          Int!                      
-	createdDate:       String!                 
-	modifiedDate:      String!                 
-	categoryNames:     [TblCategory!]!
-	categoryId:        Int!                      
-	fullSpaceAccess:   Boolean!                     
-}
-
-type TblCategory {
-    id:                 Int!
-    categoryName:       String!
-    categorySlug:       String!
-    description:        String!
-    imagePath:          String!
-    createdOn:          Time!
-    createdBy:          Int!
-    modifiedOn:         Time! 
-    modifiedBy:         Int!       
-    isDeleted:          Int!
-    deletedOn:          Time! 
-    deletedBy:          Int!      
-    parentId:           Int!
-    createdDate:        String!  
-    modifiedDate:       String!   
-    dateString:         String!  
-    parentCategoryName: String!   
-    parent:             [String!]! 
-    parentWithChild:    [Result!]! 
-}
-
-type Result {
-	categoryName: String!
-}
-
-type SpacesDetails{
-	spaces: [TblSpacesAliases!]!
-	count: Int!
-}
-
-type MemberNotesHighlight {
-	id:                        Int! 
-	memberId:                  Int!
-	pageId:                    Int!
-	notesHighlightsContent:    String!
-	notesHighlightsType:       String!
-	highlightsConfiguration:   Map! 
-	createdBy:                 Int!
-	createdOn:                 Time!
-	modifiedOn:                Time 
-	modifiedBy:                Int       
-	deletedOn:                 Time 
-	deletedBy:                 Int       
-	isDeleted:                 Int!
-}
-
 type Member{
     id:               Int! 
     uuid:             String!
@@ -156,20 +49,87 @@ type MemberGroup{
 	dateString:   String   
 }
 
+type TblChannel{
+	id:                  Int!
+	channelName:         String!
+	channelDescription:  String!
+	slugName:            String!
+	fieldGroupId:        Int!
+	isActive:            Int!
+	isDeleted:           Int!
+	createdOn:           Time!
+	createdBy:           Int!
+	modifiedOn:          Time          
+	modifiedBy:          Int                                              
+}
+
+type ChannelDetails{
+    channellist: [TblChannel!]!
+    count:       Int!
+}
+
+type ChannelEntryDetails{
+    channelEntryList: ChannelEntries
+    channelEntry: TblChannelEntries
+}
+
+type ChannelEntries{
+    channelEntryList: [TblChannelEntries!]!
+    count:            Int!
+}
+
+type TblChannelEntries{
+	id:                   Int!
+	title:                String! 
+	slug:                 String! 
+	description:          String!
+	userId:               Int!
+	channelId:            Int!
+	status:               Int!
+	isActive:             Int!
+	isDeleted:            Int! 
+	deletedBy:            Int       
+	deletedOn:            Time 
+	createdOn:            Time!
+	createdBy:            Int!
+	modifiedBy:           Int     
+	modifiedOn:           Time 
+	coverImage:           String!
+	thumbnailImage:       String!
+	metaTitle:            String!
+	metaDescription:      String!
+	keyword:              String!
+	categoriesId:         String!
+	relatedArticles:      String!
+	categories:           [[TblCategory!]!]!
+}
+
+type TblCategory{
+	id:                 Int!
+	categoryName:       String!
+	categorySlug:       String!
+	description:        String!
+	imagePath:          String!
+	createdOn:          Time!
+	createdBy:          Int!
+	modifiedOn:         Time 
+	modifiedBy:         Int       
+	isDeleted:          Int!
+	deletedOn:          Time 
+	deletedBy:          Int     
+	parentId:           Int!
+}
+
 type Query{
-    pageslist(spaceid: Int!): PageAndPagegroups!
-    spacesList(filter: Filter!): SpacesDetails!
-    PageContent(pageid: Int!): String!
-    getNotesOrHighlights(pageid: Int!,contentType: String!): [MemberNotesHighlight!]! @auth
+    channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
+	channelDetail(channelId: Int!): TblChannel! @auth
+    channelEntriesList(channelId: Int,channelEntryId: Int,limit: Int,offset: Int): ChannelEntryDetails! @auth
 }
 
 type Mutation{
     memberLogin(input: LoginCredentials!): String!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
-    updateHighlights(highlights: Highlights!): Boolean! @auth
-    updateNotes(pageid: Int!,notes: String!): Boolean! @auth
-    deleteNotesOrHighlights(contentId: Int!): Boolean! @auth
     sendOtpToMail(email: String!): Boolean!
     resetPassword(otp: Int!,newPassword: String!,email: String!): Boolean! 
 }
@@ -189,24 +149,7 @@ input MemberDetails{
     profileImage:     String
     profileImagePath: String
     username:         String
-    groupId:          Int
-    
-}
-
-input Filter{
-    limit: Int!
-    offset: Int!
-    keyword: String
-    categoryId: Int
-}
-
-input Highlights{
-    pageid:        Int!
-    content:       String!
-    startOffset:   Int!
-    endOffset:     Int!
-    selectPara:    String!
-    contentColor:  String!
+    groupId:          Int 
 }
 
 

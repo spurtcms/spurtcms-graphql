@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>GraphQL Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+  <link rel="stylesheet" href="https://unpkg.com/graphql-playground-react/build/static/css/index.css" />
+  <style>
+    /* Include the contents of prism.css here */
+    /* Copy and paste the content of your prism.css file */
+  </style>
+  <!-- Use the prism.css directly from the GitHub repository -->
+</head>
+
+<body>
+  <div id="root">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/graphql-playground-react/build/static/js/middleware.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      const root = document.getElementById('root');
+      root.classList.add('playgroundIn');
+        GraphQLPlayground.init(root, {
+          endpoint: '/query',
+          settings: {
+            'request.credentials': 'same-origin',
+          },
+          tabs: [
+            {
+              endpoint: '/query',
+              name: 'Channel Entries',
+              query: 
+`query($channelId: Int,$channelEntryId: Int,$limit: Int,$offset: Int){
+  channelEntriesList(channelId: $channelId,channelEntryId: $channelEntryId, limit: $limit,offset: $offset){
+    channelEntryList{
+      channelEntryList{
+        id
+        title
+        slug
+        description
+        userId
+        channelId
+        status
+        isActive
+        isDeleted
+        deletedBy
+        deletedOn
+        createdOn
+        createdBy
+        modifiedBy
+        modifiedOn
+        coverImage
+        thumbnailImage
+        metaTitle
+        metaDescription
+        keyword
+        categoriesId
+        relatedArticles
+        categories{
+          id
+          categoryName
+          parentId
+          modifiedOn
+        }
+      }
+      count
+    }
+    channelEntry{
+      id
+      title
+      slug
+      description
+      userId
+      channelId
+      status
+      isActive
+      isDeleted
+      deletedBy
+      deletedOn
+      createdOn
+      createdBy
+      modifiedBy
+      modifiedBy
+      modifiedOn
+      coverImage
+      thumbnailImage
+      metaTitle
+      metaDescription
+      keyword
+      categoriesId
+      relatedArticles
+      categories{
+          id
+          categoryName
+          parentId
+          modifiedOn
+        }
+    }
+  }
+}`,
+variables:`{
+  "limit": 10,
+  "offset": 0
+}`,
+headers:{
+  "Authorization":"{{.AuthToken}}"
+}
+
+            },
+          ],
+        });
+      });
+  </script>
+</body>
+
+</html>

@@ -8,8 +8,8 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gin-gonic/gin"
-	
-	"github.com/spurtcms/spurtcms-core/member"
+
+	"github.com/spurtcms/pkgcore/member"
 )
 
 // Implement the AuthMiddleware function
@@ -27,16 +27,26 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	}
 
-	userid,roleid,err := member.VerifyToken(token,os.Getenv("JWT_SECRET"))
+	if token == controller.SpecialToken {
+
+		c.Set("token",token)
+
+		return next(ctx)
+
+	}
+
+	memberid,groupid,err := member.VerifyToken(token,os.Getenv("JWT_SECRET"))
 
 	if err != nil {
 
-		return nil, fmt.Errorf("unauthorized: %v", err)
+		return nil, fmt.Errorf("Unauthorized: %v", err)
 	}
 
-	c.Set("userid",userid)
+	controller.AuthToken = token
 
-	c.Set("roleid",roleid)
+	c.Set("memberid",memberid)
+
+	c.Set("groupid",groupid)
 
 	c.Set("token",token)
 

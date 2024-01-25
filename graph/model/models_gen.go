@@ -6,20 +6,19 @@ import (
 	"time"
 )
 
-type Filter struct {
-	Limit      int     `json:"limit"`
-	Offset     int     `json:"offset"`
-	Keyword    *string `json:"keyword,omitempty"`
-	CategoryID *int    `json:"categoryId,omitempty"`
+type ChannelDetails struct {
+	Channellist []TblChannel `json:"channellist"`
+	Count       int          `json:"count"`
 }
 
-type Highlights struct {
-	Pageid       int    `json:"pageid"`
-	Content      string `json:"content"`
-	StartOffset  int    `json:"startOffset"`
-	EndOffset    int    `json:"endOffset"`
-	SelectPara   string `json:"selectPara"`
-	ContentColor string `json:"contentColor"`
+type ChannelEntries struct {
+	ChannelEntryList []TblChannelEntries `json:"channelEntryList"`
+	Count            int                 `json:"count"`
+}
+
+type ChannelEntryDetails struct {
+	ChannelEntryList *ChannelEntries    `json:"channelEntryList,omitempty"`
+	ChannelEntry     *TblChannelEntries `json:"channelEntry,omitempty"`
 }
 
 type LoginCredentials struct {
@@ -81,109 +80,58 @@ type MemberGroup struct {
 	DateString  *string    `json:"dateString,omitempty"`
 }
 
-type MemberNotesHighlight struct {
-	ID                      int                    `json:"id"`
-	MemberID                int                    `json:"memberId"`
-	PageID                  int                    `json:"pageId"`
-	NotesHighlightsContent  string                 `json:"notesHighlightsContent"`
-	NotesHighlightsType     string                 `json:"notesHighlightsType"`
-	HighlightsConfiguration map[string]interface{} `json:"highlightsConfiguration"`
-	CreatedBy               int                    `json:"createdBy"`
-	CreatedOn               time.Time              `json:"createdOn"`
-	ModifiedOn              *time.Time             `json:"modifiedOn,omitempty"`
-	ModifiedBy              *int                   `json:"modifiedBy,omitempty"`
-	DeletedOn               *time.Time             `json:"deletedOn,omitempty"`
-	DeletedBy               *int                   `json:"deletedBy,omitempty"`
-	IsDeleted               int                    `json:"isDeleted"`
-}
-
-type PageAndPagegroups struct {
-	Pages      []Pages      `json:"Pages"`
-	SubPages   []Subpages   `json:"SubPages"`
-	Pagegroups []Pagegroups `json:"Pagegroups"`
-}
-
-type Pagegroups struct {
-	GroupID    int    `json:"GroupId"`
-	NewGroupID int    `json:"NewGroupId"`
-	Name       string `json:"Name"`
-	OrderIndex int    `json:"OrderIndex"`
-}
-
-type Pages struct {
-	PgID       int    `json:"PgId"`
-	NewPgID    int    `json:"NewPgId"`
-	Name       string `json:"Name"`
-	Content    string `json:"Content"`
-	Pgroupid   int    `json:"Pgroupid"`
-	NewGrpID   int    `json:"NewGrpId"`
-	OrderIndex int    `json:"OrderIndex"`
-	ParentID   int    `json:"ParentId"`
-}
-
-type Result struct {
-	CategoryName string `json:"categoryName"`
-}
-
-type SpacesDetails struct {
-	Spaces []TblSpacesAliases `json:"spaces"`
-	Count  int                `json:"count"`
-}
-
-type Subpages struct {
-	SpgID       int    `json:"SpgId"`
-	NewSpID     int    `json:"NewSpId"`
-	Name        string `json:"Name"`
-	Content     string `json:"Content"`
-	ParentID    int    `json:"ParentId"`
-	NewParentID int    `json:"NewParentId"`
-	PgroupID    int    `json:"PgroupId"`
-	NewPgroupID int    `json:"NewPgroupId"`
-	OrderIndex  int    `json:"OrderIndex"`
-}
-
 type TblCategory struct {
-	ID                 int       `json:"id"`
-	CategoryName       string    `json:"categoryName"`
-	CategorySlug       string    `json:"categorySlug"`
-	Description        string    `json:"description"`
-	ImagePath          string    `json:"imagePath"`
-	CreatedOn          time.Time `json:"createdOn"`
-	CreatedBy          int       `json:"createdBy"`
-	ModifiedOn         time.Time `json:"modifiedOn"`
-	ModifiedBy         int       `json:"modifiedBy"`
-	IsDeleted          int       `json:"isDeleted"`
-	DeletedOn          time.Time `json:"deletedOn"`
-	DeletedBy          int       `json:"deletedBy"`
-	ParentID           int       `json:"parentId"`
-	CreatedDate        string    `json:"createdDate"`
-	ModifiedDate       string    `json:"modifiedDate"`
-	DateString         string    `json:"dateString"`
-	ParentCategoryName string    `json:"parentCategoryName"`
-	Parent             []string  `json:"parent"`
-	ParentWithChild    []Result  `json:"parentWithChild"`
+	ID           int        `json:"id"`
+	CategoryName string     `json:"categoryName"`
+	CategorySlug string     `json:"categorySlug"`
+	Description  string     `json:"description"`
+	ImagePath    string     `json:"imagePath"`
+	CreatedOn    time.Time  `json:"createdOn"`
+	CreatedBy    int        `json:"createdBy"`
+	ModifiedOn   *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy   *int       `json:"modifiedBy,omitempty"`
+	IsDeleted    int        `json:"isDeleted"`
+	DeletedOn    *time.Time `json:"deletedOn,omitempty"`
+	DeletedBy    *int       `json:"deletedBy,omitempty"`
+	ParentID     int        `json:"parentId"`
 }
 
-type TblSpacesAliases struct {
-	ID                int           `json:"id"`
-	SpacesID          int           `json:"spacesId"`
-	LanguageID        int           `json:"languageId"`
-	SpacesName        string        `json:"spacesName"`
-	SpacesSlug        string        `json:"spacesSlug"`
-	SpacesDescription string        `json:"spacesDescription"`
-	ImagePath         string        `json:"imagePath"`
-	CreatedOn         time.Time     `json:"createdOn"`
-	CreatedBy         int           `json:"createdBy"`
-	ModifiedOn        *time.Time    `json:"modifiedOn,omitempty"`
-	ModifiedBy        int           `json:"modifiedBy"`
-	DeletedOn         *time.Time    `json:"deletedOn,omitempty"`
-	DeletedBy         int           `json:"deletedBy"`
-	IsDeleted         int           `json:"isDeleted"`
-	PageCategoryID    int           `json:"pageCategoryId"`
-	ParentID          int           `json:"parentId"`
-	CreatedDate       string        `json:"createdDate"`
-	ModifiedDate      string        `json:"modifiedDate"`
-	CategoryNames     []TblCategory `json:"categoryNames"`
-	CategoryID        int           `json:"categoryId"`
-	FullSpaceAccess   bool          `json:"fullSpaceAccess"`
+type TblChannel struct {
+	ID                 int        `json:"id"`
+	ChannelName        string     `json:"channelName"`
+	ChannelDescription string     `json:"channelDescription"`
+	SlugName           string     `json:"slugName"`
+	FieldGroupID       int        `json:"fieldGroupId"`
+	IsActive           int        `json:"isActive"`
+	IsDeleted          int        `json:"isDeleted"`
+	CreatedOn          time.Time  `json:"createdOn"`
+	CreatedBy          int        `json:"createdBy"`
+	ModifiedOn         *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy         *int       `json:"modifiedBy,omitempty"`
+}
+
+type TblChannelEntries struct {
+	ID              int             `json:"id"`
+	Title           string          `json:"title"`
+	Slug            string          `json:"slug"`
+	Description     string          `json:"description"`
+	UserID          int             `json:"userId"`
+	ChannelID       int             `json:"channelId"`
+	Status          int             `json:"status"`
+	IsActive        int             `json:"isActive"`
+	IsDeleted       int             `json:"isDeleted"`
+	DeletedBy       *int            `json:"deletedBy,omitempty"`
+	DeletedOn       *time.Time      `json:"deletedOn,omitempty"`
+	CreatedOn       time.Time       `json:"createdOn"`
+	CreatedBy       int             `json:"createdBy"`
+	ModifiedBy      *int            `json:"modifiedBy,omitempty"`
+	ModifiedOn      *time.Time      `json:"modifiedOn,omitempty"`
+	CoverImage      string          `json:"coverImage"`
+	ThumbnailImage  string          `json:"thumbnailImage"`
+	MetaTitle       string          `json:"metaTitle"`
+	MetaDescription string          `json:"metaDescription"`
+	Keyword         string          `json:"keyword"`
+	CategoriesID    string          `json:"categoriesId"`
+	RelatedArticles string          `json:"relatedArticles"`
+	Categories      [][]TblCategory `json:"categories" gorm:"-"`
 }

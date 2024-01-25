@@ -10,28 +10,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spurtcms/spurtcms-content/lms"
-	"github.com/spurtcms/spurtcms-core/auth"
-	"github.com/spurtcms/spurtcms-core/member"
+	"github.com/spurtcms/pkgcore/auth"
+	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 
-	spurtcore "github.com/spurtcms/spurtcms-core"
+	spurtcore "github.com/spurtcms/pkgcore"
 )
 
 type key string
 
 const ContextKey key = "ginContext"
 
-var IST, _ = time.LoadLocation("Asia/Kolkata")
-
-var ProfileImagePath = "Uploads/ProfileImages/"
-
 var(
 	Mem member.MemberAuth
 	Auth *auth.Authorization
-	Flag bool
-	Pg lms.MemberPage
-	Sp lms.MemberSpace
+	IST, _ = time.LoadLocation("Asia/Kolkata")
+	ProfileImagePath = "Uploads/ProfileImages/"
+	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
+	AuthToken string
 )
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
