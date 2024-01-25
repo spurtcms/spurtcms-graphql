@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"gqlserver/graph/model"
+	"os"
 	"strconv"
 	"strings"
 
@@ -126,6 +127,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 			}
 
 			if entryerr==nil{
+
+				modified_path := strings.TrimPrefix(channelEntry.CoverImage, "/")
+
+				if modified_path!=""{
+
+					channelEntry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+				}
 	
 				splittedArr := strings.Split(channelEntry.CategoriesID, ",")
 	
@@ -230,13 +238,20 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 				for _,entry := range channelEntries{
 	
 					var indivCategories [][]model.TblCategory
+
+					modified_path := strings.TrimPrefix(entry.CoverImage, "/")
+
+				    if modified_path!=""{
+
+						entry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+					}
 	
 					splittedArr := strings.Split(entry.CategoriesID, ",")
 		
 					var parentCatId int
 		
 					for _, catId := range splittedArr{
-		
+	
 						var indivCategory []model.TblCategory
 		
 						conv_id,_ := strconv.Atoi(catId)
@@ -350,6 +365,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 				for _,entry := range channelEntries{
 	
 					var indivCategories [][]model.TblCategory
+
+					modified_path := strings.TrimPrefix(entry.CoverImage, "/")
+
+				    if modified_path!=""{
+
+						entry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+					}
 	
 					splittedArr := strings.Split(entry.CategoriesID, ",")
 		
@@ -481,6 +503,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 			}
 	
 			if entryerr==nil{
+
+				modified_path := strings.TrimPrefix(channelEntry.CoverImage, "/")
+
+				if modified_path!=""{
+
+					channelEntry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+				}
 	
 				splittedArr := strings.Split(channelEntry.CategoriesID, ",")
 	
@@ -589,6 +618,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 				for _,entry := range channelEntries{
 	
 					var indivCategories [][]model.TblCategory
+
+					modified_path := strings.TrimPrefix(entry.CoverImage, "/")
+
+				    if modified_path!=""{
+
+						entry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+					}
 	
 					splittedArr := strings.Split(entry.CategoriesID, ",")
 		
@@ -714,6 +750,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 				for _,entry := range channelEntries{
 	
 					var indivCategories [][]model.TblCategory
+
+					modified_path := strings.TrimPrefix(entry.CoverImage, "/")
+
+				    if modified_path!=""{
+
+						entry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+					}
 	
 					splittedArr := strings.Split(entry.CategoriesID, ",")
 		
