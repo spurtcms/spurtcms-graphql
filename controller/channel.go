@@ -130,9 +130,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 
 				modified_path := strings.TrimPrefix(channelEntry.CoverImage, "/")
 
-				if modified_path!=""{
+				if modified_path!="" && os.Getenv("DOMAIN_URL")!=""{
 
 					channelEntry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+
+				}else{
+
+					channelEntry.CoverImage = os.Getenv("LOCAL_URL")+ modified_path
 				}
 	
 				splittedArr := strings.Split(channelEntry.CategoriesID, ",")
@@ -241,9 +245,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 
 					modified_path := strings.TrimPrefix(entry.CoverImage, "/")
 
-				    if modified_path!=""{
+					if modified_path!="" && os.Getenv("DOMAIN_URL")!=""{
 
 						entry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+	
+					}else{
+	
+						entry.CoverImage = os.Getenv("LOCAL_URL")+ modified_path
 					}
 	
 					splittedArr := strings.Split(entry.CategoriesID, ",")
@@ -368,9 +376,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 
 					modified_path := strings.TrimPrefix(entry.CoverImage, "/")
 
-				    if modified_path!=""{
+					if modified_path!="" && os.Getenv("DOMAIN_URL")!=""{
 
 						entry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+	
+					}else{
+	
+						entry.CoverImage = os.Getenv("LOCAL_URL")+ modified_path
 					}
 	
 					splittedArr := strings.Split(entry.CategoriesID, ",")
@@ -506,9 +518,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 
 				modified_path := strings.TrimPrefix(channelEntry.CoverImage, "/")
 
-				if modified_path!=""{
+				if modified_path!="" && os.Getenv("DOMAIN_URL")!=""{
 
 					channelEntry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+
+				}else{
+
+					channelEntry.CoverImage = os.Getenv("LOCAL_URL")+ modified_path
 				}
 	
 				splittedArr := strings.Split(channelEntry.CategoriesID, ",")
@@ -621,9 +637,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 
 					modified_path := strings.TrimPrefix(entry.CoverImage, "/")
 
-				    if modified_path!=""{
+					if modified_path!="" && os.Getenv("DOMAIN_URL")!=""{
 
 						entry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+	
+					}else{
+	
+						entry.CoverImage = os.Getenv("LOCAL_URL")+ modified_path
 					}
 	
 					splittedArr := strings.Split(entry.CategoriesID, ",")
@@ -753,9 +773,13 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 
 					modified_path := strings.TrimPrefix(entry.CoverImage, "/")
 
-				    if modified_path!=""{
+					if modified_path!="" && os.Getenv("DOMAIN_URL")!=""{
 
 						entry.CoverImage = os.Getenv("DOMAIN_URL")+ modified_path
+	
+					}else{
+	
+						entry.CoverImage = os.Getenv("LOCAL_URL")+ modified_path
 					}
 	
 					splittedArr := strings.Split(entry.CategoriesID, ",")
