@@ -5,6 +5,7 @@ import (
 	"errors"
 	"gqlserver/graph/model"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -100,7 +101,7 @@ func Channellist(db *gorm.DB,ctx context.Context,limit,offset int)(model.Channel
 
 }
 
-func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channelEntryID *int, limit ,offset *int) (model.ChannelEntryDetails, error) {
+func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID , channelEntryID , categoryId , limit ,offset *int) (model.ChannelEntryDetails, error) {
 
 	c,_ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -113,16 +114,32 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 			var channelEntry model.TblChannelEntries
 	
 			var entryerr error
+
+			var query *gorm.DB
 	
 			if channelID!=nil{
+
+			   query = db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1 and tbl_channel_entries.channel_id = ? and tbl_channel_entries.id = ?",channelID,channelEntryID)
+
+			   if categoryId!=nil{
+				 
+				query = query.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+
+			   }
 	
-			   entryerr = db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1 and tbl_channel_entries.channel_id = ? and tbl_channel_entries.id = ?",channelID,channelEntryID).
-			   First(&channelEntry).Error
+			   entryerr = query.First(&channelEntry).Error
 	
 			}else{
-	
-			  entryerr = db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1 and tbl_channel_entries.id = ?",channelEntryID).
-			  First(&channelEntry).Error
+
+			  query = db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1 and tbl_channel_entries.id = ?",channelEntryID)
+
+			  if categoryId!=nil{
+				 
+				query = query.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+
+			  }
+   
+			  entryerr = query.First(&channelEntry).Error
 
 			}
 
@@ -208,8 +225,14 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 	
 						indivCategory = append(indivCategory, model.TblCategory{})
 					}
+					
+	              sort.SliceStable(indivCategory, func(i, j int) bool {
+
+		            return indivCategory[i].ID < indivCategory[j].ID
+
+	              })
 	
-					indivCategories = append(indivCategories, indivCategory)
+				 indivCategories = append(indivCategories, indivCategory)
 	
 				}
 	
@@ -228,12 +251,21 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 			var channelEntries []model.TblChannelEntries
 	
 			var count int64
+
+			query := db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1 and tbl_channel_entries.channel_id = ?",channelID).Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc")
+
+			countquery := db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1 and tbl_channel_entries.channel_id = ?",channelID)
+
+			if categoryId!=nil{
+
+				query = query.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+
+				countquery = countquery.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+			}
 	
-			entrieserr := db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1 and tbl_channel_entries.channel_id = ?",channelID).Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc").
-			Find(&channelEntries).Error
+			entrieserr := query.Find(&channelEntries).Error
 	
-			counterr := db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1 and tbl_channel_entries.channel_id = ?",channelID).
-			Count(&count).Error
+			counterr := countquery.Count(&count).Error
 	
 			if entrieserr==nil && counterr==nil{
 	
@@ -322,6 +354,12 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 		
 							indivCategory = append(indivCategory, model.TblCategory{})
 						}
+
+						sort.SliceStable(indivCategory, func(i, j int) bool {
+
+							return indivCategory[i].ID < indivCategory[j].ID
+		
+						})
 		
 						indivCategories = append(indivCategories, indivCategory)
 		
@@ -360,11 +398,21 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 			var channelEntries []model.TblChannelEntries
 	
 			var count int64
+
+			query := db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1").Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc")
+
+			countquery := db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1")
+
+		    if categoryId!=nil{
+
+				query = query.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+
+				countquery = countquery.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+			}
 	
-			entrieserr := db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1").Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc").
-			Find(&channelEntries).Error
+			entrieserr := query.Find(&channelEntries).Error
 	
-			counterr := db.Table("tbl_channel_entries").Where("tbl_channel_entries.status = 1").Count(&count).Error
+			counterr := countquery.Count(&count).Error
 	
 			if entrieserr==nil && counterr==nil{
 	
@@ -453,6 +501,12 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 		
 							indivCategory = append(indivCategory, model.TblCategory{})
 						}
+
+						sort.SliceStable(indivCategory, func(i, j int) bool {
+
+							return indivCategory[i].ID < indivCategory[j].ID
+		
+						})
 		
 						indivCategories = append(indivCategories, indivCategory)
 		
@@ -498,21 +552,37 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 			var channelEntry model.TblChannelEntries
 	
 			var entryerr error
-	
+
+			var query *gorm.DB
+
 			if channelID!=nil{
-	
-			   entryerr = db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+
+				query = db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+				Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
+				Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ? and tbl_channel_entries.id = ?",memberid,channelID,channelEntryID)
+ 
+				if categoryId!=nil{
+				  
+				  query = query.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+ 
+				}
+	 
+				entryerr = query.First(&channelEntry).Error
+	 
+			 }else{
+ 
+			   query = db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
 			   Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-			   Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ? and tbl_channel_entries.id = ?",memberid,channelID,channelEntryID).
-			   First(&channelEntry).Error
+			   Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.id = ?",memberid,channelEntryID)
+ 
+			   if categoryId!=nil{
+				  
+				 query = query.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+			   }
 	
-			}else{
-	
-			  entryerr = db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
-			  Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-			  Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.id = ?",memberid,channelEntryID).
-			  First(&channelEntry).Error
-			}
+			   entryerr = query.First(&channelEntry).Error
+ 
+			 }
 	
 			if entryerr==nil{
 
@@ -596,6 +666,12 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 	
 						indivCategory = append(indivCategory, model.TblCategory{})
 					}
+
+					sort.SliceStable(indivCategory, func(i, j int) bool {
+
+						return indivCategory[i].ID < indivCategory[j].ID
+	
+					})
 	
 					indivCategories = append(indivCategories, indivCategory)
 	
@@ -616,16 +692,25 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 			var channelEntries []model.TblChannelEntries
 	
 			var count int64
-	
-			entrieserr := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+
+			query := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
 			Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-			Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ?",memberid,channelID).Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc").
-			Find(&channelEntries).Error
-	
-			counterr := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+			Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ?",memberid,channelID).Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc")
+
+			countquery := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
 			Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-			Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ?",memberid,channelID).
-			Count(&count).Error
+			Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ? and tbl_channel_entries.channel_id = ?",memberid,channelID)
+
+			if categoryId!=nil{
+
+				query = query.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+
+				countquery = countquery.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+			}
+	
+			entrieserr := query.Find(&channelEntries).Error
+	
+			counterr := countquery.Count(&count).Error
 	
 			if entrieserr==nil && counterr==nil{
 	
@@ -714,6 +799,12 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 		
 							indivCategory = append(indivCategory, model.TblCategory{})
 						}
+
+						sort.SliceStable(indivCategory, func(i, j int) bool {
+
+							return indivCategory[i].ID < indivCategory[j].ID
+		
+						})
 		
 						indivCategories = append(indivCategories, indivCategory)
 		
@@ -752,16 +843,25 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 			var channelEntries []model.TblChannelEntries
 	
 			var count int64
-	
-			entrieserr := db.Debug().Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+
+			query := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
 			Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-			Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ?",memberid).Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc").
-			Find(&channelEntries).Error
-	
-			counterr := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+			Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ?",memberid).Limit(*limit).Offset(*offset).Order("tbl_channel_entries.id desc")
+
+			countquery := db.Table("tbl_channel_entries").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.entry_id = tbl_channel_entries.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
 			Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-			Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ?",memberid).
-			Count(&count).Error
+			Where("tbl_channel_entries.status = 1 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ?",memberid)
+
+			if categoryId!=nil{
+
+				query = query.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+
+				countquery = countquery.Where("LOWER(TRIM(tbl_channel_entries.categories_id)) ILIKE LOWER(TRIM(?))", "%"+strconv.Itoa(*categoryId)+"%")
+			}
+	
+			entrieserr := query.Find(&channelEntries).Error
+	
+			counterr := countquery.Count(&count).Error
 	
 			if entrieserr==nil && counterr==nil{
 	
@@ -850,6 +950,12 @@ func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID *int, channel
 		
 							indivCategory = append(indivCategory, model.TblCategory{})
 						}
+
+						sort.SliceStable(indivCategory, func(i, j int) bool {
+
+							return indivCategory[i].ID < indivCategory[j].ID
+		
+						})
 		
 						indivCategories = append(indivCategories, indivCategory)
 		

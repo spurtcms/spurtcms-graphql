@@ -41,12 +41,12 @@ func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) 
 
 // ChannelDetail is the resolver for the channelDetail field.
 func (r *queryResolver) ChannelDetail(ctx context.Context, channelID int) (model.TblChannel, error) {
-	return ChannelDetail(r.DB,ctx,channelID)
+	return ChannelDetail(r.DB, ctx, channelID)
 }
 
 // ChannelEntriesList is the resolver for the channelEntriesList field.
-func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, channelEntryID *int, limit *int, offset *int) (model.ChannelEntryDetails, error) {
-	return ChannelEntriesList(r.DB, ctx, channelID, channelEntryID, limit, offset)
+func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, channelEntryID *int, categoryID *int, limit *int, offset *int) (model.ChannelEntryDetails, error) {
+	return ChannelEntriesList(r.DB, ctx, channelID, channelEntryID, categoryID, limit, offset)
 }
 
 // Mutation returns MutationResolver implementation.

@@ -31,8 +31,8 @@
               endpoint: '/query',
               name: 'Channel Entries',
               query: 
-`query($channelId: Int,$channelEntryId: Int,$limit: Int,$offset: Int){
-  channelEntriesList(channelId: $channelId,channelEntryId: $channelEntryId, limit: $limit,offset: $offset){
+`query($channelId: Int,$channelEntryId: Int,$categoryId: Int,$limit: Int,$offset: Int){
+  channelEntriesList(channelId: $channelId,channelEntryId: $channelEntryId,categoryId: $categoryId, limit: $limit,offset: $offset){
     channelEntryList{
       channelEntryList{
         id

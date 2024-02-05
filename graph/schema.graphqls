@@ -123,7 +123,7 @@ type TblCategory{
 type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int!): TblChannel! @auth
-    channelEntriesList(channelId: Int,channelEntryId: Int,limit: Int,offset: Int): ChannelEntryDetails! @auth
+    channelEntriesList(channelId: Int,channelEntryId: Int,categoryId: Int,limit: Int,offset: Int): ChannelEntryDetails! @auth
 }
 
 type Mutation{
