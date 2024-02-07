@@ -24,16 +24,6 @@ func (r *mutationResolver) MemberUpdate(ctx context.Context, memberdata model.Me
 	return MemberUpdate(r.DB, ctx, memberdata)
 }
 
-// SendOtpToMail is the resolver for the sendOtpToMail field.
-func (r *mutationResolver) SendOtpToMail(ctx context.Context, email string) (bool, error) {
-	return SendOtpToMail(r.DB, ctx, email)
-}
-
-// ResetPassword is the resolver for the resetPassword field.
-func (r *mutationResolver) ResetPassword(ctx context.Context, otp int, newPassword string, email string) (bool, error) {
-	return ResetPassword(r.DB, otp, newPassword, email)
-}
-
 // Channellist is the resolver for the channellist field.
 func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error) {
 	return Channellist(r.DB, ctx, limit, offset)

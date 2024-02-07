@@ -130,8 +130,6 @@ type Mutation{
     memberLogin(input: LoginCredentials!): String!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
-    sendOtpToMail(email: String!): Boolean!
-    resetPassword(otp: Int!,newPassword: String!,email: String!): Boolean! 
 }
 
 input LoginCredentials{

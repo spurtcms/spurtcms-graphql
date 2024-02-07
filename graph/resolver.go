@@ -29,14 +29,6 @@ func MemberRegister(db *gorm.DB, input model.MemberDetails)(bool,error){
 	return controller.MemberRegister(db,input)
 }
 
-func SendOtpToMail(db *gorm.DB, ctx context.Context, email string) (bool, error) {
-	return controller.SendOtpToMail(db,ctx,email)
-}
-
-func ResetPassword(db *gorm.DB, otp int, newPassword, email string) (bool, error) {
-	return controller.ResetPassword(db,otp,newPassword,email)
-}
-
 func Channellist(db *gorm.DB,ctx context.Context,limit, offset int) (model.ChannelDetails, error) {
 	return controller.Channellist(db,ctx,limit,offset)
 }
