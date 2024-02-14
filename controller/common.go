@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"log"
 	"math/rand"
-	"net/smtp"
 	"os"
 	"strconv"
 	"strings"
@@ -96,39 +95,5 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 	return imageName,storageDestination,nil
 }
 
-func SendEmail(userEmail,sub,body string ,channel chan error){
-
-	from := os.Getenv("MAIL_USERNAME")
-	password := os.Getenv("MAIL_PASSWORD")
-
-	to := []string{
-		userEmail,
-	}
-
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
-
-	auth := smtp.PlainAuth("", from, password, smtpHost)
-
-	subject := "Subject:" + sub + "\n"
-
-	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-
-	msg := []byte(subject + mime + body)
-
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
-
-	if err != nil {
-
-		log.Println(err)
-
-		channel <- err
-
-		return
-	}
-
-	channel <- nil
-
-}
 
 
