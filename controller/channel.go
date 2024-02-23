@@ -70,7 +70,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, channelEntr
 		pathUrl = os.Getenv("LOCAL_URL")
 	}
 
-
+	
 	var channelEntryDetails model.ChannelEntryDetails
 
 	if channelEntryID != nil || (channelID != nil && channelEntryID != nil) && limit == nil && offset == nil {
@@ -140,7 +140,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, channelEntr
 			Categories:      conv_categories,
 		}
 
-		channelEntryDetails = model.ChannelEntryDetails{ChannelEntryList: &model.ChannelEntries{}, ChannelEntry: &conv_channelEntry}
+		channelEntryDetails = model.ChannelEntryDetails{ChannelEntry: &conv_channelEntry}
 
 	}else if channelEntryID == nil && channelID != nil && limit != nil && offset != nil {
 
@@ -216,7 +216,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, channelEntr
 			conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
 		}
 
-		channelEntryDetails = model.ChannelEntryDetails{ChannelEntryList: &model.ChannelEntries{ChannelEntryList: conv_channelEntries,Count: int(count)}, ChannelEntry: &model.TblChannelEntries{}}
+		channelEntryDetails = model.ChannelEntryDetails{ChannelEntryList: &model.ChannelEntries{ChannelEntryList: conv_channelEntries,Count: int(count)}}
 
 
 	}else if channelID == nil && channelEntryID == nil && limit != nil && offset != nil {
