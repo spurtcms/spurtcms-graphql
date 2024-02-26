@@ -42,8 +42,6 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 		return nil, fmt.Errorf("Unauthorized: %v", err)
 	}
 
-	controller.AuthToken = token
-
 	c.Set("memberid",memberid)
 
 	c.Set("groupid",groupid)

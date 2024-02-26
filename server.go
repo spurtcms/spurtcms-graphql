@@ -3,6 +3,7 @@ package main
 import (
 	"gqlserver/controller"
 	ginhandler "gqlserver/ginHandler"
+	"gqlserver/middleware"
 	"log"
 	"os"
 
@@ -29,6 +30,8 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	r.Use(middleware.CorsMiddleware())
 
 	r.LoadHTMLGlob("view/*")
 
