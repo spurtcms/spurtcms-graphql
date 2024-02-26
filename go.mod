@@ -45,7 +45,7 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sosodev/duration v1.1.0 // indirect
-	github.com/spurtcms/pkgcontent v1.0.69 // indirect
+	github.com/spurtcms/pkgcontent v1.0.70 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/urfave/cli/v2 v2.25.5 // indirect
