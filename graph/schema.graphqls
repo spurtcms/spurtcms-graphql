@@ -120,10 +120,35 @@ type TblCategory{
 	parentId:           Int!
 }
 
+type SpaceDetails{
+	spacelist:      [Space!]!
+	count:          Int!
+}
+
+type Space{
+	id:                   Int!
+	spaceName:            String!
+	spaceSlug:            String!
+	spaceDescription:     String!
+	imagePath:            String!
+	languageId:           Int!
+	createdOn:            Time!
+	createdBy:            Int!
+	modifiedOn:           Time        
+	modifiedBy:           Int 
+	isDeleted:            Int!                        
+	deletedOn:            Time               
+	deletedBy:            Int 
+	categoryId:           Int!                                                                                                
+	categories:           [TblCategory!]!                                                                               
+}
+
 type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int!): TblChannel! @auth
     channelEntriesList(channelId: Int,channelEntryId: Int,categoryId: Int,limit: Int,offset: Int): ChannelEntryDetails! @auth
+	spaceList(limit: Int!,offset: Int!): SpaceDetails! @auth
+	spaceDetails(spaceId: Int!): Space! @auth
 }
 
 type Mutation{

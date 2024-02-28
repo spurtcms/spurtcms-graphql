@@ -80,6 +80,29 @@ type MemberGroup struct {
 	DateString  *string    `json:"dateString,omitempty"`
 }
 
+type Space struct {
+	ID               int           `json:"id"`
+	SpaceName        string        `json:"spaceName" gorm:"column:spaces_name"`
+	SpaceSlug        string        `json:"spaceSlug" gorm:"column:spaces_slug"`
+	SpaceDescription string        `json:"spaceDescription" gorm:"column:spaces_description"`
+	ImagePath        string        `json:"imagePath"`
+	LanguageID       int           `json:"languageId"`
+	CreatedOn        time.Time     `json:"createdOn"`
+	CreatedBy        int           `json:"createdBy"`
+	ModifiedOn       *time.Time    `json:"modifiedOn,omitempty"`
+	ModifiedBy       *int          `json:"modifiedBy,omitempty"`
+	IsDeleted        int           `json:"isDeleted"`
+	DeletedOn        *time.Time    `json:"deletedOn,omitempty"`
+	DeletedBy        *int          `json:"deletedBy,omitempty"`
+	CategoryID       int           `json:"categoryId" gorm:"column:page_category_id;<-:false"`
+	Categories       []TblCategory `json:"categories" gorm:"-"`
+}
+
+type SpaceDetails struct {
+	Spacelist []Space `json:"spacelist"`
+	Count     int     `json:"count"`
+}
+
 type TblCategory struct {
 	ID           int        `json:"id"`
 	CategoryName string     `json:"categoryName"`

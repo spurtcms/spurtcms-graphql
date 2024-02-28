@@ -39,6 +39,16 @@ func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, 
 	return ChannelEntriesList(r.DB, ctx, channelID, channelEntryID, categoryID, limit, offset)
 }
 
+// SpaceList is the resolver for the spaceList field.
+func (r *queryResolver) SpaceList(ctx context.Context, limit int, offset int) (model.SpaceDetails, error) {
+	return SpaceList(r.DB, ctx, limit, offset)
+}
+
+// SpaceDetails is the resolver for the spaceDetails field.
+func (r *queryResolver) SpaceDetails(ctx context.Context, spaceID int) (model.Space, error) {
+	return SpaceDetails(r.DB,ctx,spaceID)
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

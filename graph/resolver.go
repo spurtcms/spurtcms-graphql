@@ -10,7 +10,6 @@ import (
 )
 
 // This file will not be regenerated automatically.
-//
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct{
@@ -43,6 +42,14 @@ func MemberUpdate(db *gorm.DB,ctx context.Context, memberdata model.MemberDetail
 
 func ChannelDetail(db *gorm.DB,ctx context.Context, channelID int) (model.TblChannel, error) {
 	return controller.ChannelDetail(db,ctx,channelID)
+}
+
+func SpaceList(db *gorm.DB,ctx context.Context,limit, offset int) (model.SpaceDetails, error){
+	return controller.SpaceList(db,ctx,limit,offset)
+}
+
+func SpaceDetails(db *gorm.DB,ctx context.Context,spaceId int)(model.Space,error){
+	return controller.SpaceDetails(db,ctx,spaceId)
 }
 
 
