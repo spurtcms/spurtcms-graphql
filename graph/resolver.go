@@ -52,4 +52,8 @@ func SpaceDetails(db *gorm.DB,ctx context.Context,spaceId int)(model.Space,error
 	return controller.SpaceDetails(db,ctx,spaceId)
 }
 
+func PagesAndPageGroupsUnderSpace(db *gorm.DB,ctx context.Context, spaceID int) (model.PageAndPageGroups, error) {
+	return controller.PagesAndPageGroupsBySpaceId(db,ctx,spaceID)
+}
+
 

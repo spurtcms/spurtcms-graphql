@@ -9,9 +9,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+    // spaces "github.com/spurtcms/pkgcontent/spaces"
 )
 
 func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int) (model.SpaceDetails, error) {
+
+	// spaceAuth := spaces.Space{Authority: Auth}
+
+	// spaceAuth.GetGraphqlSpacelist(limit,offset)
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -217,12 +222,45 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, e
 
 }
 
-// func PageAndPageGrouplistBySpaceId(db *gorm.DB,ctx context.Context,limit, offset int)(model,error){
+func PagesAndPageGroupsBySpaceId(db *gorm.DB,ctx context.Context,spaceId int)(model.PageAndPageGroups,error){
 
-// 	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-// 	token, _ := c.Get("token")
+	token, _ := c.Get("token")
 
-// 	memberid := c.GetInt("memberid")
+	memberid := c.GetInt("memberid")
 
-// }
+	pages, subpages, pagegroups := []model.Page{},[]model.SubPage{},[]model.PageGroup{}
+
+	if token==SpecialToken{
+
+		db.Debug().Table("tbl_page_aliases").Select("tbl_page.id,tbl_page_aliases.page_title,tbl_page_aliases.page_description,tbl_page.page_group_id,tbl_page_aliases.order_index,tbl_page.parent_id,tbl_page_aliases.status,tbl_page_aliases.created_on,tbl_page_aliases.created_by,tbl_page_aliases.modified_on,tbl_page_aliases.modified_by").
+		Joins("inner join tbl_page on tbl_page.id = tbl_page_aliases.page_id").Where("tbl_page.is_deleted = 0 and tbl_page_aliases.is_deleted = 0 and tbl_page.parent_id = 0 and tbl_page.spaces_id = ?",spaceId).Find(&pages)
+
+		db.Debug().Table("tbl_page_aliases").Select("tbl_page.id,tbl_page_aliases.page_title,tbl_page_aliases.page_description,tbl_page.page_group_id,tbl_page_aliases.page_suborder,tbl_page.parent_id,tbl_page_aliases.status,tbl_page_aliases.created_on,tbl_page_aliases.created_by,tbl_page_aliases.modified_on,tbl_page_aliases.modified_by").
+		Joins("inner join tbl_page on tbl_page.id = tbl_page_aliases.page_id").Where("tbl_page.is_deleted = 0 and tbl_page_aliases.is_deleted = 0 and tbl_page.parent_id != 0 and tbl_page.spaces_id = ?",spaceId).Find(&subpages)
+
+		db.Debug().Table("tbl_pages_group_aliases").Select("tbl_pages_group.id,tbl_pages_group_aliases.group_name,tbl_pages_group_aliases.order_index,tbl_pages_group_aliases.created_on,tbl_pages_group_aliases.created_by,tbl_pages_group_aliases.modified_by,tbl_pages_group_aliases.modified_on,tbl_pages_group_aliases.is_deleted,tbl_pages_group_aliases.deleted_on,tbl_pages_group_aliases.deleted_by").
+		Joins("inner join tbl_pages_group on tbl_pages_group.id = tbl_pages_group_aliases.page_group_id").Where("tbl_pages_group.is_deleted = 0 and tbl_pages_group_aliases.is_deleted = 0 and tbl_pages_group.spaces_id = ?",spaceId).Find(&pagegroups)
+
+	}else{
+
+		db.Debug().Table("tbl_page_aliases").Select("distinct on (tbl_page.id) tbl_page.id,tbl_page_aliases.page_title,tbl_page_aliases.page_description,tbl_page.page_group_id,tbl_page_aliases.order_index,tbl_page.parent_id,tbl_page_aliases.status,tbl_page_aliases.created_on,tbl_page_aliases.created_by,tbl_page_aliases.modified_on,tbl_page_aliases.modified_by").
+		Joins("inner join tbl_page on tbl_page.id = tbl_page_aliases.page_id").Joins("inner join tbl_spaces on tbl_spaces.id = tbl_page.spaces_id").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.page_id = tbl_page.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
+		Where("tbl_page.is_deleted = 0 and tbl_page_aliases.is_deleted = 0 and tbl_page.parent_id = 0 and tbl_spaces.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_page.spaces_id = ? and tbl_members.id=?",spaceId,memberid).Find(&pages)
+
+		db.Debug().Table("tbl_page_aliases").Select("distinct on (tbl_page.id) tbl_page.id,tbl_page_aliases.page_title,tbl_page_aliases.page_description,tbl_page.page_group_id,tbl_page_aliases.page_suborder,tbl_page.parent_id,tbl_page_aliases.status,tbl_page_aliases.created_on,tbl_page_aliases.created_by,tbl_page_aliases.modified_on,tbl_page_aliases.modified_by").
+		Joins("inner join tbl_page on tbl_page.id = tbl_page_aliases.page_id").Joins("inner join tbl_spaces on tbl_spaces.id = tbl_page.spaces_id").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.page_id = tbl_page.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
+		Where("tbl_page.is_deleted = 0 and tbl_page_aliases.is_deleted = 0 and tbl_page.parent_id != 0 and tbl_spaces.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_page.spaces_id = ? and tbl_members.id=?",spaceId,memberid).Find(&subpages)
+
+		db.Debug().Table("tbl_pages_group_aliases").Select("distinct on (tbl_pages_group.id) tbl_pages_group.id,tbl_pages_group_aliases.group_name,tbl_pages_group_aliases.order_index,tbl_pages_group_aliases.created_on,tbl_pages_group_aliases.created_by,tbl_pages_group_aliases.modified_by,tbl_pages_group_aliases.modified_on,tbl_pages_group_aliases.is_deleted,tbl_pages_group_aliases.deleted_on,tbl_pages_group_aliases.deleted_by").
+		Joins("inner join tbl_pages_group on tbl_pages_group.id = tbl_pages_group_aliases.page_group_id").Joins("inner join tbl_spaces on tbl_spaces.id = tbl_pages_group.spaces_id").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.page_group_id = tbl_pages_group.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
+		Where("tbl_pages_group.is_deleted = 0 and tbl_pages_group_aliases.is_deleted = 0 and tbl_spaces.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_pages_group.spaces_id = ? and tbl_members.id = ?",spaceId,memberid).Find(&pagegroups)
+	}
+
+	return model.PageAndPageGroups{Pages: pages,Subpages: subpages,Pagegroups: pagegroups},nil
+
+}

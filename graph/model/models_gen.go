@@ -80,6 +80,42 @@ type MemberGroup struct {
 	DateString  *string    `json:"dateString,omitempty"`
 }
 
+type Page struct {
+	ID          int        `json:"id"`
+	PageName    string     `json:"pageName" gorm:"column:page_title"`
+	Content     string     `json:"content" gorm:"column:page_description"`
+	PagegroupID int        `json:"pagegroupId" gorm:"column: page_group_id"`
+	OrderIndex  int        `json:"orderIndex"`
+	ParentID    int        `json:"parentId"`
+	Status      string     `json:"status"`
+	CreatedOn   time.Time  `json:"createdOn"`
+	CreatedBy   int        `json:"created_by"`
+	ModifiedOn  *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy  *int       `json:"modifiedBy,omitempty"`
+	IsDeleted   int        `json:"isDeleted"`
+	DeletedOn   *time.Time `json:"deletedOn,omitempty"`
+	DeletedBy   *int       `json:"deletedBy,omitempty"`
+}
+
+type PageAndPageGroups struct {
+	Pages      []Page      `json:"pages"`
+	Subpages   []SubPage   `json:"subpages"`
+	Pagegroups []PageGroup `json:"pagegroups"`
+}
+
+type PageGroup struct {
+	ID            int        `json:"id"`
+	PagegroupName string     `json:"pagegroupName" gorm:"column:group_name"`
+	OrderIndex    int        `json:"orderIndex"`
+	CreatedOn     time.Time  `json:"createdOn"`
+	CreatedBy     int        `json:"created_by"`
+	ModifiedOn    *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy    *int       `json:"modifiedBy,omitempty"`
+	IsDeleted     int        `json:"isDeleted"`
+	DeletedOn     *time.Time `json:"deletedOn,omitempty"`
+	DeletedBy     *int       `json:"deletedBy,omitempty"`
+}
+
 type Space struct {
 	ID               int           `json:"id"`
 	SpaceName        string        `json:"spaceName" gorm:"column:spaces_name"`
@@ -101,6 +137,23 @@ type Space struct {
 type SpaceDetails struct {
 	Spacelist []Space `json:"spacelist"`
 	Count     int     `json:"count"`
+}
+
+type SubPage struct {
+	ID          int        `json:"id"`
+	SubpageName string     `json:"subpageName" gorm:"column:page_title"`
+	Conent      string     `json:"conent" gorm:"column:page_description"`
+	ParentID    int        `json:"parentId"`
+	PageGroupID int        `json:"pageGroupId" gorm:"column: page_group_id"`
+	OrderIndex  int        `json:"orderIndex,omitempty" gorm:"column:page_suborder"`
+	Status      string     `json:"status"`
+	CreatedOn   time.Time  `json:"createdOn"`
+	CreatedBy   int        `json:"created_by"`
+	ModifiedOn  *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy  *int       `json:"modifiedBy,omitempty"`
+	IsDeleted   int        `json:"isDeleted"`
+	DeletedOn   *time.Time `json:"deletedOn,omitempty"`
+	DeletedBy   *int       `json:"deletedBy,omitempty"`
 }
 
 type TblCategory struct {

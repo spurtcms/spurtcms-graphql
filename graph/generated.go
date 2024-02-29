@@ -111,12 +111,49 @@ type ComplexityRoot struct {
 		MemberUpdate   func(childComplexity int, memberdata model.MemberDetails) int
 	}
 
+	Page struct {
+		Content     func(childComplexity int) int
+		CreatedBy   func(childComplexity int) int
+		CreatedOn   func(childComplexity int) int
+		DeletedBy   func(childComplexity int) int
+		DeletedOn   func(childComplexity int) int
+		ID          func(childComplexity int) int
+		IsDeleted   func(childComplexity int) int
+		ModifiedBy  func(childComplexity int) int
+		ModifiedOn  func(childComplexity int) int
+		OrderIndex  func(childComplexity int) int
+		PageName    func(childComplexity int) int
+		PagegroupID func(childComplexity int) int
+		ParentID    func(childComplexity int) int
+		Status      func(childComplexity int) int
+	}
+
+	PageAndPageGroups struct {
+		Pagegroups func(childComplexity int) int
+		Pages      func(childComplexity int) int
+		Subpages   func(childComplexity int) int
+	}
+
+	PageGroup struct {
+		CreatedBy     func(childComplexity int) int
+		CreatedOn     func(childComplexity int) int
+		DeletedBy     func(childComplexity int) int
+		DeletedOn     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		IsDeleted     func(childComplexity int) int
+		ModifiedBy    func(childComplexity int) int
+		ModifiedOn    func(childComplexity int) int
+		OrderIndex    func(childComplexity int) int
+		PagegroupName func(childComplexity int) int
+	}
+
 	Query struct {
-		ChannelDetail      func(childComplexity int, channelID int) int
-		ChannelEntriesList func(childComplexity int, channelID *int, channelEntryID *int, categoryID *int, limit *int, offset *int) int
-		ChannelList        func(childComplexity int, limit int, offset int) int
-		SpaceDetails       func(childComplexity int, spaceID int) int
-		SpaceList          func(childComplexity int, limit int, offset int) int
+		ChannelDetail                func(childComplexity int, channelID int) int
+		ChannelEntriesList           func(childComplexity int, channelID *int, channelEntryID *int, categoryID *int, limit *int, offset *int) int
+		ChannelList                  func(childComplexity int, limit int, offset int) int
+		PagesAndPageGroupsUnderSpace func(childComplexity int, spaceID int) int
+		SpaceDetails                 func(childComplexity int, spaceID int) int
+		SpaceList                    func(childComplexity int, limit int, offset int) int
 	}
 
 	Space struct {
@@ -140,6 +177,23 @@ type ComplexityRoot struct {
 	SpaceDetails struct {
 		Count     func(childComplexity int) int
 		Spacelist func(childComplexity int) int
+	}
+
+	SubPage struct {
+		Conent      func(childComplexity int) int
+		CreatedBy   func(childComplexity int) int
+		CreatedOn   func(childComplexity int) int
+		DeletedBy   func(childComplexity int) int
+		DeletedOn   func(childComplexity int) int
+		ID          func(childComplexity int) int
+		IsDeleted   func(childComplexity int) int
+		ModifiedBy  func(childComplexity int) int
+		ModifiedOn  func(childComplexity int) int
+		OrderIndex  func(childComplexity int) int
+		PageGroupID func(childComplexity int) int
+		ParentID    func(childComplexity int) int
+		Status      func(childComplexity int) int
+		SubpageName func(childComplexity int) int
 	}
 
 	TblCategory struct {
@@ -210,6 +264,7 @@ type QueryResolver interface {
 	ChannelEntriesList(ctx context.Context, channelID *int, channelEntryID *int, categoryID *int, limit *int, offset *int) (model.ChannelEntryDetails, error)
 	SpaceList(ctx context.Context, limit int, offset int) (model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (model.Space, error)
+	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (model.PageAndPageGroups, error)
 }
 
 type executableSchema struct {
@@ -554,6 +609,195 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.MemberUpdate(childComplexity, args["memberdata"].(model.MemberDetails)), true
 
+	case "Page.content":
+		if e.complexity.Page.Content == nil {
+			break
+		}
+
+		return e.complexity.Page.Content(childComplexity), true
+
+	case "Page.created_by":
+		if e.complexity.Page.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.Page.CreatedBy(childComplexity), true
+
+	case "Page.createdOn":
+		if e.complexity.Page.CreatedOn == nil {
+			break
+		}
+
+		return e.complexity.Page.CreatedOn(childComplexity), true
+
+	case "Page.deletedBy":
+		if e.complexity.Page.DeletedBy == nil {
+			break
+		}
+
+		return e.complexity.Page.DeletedBy(childComplexity), true
+
+	case "Page.deletedOn":
+		if e.complexity.Page.DeletedOn == nil {
+			break
+		}
+
+		return e.complexity.Page.DeletedOn(childComplexity), true
+
+	case "Page.id":
+		if e.complexity.Page.ID == nil {
+			break
+		}
+
+		return e.complexity.Page.ID(childComplexity), true
+
+	case "Page.isDeleted":
+		if e.complexity.Page.IsDeleted == nil {
+			break
+		}
+
+		return e.complexity.Page.IsDeleted(childComplexity), true
+
+	case "Page.modifiedBy":
+		if e.complexity.Page.ModifiedBy == nil {
+			break
+		}
+
+		return e.complexity.Page.ModifiedBy(childComplexity), true
+
+	case "Page.modifiedOn":
+		if e.complexity.Page.ModifiedOn == nil {
+			break
+		}
+
+		return e.complexity.Page.ModifiedOn(childComplexity), true
+
+	case "Page.orderIndex":
+		if e.complexity.Page.OrderIndex == nil {
+			break
+		}
+
+		return e.complexity.Page.OrderIndex(childComplexity), true
+
+	case "Page.pageName":
+		if e.complexity.Page.PageName == nil {
+			break
+		}
+
+		return e.complexity.Page.PageName(childComplexity), true
+
+	case "Page.pagegroupId":
+		if e.complexity.Page.PagegroupID == nil {
+			break
+		}
+
+		return e.complexity.Page.PagegroupID(childComplexity), true
+
+	case "Page.parentId":
+		if e.complexity.Page.ParentID == nil {
+			break
+		}
+
+		return e.complexity.Page.ParentID(childComplexity), true
+
+	case "Page.status":
+		if e.complexity.Page.Status == nil {
+			break
+		}
+
+		return e.complexity.Page.Status(childComplexity), true
+
+	case "PageAndPageGroups.pagegroups":
+		if e.complexity.PageAndPageGroups.Pagegroups == nil {
+			break
+		}
+
+		return e.complexity.PageAndPageGroups.Pagegroups(childComplexity), true
+
+	case "PageAndPageGroups.pages":
+		if e.complexity.PageAndPageGroups.Pages == nil {
+			break
+		}
+
+		return e.complexity.PageAndPageGroups.Pages(childComplexity), true
+
+	case "PageAndPageGroups.subpages":
+		if e.complexity.PageAndPageGroups.Subpages == nil {
+			break
+		}
+
+		return e.complexity.PageAndPageGroups.Subpages(childComplexity), true
+
+	case "PageGroup.created_by":
+		if e.complexity.PageGroup.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.CreatedBy(childComplexity), true
+
+	case "PageGroup.createdOn":
+		if e.complexity.PageGroup.CreatedOn == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.CreatedOn(childComplexity), true
+
+	case "PageGroup.deletedBy":
+		if e.complexity.PageGroup.DeletedBy == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.DeletedBy(childComplexity), true
+
+	case "PageGroup.deletedOn":
+		if e.complexity.PageGroup.DeletedOn == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.DeletedOn(childComplexity), true
+
+	case "PageGroup.id":
+		if e.complexity.PageGroup.ID == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.ID(childComplexity), true
+
+	case "PageGroup.isDeleted":
+		if e.complexity.PageGroup.IsDeleted == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.IsDeleted(childComplexity), true
+
+	case "PageGroup.modifiedBy":
+		if e.complexity.PageGroup.ModifiedBy == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.ModifiedBy(childComplexity), true
+
+	case "PageGroup.modifiedOn":
+		if e.complexity.PageGroup.ModifiedOn == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.ModifiedOn(childComplexity), true
+
+	case "PageGroup.orderIndex":
+		if e.complexity.PageGroup.OrderIndex == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.OrderIndex(childComplexity), true
+
+	case "PageGroup.pagegroupName":
+		if e.complexity.PageGroup.PagegroupName == nil {
+			break
+		}
+
+		return e.complexity.PageGroup.PagegroupName(childComplexity), true
+
 	case "Query.channelDetail":
 		if e.complexity.Query.ChannelDetail == nil {
 			break
@@ -589,6 +833,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.ChannelList(childComplexity, args["limit"].(int), args["offset"].(int)), true
+
+	case "Query.PagesAndPageGroupsUnderSpace":
+		if e.complexity.Query.PagesAndPageGroupsUnderSpace == nil {
+			break
+		}
+
+		args, err := ec.field_Query_PagesAndPageGroupsUnderSpace_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PagesAndPageGroupsUnderSpace(childComplexity, args["spaceId"].(int)), true
 
 	case "Query.spaceDetails":
 		if e.complexity.Query.SpaceDetails == nil {
@@ -732,6 +988,104 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SpaceDetails.Spacelist(childComplexity), true
+
+	case "SubPage.conent":
+		if e.complexity.SubPage.Conent == nil {
+			break
+		}
+
+		return e.complexity.SubPage.Conent(childComplexity), true
+
+	case "SubPage.created_by":
+		if e.complexity.SubPage.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.SubPage.CreatedBy(childComplexity), true
+
+	case "SubPage.createdOn":
+		if e.complexity.SubPage.CreatedOn == nil {
+			break
+		}
+
+		return e.complexity.SubPage.CreatedOn(childComplexity), true
+
+	case "SubPage.deletedBy":
+		if e.complexity.SubPage.DeletedBy == nil {
+			break
+		}
+
+		return e.complexity.SubPage.DeletedBy(childComplexity), true
+
+	case "SubPage.deletedOn":
+		if e.complexity.SubPage.DeletedOn == nil {
+			break
+		}
+
+		return e.complexity.SubPage.DeletedOn(childComplexity), true
+
+	case "SubPage.id":
+		if e.complexity.SubPage.ID == nil {
+			break
+		}
+
+		return e.complexity.SubPage.ID(childComplexity), true
+
+	case "SubPage.isDeleted":
+		if e.complexity.SubPage.IsDeleted == nil {
+			break
+		}
+
+		return e.complexity.SubPage.IsDeleted(childComplexity), true
+
+	case "SubPage.modifiedBy":
+		if e.complexity.SubPage.ModifiedBy == nil {
+			break
+		}
+
+		return e.complexity.SubPage.ModifiedBy(childComplexity), true
+
+	case "SubPage.modifiedOn":
+		if e.complexity.SubPage.ModifiedOn == nil {
+			break
+		}
+
+		return e.complexity.SubPage.ModifiedOn(childComplexity), true
+
+	case "SubPage.orderIndex":
+		if e.complexity.SubPage.OrderIndex == nil {
+			break
+		}
+
+		return e.complexity.SubPage.OrderIndex(childComplexity), true
+
+	case "SubPage.pageGroupId":
+		if e.complexity.SubPage.PageGroupID == nil {
+			break
+		}
+
+		return e.complexity.SubPage.PageGroupID(childComplexity), true
+
+	case "SubPage.parentId":
+		if e.complexity.SubPage.ParentID == nil {
+			break
+		}
+
+		return e.complexity.SubPage.ParentID(childComplexity), true
+
+	case "SubPage.status":
+		if e.complexity.SubPage.Status == nil {
+			break
+		}
+
+		return e.complexity.SubPage.Status(childComplexity), true
+
+	case "SubPage.subpageName":
+		if e.complexity.SubPage.SubpageName == nil {
+			break
+		}
+
+		return e.complexity.SubPage.SubpageName(childComplexity), true
 
 	case "TblCategory.categoryName":
 		if e.complexity.TblCategory.CategoryName == nil {
@@ -1230,6 +1584,21 @@ func (ec *executionContext) field_Mutation_memberUpdate_args(ctx context.Context
 		}
 	}
 	args["memberdata"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_PagesAndPageGroupsUnderSpace_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["spaceId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spaceId"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["spaceId"] = arg0
 	return args, nil
 }
 
@@ -3515,6 +3884,1252 @@ func (ec *executionContext) fieldContext_Mutation_memberUpdate(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Page_id(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_pageName(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_pageName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_pageName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_content(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_pagegroupId(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_pagegroupId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PagegroupID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_pagegroupId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_orderIndex(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_orderIndex(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OrderIndex, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_orderIndex(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_parentId(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_parentId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_parentId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_status(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_createdOn(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_createdOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_createdOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_created_by(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_created_by(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_created_by(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_modifiedOn(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_modifiedOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModifiedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_modifiedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_modifiedBy(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_modifiedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModifiedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_modifiedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_isDeleted(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_isDeleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDeleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_isDeleted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_deletedOn(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_deletedOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_deletedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Page_deletedBy(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Page_deletedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Page_deletedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Page",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageAndPageGroups_pages(ctx context.Context, field graphql.CollectedField, obj *model.PageAndPageGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageAndPageGroups_pages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Pages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.Page)
+	fc.Result = res
+	return ec.marshalNPage2ᚕgqlserverᚋgraphᚋmodelᚐPageᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageAndPageGroups_pages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageAndPageGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Page_id(ctx, field)
+			case "pageName":
+				return ec.fieldContext_Page_pageName(ctx, field)
+			case "content":
+				return ec.fieldContext_Page_content(ctx, field)
+			case "pagegroupId":
+				return ec.fieldContext_Page_pagegroupId(ctx, field)
+			case "orderIndex":
+				return ec.fieldContext_Page_orderIndex(ctx, field)
+			case "parentId":
+				return ec.fieldContext_Page_parentId(ctx, field)
+			case "status":
+				return ec.fieldContext_Page_status(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_Page_createdOn(ctx, field)
+			case "created_by":
+				return ec.fieldContext_Page_created_by(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_Page_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_Page_modifiedBy(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_Page_isDeleted(ctx, field)
+			case "deletedOn":
+				return ec.fieldContext_Page_deletedOn(ctx, field)
+			case "deletedBy":
+				return ec.fieldContext_Page_deletedBy(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Page", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageAndPageGroups_subpages(ctx context.Context, field graphql.CollectedField, obj *model.PageAndPageGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageAndPageGroups_subpages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Subpages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.SubPage)
+	fc.Result = res
+	return ec.marshalNSubPage2ᚕgqlserverᚋgraphᚋmodelᚐSubPageᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageAndPageGroups_subpages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageAndPageGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SubPage_id(ctx, field)
+			case "subpageName":
+				return ec.fieldContext_SubPage_subpageName(ctx, field)
+			case "conent":
+				return ec.fieldContext_SubPage_conent(ctx, field)
+			case "parentId":
+				return ec.fieldContext_SubPage_parentId(ctx, field)
+			case "pageGroupId":
+				return ec.fieldContext_SubPage_pageGroupId(ctx, field)
+			case "orderIndex":
+				return ec.fieldContext_SubPage_orderIndex(ctx, field)
+			case "status":
+				return ec.fieldContext_SubPage_status(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_SubPage_createdOn(ctx, field)
+			case "created_by":
+				return ec.fieldContext_SubPage_created_by(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_SubPage_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_SubPage_modifiedBy(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_SubPage_isDeleted(ctx, field)
+			case "deletedOn":
+				return ec.fieldContext_SubPage_deletedOn(ctx, field)
+			case "deletedBy":
+				return ec.fieldContext_SubPage_deletedBy(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SubPage", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageAndPageGroups_pagegroups(ctx context.Context, field graphql.CollectedField, obj *model.PageAndPageGroups) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageAndPageGroups_pagegroups(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Pagegroups, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.PageGroup)
+	fc.Result = res
+	return ec.marshalNPageGroup2ᚕgqlserverᚋgraphᚋmodelᚐPageGroupᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageAndPageGroups_pagegroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageAndPageGroups",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PageGroup_id(ctx, field)
+			case "pagegroupName":
+				return ec.fieldContext_PageGroup_pagegroupName(ctx, field)
+			case "orderIndex":
+				return ec.fieldContext_PageGroup_orderIndex(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_PageGroup_createdOn(ctx, field)
+			case "created_by":
+				return ec.fieldContext_PageGroup_created_by(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_PageGroup_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_PageGroup_modifiedBy(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_PageGroup_isDeleted(ctx, field)
+			case "deletedOn":
+				return ec.fieldContext_PageGroup_deletedOn(ctx, field)
+			case "deletedBy":
+				return ec.fieldContext_PageGroup_deletedBy(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_id(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_pagegroupName(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_pagegroupName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PagegroupName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_pagegroupName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_orderIndex(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_orderIndex(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OrderIndex, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_orderIndex(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_createdOn(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_createdOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_createdOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_created_by(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_created_by(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_created_by(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_modifiedOn(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_modifiedOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModifiedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_modifiedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_modifiedBy(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_modifiedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModifiedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_modifiedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_isDeleted(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_isDeleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDeleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_isDeleted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_deletedOn(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_deletedOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_deletedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageGroup_deletedBy(ctx context.Context, field graphql.CollectedField, obj *model.PageGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageGroup_deletedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageGroup_deletedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_channelList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_channelList(ctx, field)
 	if err != nil {
@@ -3958,6 +5573,89 @@ func (ec *executionContext) fieldContext_Query_spaceDetails(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_spaceDetails_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_PagesAndPageGroupsUnderSpace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_PagesAndPageGroupsUnderSpace(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().PagesAndPageGroupsUnderSpace(rctx, fc.Args["spaceId"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(model.PageAndPageGroups); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be gqlserver/graph/model.PageAndPageGroups`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.PageAndPageGroups)
+	fc.Result = res
+	return ec.marshalNPageAndPageGroups2gqlserverᚋgraphᚋmodelᚐPageAndPageGroups(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_PagesAndPageGroupsUnderSpace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "pages":
+				return ec.fieldContext_PageAndPageGroups_pages(ctx, field)
+			case "subpages":
+				return ec.fieldContext_PageAndPageGroups_subpages(ctx, field)
+			case "pagegroups":
+				return ec.fieldContext_PageAndPageGroups_pagegroups(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageAndPageGroups", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_PagesAndPageGroupsUnderSpace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -4879,6 +6577,610 @@ func (ec *executionContext) _SpaceDetails_count(ctx context.Context, field graph
 func (ec *executionContext) fieldContext_SpaceDetails_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SpaceDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_id(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_subpageName(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_subpageName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SubpageName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_subpageName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_conent(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_conent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Conent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_conent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_parentId(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_parentId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_parentId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_pageGroupId(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_pageGroupId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageGroupID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_pageGroupId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_orderIndex(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_orderIndex(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OrderIndex, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_orderIndex(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_status(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_createdOn(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_createdOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_createdOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_created_by(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_created_by(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_created_by(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_modifiedOn(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_modifiedOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModifiedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_modifiedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_modifiedBy(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_modifiedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModifiedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_modifiedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_isDeleted(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_isDeleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDeleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_isDeleted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_deletedOn(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_deletedOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_deletedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SubPage_deletedBy(ctx context.Context, field graphql.CollectedField, obj *model.SubPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SubPage_deletedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SubPage_deletedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SubPage",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -9283,6 +11585,219 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
+var pageImplementors = []string{"Page"}
+
+func (ec *executionContext) _Page(ctx context.Context, sel ast.SelectionSet, obj *model.Page) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Page")
+		case "id":
+			out.Values[i] = ec._Page_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageName":
+			out.Values[i] = ec._Page_pageName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "content":
+			out.Values[i] = ec._Page_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pagegroupId":
+			out.Values[i] = ec._Page_pagegroupId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "orderIndex":
+			out.Values[i] = ec._Page_orderIndex(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "parentId":
+			out.Values[i] = ec._Page_parentId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._Page_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdOn":
+			out.Values[i] = ec._Page_createdOn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "created_by":
+			out.Values[i] = ec._Page_created_by(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "modifiedOn":
+			out.Values[i] = ec._Page_modifiedOn(ctx, field, obj)
+		case "modifiedBy":
+			out.Values[i] = ec._Page_modifiedBy(ctx, field, obj)
+		case "isDeleted":
+			out.Values[i] = ec._Page_isDeleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletedOn":
+			out.Values[i] = ec._Page_deletedOn(ctx, field, obj)
+		case "deletedBy":
+			out.Values[i] = ec._Page_deletedBy(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var pageAndPageGroupsImplementors = []string{"PageAndPageGroups"}
+
+func (ec *executionContext) _PageAndPageGroups(ctx context.Context, sel ast.SelectionSet, obj *model.PageAndPageGroups) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pageAndPageGroupsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PageAndPageGroups")
+		case "pages":
+			out.Values[i] = ec._PageAndPageGroups_pages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "subpages":
+			out.Values[i] = ec._PageAndPageGroups_subpages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pagegroups":
+			out.Values[i] = ec._PageAndPageGroups_pagegroups(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var pageGroupImplementors = []string{"PageGroup"}
+
+func (ec *executionContext) _PageGroup(ctx context.Context, sel ast.SelectionSet, obj *model.PageGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pageGroupImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PageGroup")
+		case "id":
+			out.Values[i] = ec._PageGroup_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pagegroupName":
+			out.Values[i] = ec._PageGroup_pagegroupName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "orderIndex":
+			out.Values[i] = ec._PageGroup_orderIndex(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdOn":
+			out.Values[i] = ec._PageGroup_createdOn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "created_by":
+			out.Values[i] = ec._PageGroup_created_by(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "modifiedOn":
+			out.Values[i] = ec._PageGroup_modifiedOn(ctx, field, obj)
+		case "modifiedBy":
+			out.Values[i] = ec._PageGroup_modifiedBy(ctx, field, obj)
+		case "isDeleted":
+			out.Values[i] = ec._PageGroup_isDeleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletedOn":
+			out.Values[i] = ec._PageGroup_deletedOn(ctx, field, obj)
+		case "deletedBy":
+			out.Values[i] = ec._PageGroup_deletedBy(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -9400,6 +11915,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_spaceDetails(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "PagesAndPageGroupsUnderSpace":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_PagesAndPageGroupsUnderSpace(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -9561,6 +12098,98 @@ func (ec *executionContext) _SpaceDetails(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var subPageImplementors = []string{"SubPage"}
+
+func (ec *executionContext) _SubPage(ctx context.Context, sel ast.SelectionSet, obj *model.SubPage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subPageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SubPage")
+		case "id":
+			out.Values[i] = ec._SubPage_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "subpageName":
+			out.Values[i] = ec._SubPage_subpageName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "conent":
+			out.Values[i] = ec._SubPage_conent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "parentId":
+			out.Values[i] = ec._SubPage_parentId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageGroupId":
+			out.Values[i] = ec._SubPage_pageGroupId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "orderIndex":
+			out.Values[i] = ec._SubPage_orderIndex(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._SubPage_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdOn":
+			out.Values[i] = ec._SubPage_createdOn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "created_by":
+			out.Values[i] = ec._SubPage_created_by(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "modifiedOn":
+			out.Values[i] = ec._SubPage_modifiedOn(ctx, field, obj)
+		case "modifiedBy":
+			out.Values[i] = ec._SubPage_modifiedBy(ctx, field, obj)
+		case "isDeleted":
+			out.Values[i] = ec._SubPage_isDeleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletedOn":
+			out.Values[i] = ec._SubPage_deletedOn(ctx, field, obj)
+		case "deletedBy":
+			out.Values[i] = ec._SubPage_deletedBy(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10269,6 +12898,106 @@ func (ec *executionContext) marshalNMemberGroup2gqlserverᚋgraphᚋmodelᚐMemb
 	return ec._MemberGroup(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNPage2gqlserverᚋgraphᚋmodelᚐPage(ctx context.Context, sel ast.SelectionSet, v model.Page) graphql.Marshaler {
+	return ec._Page(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPage2ᚕgqlserverᚋgraphᚋmodelᚐPageᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Page) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPage2gqlserverᚋgraphᚋmodelᚐPage(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNPageAndPageGroups2gqlserverᚋgraphᚋmodelᚐPageAndPageGroups(ctx context.Context, sel ast.SelectionSet, v model.PageAndPageGroups) graphql.Marshaler {
+	return ec._PageAndPageGroups(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPageGroup2gqlserverᚋgraphᚋmodelᚐPageGroup(ctx context.Context, sel ast.SelectionSet, v model.PageGroup) graphql.Marshaler {
+	return ec._PageGroup(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPageGroup2ᚕgqlserverᚋgraphᚋmodelᚐPageGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []model.PageGroup) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPageGroup2gqlserverᚋgraphᚋmodelᚐPageGroup(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNSpace2gqlserverᚋgraphᚋmodelᚐSpace(ctx context.Context, sel ast.SelectionSet, v model.Space) graphql.Marshaler {
 	return ec._Space(ctx, sel, &v)
 }
@@ -10334,6 +13063,54 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNSubPage2gqlserverᚋgraphᚋmodelᚐSubPage(ctx context.Context, sel ast.SelectionSet, v model.SubPage) graphql.Marshaler {
+	return ec._SubPage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSubPage2ᚕgqlserverᚋgraphᚋmodelᚐSubPageᚄ(ctx context.Context, sel ast.SelectionSet, v []model.SubPage) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSubPage2gqlserverᚋgraphᚋmodelᚐSubPage(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNTblCategory2gqlserverᚋgraphᚋmodelᚐTblCategory(ctx context.Context, sel ast.SelectionSet, v model.TblCategory) graphql.Marshaler {
