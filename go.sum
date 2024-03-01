@@ -99,6 +99,10 @@ github.com/sosodev/duration v1.1.0 h1:kQcaiGbJaIsRqgQy7VGlZrVw1giWO+lDoX3MCPnpVO
 github.com/sosodev/duration v1.1.0/go.mod h1:RQIBBX0+fMLc/D9+Jb/fwvVmo0eZvDDEERAikUR6SDg=
 github.com/spurtcms/pkgcontent v1.0.71 h1:cyx7Isaj2LXyy0UWv1mteOnGEG/xfzaA2nXjsDWoWZE=
 github.com/spurtcms/pkgcontent v1.0.71/go.mod h1:/ZOPwQaQ7HThpUPA7PlR4E1Nm5I2NGtIDoucg66J8gc=
+github.com/spurtcms/pkgcontent v1.0.74 h1:mErh66cM4fSLu6vHDszTXERPGvt0x7R1UCWo69IkLLI=
+github.com/spurtcms/pkgcontent v1.0.74/go.mod h1:/ZOPwQaQ7HThpUPA7PlR4E1Nm5I2NGtIDoucg66J8gc=
+github.com/spurtcms/pkgcontent v1.0.76 h1:SIROJoAkFjvN7chtgg32H7fnykd9mqqy3hwAmsjWGZU=
+github.com/spurtcms/pkgcontent v1.0.76/go.mod h1:/ZOPwQaQ7HThpUPA7PlR4E1Nm5I2NGtIDoucg66J8gc=
 github.com/spurtcms/pkgcore v1.0.45 h1:x21WSxULZCISJSATRiOJVBgFm/4DOhY2ji9+PX+lwdk=
 github.com/spurtcms/pkgcore v1.0.45/go.mod h1:Q3vgk/jS9mzbqvb3WHW5YWJYtzIn4Uqr/xFmfrGT4vg=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

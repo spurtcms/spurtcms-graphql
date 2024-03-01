@@ -4,123 +4,84 @@ import (
 	"context"
 	"gqlserver/graph/model"
 	"os"
-	"sort"
-	"strings"
 
 	"github.com/gin-gonic/gin"
+	spaces "github.com/spurtcms/pkgcontent/spaces"
 	"gorm.io/gorm"
-    // spaces "github.com/spurtcms/pkgcontent/spaces"
 )
 
 func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int) (model.SpaceDetails, error) {
-
-	// spaceAuth := spaces.Space{Authority: Auth}
-
-	// spaceAuth.GetGraphqlSpacelist(limit,offset)
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	token, _ := c.Get("token")
 
-	memberid := c.GetInt("memberid")
+	var pathUrl string
 
-	var spacelist []model.Space
+	if os.Getenv("DOMAIN_URL") != "" {
 
-	var count int64
-
-	if token == SpecialToken {
-
-		db.Debug().Table("tbl_spaces_aliases").Select("tbl_spaces_aliases.id,tbl_spaces_aliases.spaces_name,tbl_spaces_aliases.spaces_slug,tbl_spaces_aliases.spaces_description,tbl_spaces_aliases.image_path,tbl_spaces_aliases.language_id,tbl_spaces_aliases.created_on,tbl_spaces_aliases.created_by,tbl_spaces_aliases.modified_on,tbl_spaces_aliases.modified_by,tbl_spaces_aliases.is_deleted,tbl_spaces_aliases.deleted_on,tbl_spaces_aliases.deleted_by,tbl_spaces.page_category_id").
-			Joins("inner join tbl_spaces on tbl_spaces.id = tbl_spaces_aliases.spaces_id").Where("tbl_spaces.is_deleted = 0 and tbl_spaces_aliases.is_deleted = 0").
-			Order("tbl_spaces.id desc").Limit(limit).Offset(offset).Find(&spacelist)
-
-		db.Debug().Table("tbl_spaces_aliases").Joins("inner join tbl_spaces on tbl_spaces.id = tbl_spaces_aliases.spaces_id").Where("tbl_spaces.is_deleted = 0 and tbl_spaces_aliases.is_deleted = 0").Count(&count)
+		pathUrl = os.Getenv("DOMAIN_URL")
 
 	} else {
 
-		db.Debug().Table("tbl_spaces_aliases").Select("distinct on (tbl_spaces.id) tbl_spaces_aliases.id,tbl_spaces_aliases.spaces_name,tbl_spaces_aliases.spaces_slug,tbl_spaces_aliases.spaces_description,tbl_spaces_aliases.image_path,tbl_spaces_aliases.language_id,tbl_spaces_aliases.created_on,tbl_spaces_aliases.created_by,tbl_spaces_aliases.modified_on,tbl_spaces_aliases.modified_by,tbl_spaces_aliases.is_deleted,tbl_spaces_aliases.deleted_on,tbl_spaces_aliases.deleted_by,tbl_spaces.page_category_id").
-			Joins("inner join tbl_spaces on tbl_spaces.id = tbl_spaces_aliases.spaces_id").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.spaces_id = tbl_spaces.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
-			Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-			Where("tbl_spaces.is_deleted = 0 and tbl_spaces_aliases.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ?", memberid).Order("tbl_spaces.id desc").Limit(limit).Offset(offset).Find(&spacelist)
+		pathUrl = os.Getenv("LOCAL_URL")
+	}
 
-		db.Debug().Table("tbl_spaces_aliases").Distinct("tbl_spaces.id").Joins("inner join tbl_spaces on tbl_spaces.id = tbl_spaces_aliases.spaces_id").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.spaces_id = tbl_spaces.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
-			Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-			Where("tbl_spaces.is_deleted = 0 and tbl_spaces_aliases.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ?", memberid).Count(&count)
+	spaceAuth := spaces.Space{Authority: GetAuthorization(token.(string), db)}
+
+	spacelist, count, err := spaceAuth.GetGraphqlSpacelist(limit, offset, pathUrl)
+
+	if err != nil {
+
+		return model.SpaceDetails{}, err
 	}
 
 	var final_spacelist []model.Space
 
 	for _, space := range spacelist {
 
-		modified_path := os.Getenv("DOMAIN_URL") + strings.TrimPrefix(space.ImagePath, "/")
+		var conv_categories []model.TblCategory
 
-		space.ImagePath = modified_path
+		for _, category := range space.CategoryNames {
 
-		var categories []model.TblCategory
-
-		var parent_category model.TblCategory
-
-		db.Table("tbl_categories").Where("tbl_categories.is_deleted = 0 and tbl_categories.id = ?", space.CategoryID).First(&parent_category)
-
-		if parent_category.ID != 0 {
-
-			categories = append(categories, parent_category)
-		}
-
-		parentCatId := parent_category.ParentID
-
-		if parentCatId != 0 {
-
-		LOOP:
-
-			count := 0
-
-			for {
-
-				count++ //count increment used to check how many times the loop gets executed
-
-				var loopParentCategory model.TblCategory
-
-				db.Table("tbl_categories").Where("tbl_categories.is_deleted = 0 and tbl_categories.id = ?", parentCatId).First(&loopParentCategory)
-
-				if loopParentCategory.ID != 0 {
-
-					categories = append(categories, loopParentCategory)
-				}
-
-				parentCatId = loopParentCategory.ParentID
-
-				if parentCatId != 0 {
-
-					goto LOOP
-
-				} else if count > 49 { //mannuall condition to break the loop in overlooping situations
-
-					break //use to break the loop if infinite loop doesn't break ,So forcing the loop to break at overlooping conditions
-
-				} else {
-
-					break
-
-				}
-
+			conv_category := model.TblCategory{
+				ID:           category.Id,
+				CategoryName: category.CategoryName,
+				CategorySlug: category.CategorySlug,
+				Description:  category.Description,
+				ImagePath:    category.ImagePath,
+				CreatedOn:    category.CreatedOn,
+				CreatedBy:    category.CreatedBy,
+				ModifiedOn:   &category.ModifiedOn,
+				ModifiedBy:   &category.ModifiedBy,
+				IsDeleted:    category.IsDeleted,
+				DeletedOn:    &category.DeletedOn,
+				DeletedBy:    &category.DeletedBy,
+				ParentID:     category.ParentId,
 			}
 
+			conv_categories = append(conv_categories, conv_category)
 		}
 
-		if len(categories) > 0 {
-
-			sort.SliceStable(categories, func(i, j int) bool {
-
-				return categories[i].ID < categories[j].ID
-
-			})
-
-			space.Categories = categories
-
+		conv_space := model.Space{
+			ID:               space.Id,
+			SpaceName:        space.SpacesName,
+			SpaceSlug:        space.SpacesSlug,
+			SpaceDescription: space.SpacesDescription,
+			ImagePath:        space.ImagePath,
+			LanguageID:       space.LanguageId,
+			CreatedOn:        space.CreatedOn,
+			CreatedBy:        space.CreatedBy,
+			ModifiedOn:       &space.ModifiedOn,
+			ModifiedBy:       &space.ModifiedBy,
+			IsDeleted:        space.IsDeleted,
+			DeletedOn:        &space.DeletedOn,
+			DeletedBy:        &space.DeletedBy,
+			CategoryID:       space.PageCategoryId,
+			Categories:       conv_categories,
 		}
 
-		final_spacelist = append(final_spacelist, space)
+		final_spacelist = append(final_spacelist, conv_space)
 
 	}
 
@@ -133,134 +94,156 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, e
 
 	token, _ := c.Get("token")
 
-	memberid := c.GetInt("memberid")
+	var pathUrl string
 
-	var space model.Space
+	if os.Getenv("DOMAIN_URL") != "" {
 
-	if token == SpecialToken {
-
-		db.Debug().Table("tbl_spaces_aliases").Select("tbl_spaces_aliases.id,tbl_spaces_aliases.spaces_name,tbl_spaces_aliases.spaces_slug,tbl_spaces_aliases.spaces_description,tbl_spaces_aliases.image_path,tbl_spaces_aliases.language_id,tbl_spaces_aliases.created_on,tbl_spaces_aliases.created_by,tbl_spaces_aliases.modified_on,tbl_spaces_aliases.modified_by,tbl_spaces_aliases.is_deleted,tbl_spaces_aliases.deleted_on,tbl_spaces_aliases.deleted_by,tbl_spaces.page_category_id").
-			Joins("inner join tbl_spaces on tbl_spaces.id = tbl_spaces_aliases.spaces_id").Where("tbl_spaces.is_deleted = 0 and tbl_spaces_aliases.is_deleted = 0 and tbl_spaces.id = ?", spaceId).First(&space)
+		pathUrl = os.Getenv("DOMAIN_URL")
 
 	} else {
 
-		db.Debug().Table("tbl_spaces_aliases").Select("distinct on (tbl_spaces_aliases.id) tbl_spaces_aliases.id,tbl_spaces_aliases.spaces_name,tbl_spaces_aliases.spaces_slug,tbl_spaces_aliases.spaces_description,tbl_spaces_aliases.image_path,tbl_spaces_aliases.language_id,tbl_spaces_aliases.created_on,tbl_spaces_aliases.created_by,tbl_spaces_aliases.modified_on,tbl_spaces_aliases.modified_by,tbl_spaces_aliases.is_deleted,tbl_spaces_aliases.deleted_on,tbl_spaces_aliases.deleted_by,tbl_spaces.page_category_id").
-			Joins("inner join tbl_spaces on tbl_spaces.id = tbl_spaces_aliases.spaces_id").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.spaces_id = tbl_spaces.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
-			Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-			Where("tbl_spaces.is_deleted = 0 and tbl_spaces_aliases.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_spaces.id = ? and tbl_members.id = ?", spaceId, memberid).First(&space)
+		pathUrl = os.Getenv("LOCAL_URL")
 	}
 
-	modified_path := os.Getenv("DOMAIN_URL") + strings.TrimPrefix(space.ImagePath, "/")
+	spaceAuth := spaces.Space{Authority: GetAuthorization(token.(string), db)}
 
-	space.ImagePath = modified_path
+	space,err := spaceAuth.GetGraphqlSpaceDetails(spaceId, pathUrl)
 
-	var categories []model.TblCategory
+	if err!= nil{
 
-	var parent_category model.TblCategory
-
-	db.Table("tbl_categories").Where("tbl_categories.is_deleted = 0 and tbl_categories.id = ?", space.CategoryID).First(&parent_category)
-
-	if parent_category.ID != 0 {
-
-		categories = append(categories, parent_category)
+		return model.Space{},err
 	}
 
-	parentCatId := parent_category.ParentID
+	var conv_categories []model.TblCategory
 
-	if parentCatId != 0 {
+	for _, category := range space.CategoryNames {
 
-	LOOP:
-
-		count := 0
-
-		for {
-
-			count++ //count increment used to check how many times the loop gets executed
-
-			var loopParentCategory model.TblCategory
-
-			db.Table("tbl_categories").Where("tbl_categories.is_deleted = 0 and tbl_categories.id = ?", parentCatId).First(&loopParentCategory)
-
-			if loopParentCategory.ID != 0 {
-
-				categories = append(categories, loopParentCategory)
-			}
-
-			parentCatId = loopParentCategory.ParentID
-
-			if parentCatId != 0 {
-
-				goto LOOP
-
-			} else if count > 49 { //mannuall condition to break the loop in overlooping situations
-
-				break //use to break the loop if infinite loop doesn't break ,So forcing the loop to break at overlooping conditions
-
-			} else {
-
-				break
-
-			}
-
+		conv_category := model.TblCategory{
+			ID:           category.Id,
+			CategoryName: category.CategoryName,
+			CategorySlug: category.CategorySlug,
+			Description:  category.Description,
+			ImagePath:    category.ImagePath,
+			CreatedOn:    category.CreatedOn,
+			CreatedBy:    category.CreatedBy,
+			ModifiedOn:   &category.ModifiedOn,
+			ModifiedBy:   &category.ModifiedBy,
+			IsDeleted:    category.IsDeleted,
+			DeletedOn:    &category.DeletedOn,
+			DeletedBy:    &category.DeletedBy,
+			ParentID:     category.ParentId,
 		}
 
+		conv_categories = append(conv_categories, conv_category)
 	}
 
-	if len(categories) > 0 {
-
-		sort.SliceStable(categories, func(i, j int) bool {
-
-			return categories[i].ID < categories[j].ID
-
-		})
-
-		space.Categories = categories
-
+	conv_space := model.Space{
+		ID:               space.Id,
+		SpaceName:        space.SpacesName,
+		SpaceSlug:        space.SpacesSlug,
+		SpaceDescription: space.SpacesDescription,
+		ImagePath:        space.ImagePath,
+		LanguageID:       space.LanguageId,
+		CreatedOn:        space.CreatedOn,
+		CreatedBy:        space.CreatedBy,
+		ModifiedOn:       &space.ModifiedOn,
+		ModifiedBy:       &space.ModifiedBy,
+		IsDeleted:        space.IsDeleted,
+		DeletedOn:        &space.DeletedOn,
+		DeletedBy:        &space.DeletedBy,
+		CategoryID:       space.PageCategoryId,
+		Categories:       conv_categories,
 	}
 
-	return space,nil
-
+	return conv_space,nil
 }
 
-func PagesAndPageGroupsBySpaceId(db *gorm.DB,ctx context.Context,spaceId int)(model.PageAndPageGroups,error){
+func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) (model.PageAndPageGroups, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	token, _ := c.Get("token")
 
-	memberid := c.GetInt("memberid")
+	spaceAuth := spaces.Space{Authority: GetAuthorization(token.(string), db)}
 
-	pages, subpages, pagegroups := []model.Page{},[]model.SubPage{},[]model.PageGroup{}
+	pagez, subpagez, pagegroupz,err := spaceAuth.GetPagesAndPagegroupsUnderSpace(spaceId)
+	
+	if err!=nil{
 
-	if token==SpecialToken{
-
-		db.Debug().Table("tbl_page_aliases").Select("tbl_page.id,tbl_page_aliases.page_title,tbl_page_aliases.page_description,tbl_page.page_group_id,tbl_page_aliases.order_index,tbl_page.parent_id,tbl_page_aliases.status,tbl_page_aliases.created_on,tbl_page_aliases.created_by,tbl_page_aliases.modified_on,tbl_page_aliases.modified_by").
-		Joins("inner join tbl_page on tbl_page.id = tbl_page_aliases.page_id").Where("tbl_page.is_deleted = 0 and tbl_page_aliases.is_deleted = 0 and tbl_page.parent_id = 0 and tbl_page.spaces_id = ?",spaceId).Find(&pages)
-
-		db.Debug().Table("tbl_page_aliases").Select("tbl_page.id,tbl_page_aliases.page_title,tbl_page_aliases.page_description,tbl_page.page_group_id,tbl_page_aliases.page_suborder,tbl_page.parent_id,tbl_page_aliases.status,tbl_page_aliases.created_on,tbl_page_aliases.created_by,tbl_page_aliases.modified_on,tbl_page_aliases.modified_by").
-		Joins("inner join tbl_page on tbl_page.id = tbl_page_aliases.page_id").Where("tbl_page.is_deleted = 0 and tbl_page_aliases.is_deleted = 0 and tbl_page.parent_id != 0 and tbl_page.spaces_id = ?",spaceId).Find(&subpages)
-
-		db.Debug().Table("tbl_pages_group_aliases").Select("tbl_pages_group.id,tbl_pages_group_aliases.group_name,tbl_pages_group_aliases.order_index,tbl_pages_group_aliases.created_on,tbl_pages_group_aliases.created_by,tbl_pages_group_aliases.modified_by,tbl_pages_group_aliases.modified_on,tbl_pages_group_aliases.is_deleted,tbl_pages_group_aliases.deleted_on,tbl_pages_group_aliases.deleted_by").
-		Joins("inner join tbl_pages_group on tbl_pages_group.id = tbl_pages_group_aliases.page_group_id").Where("tbl_pages_group.is_deleted = 0 and tbl_pages_group_aliases.is_deleted = 0 and tbl_pages_group.spaces_id = ?",spaceId).Find(&pagegroups)
-
-	}else{
-
-		db.Debug().Table("tbl_page_aliases").Select("distinct on (tbl_page.id) tbl_page.id,tbl_page_aliases.page_title,tbl_page_aliases.page_description,tbl_page.page_group_id,tbl_page_aliases.order_index,tbl_page.parent_id,tbl_page_aliases.status,tbl_page_aliases.created_on,tbl_page_aliases.created_by,tbl_page_aliases.modified_on,tbl_page_aliases.modified_by").
-		Joins("inner join tbl_page on tbl_page.id = tbl_page_aliases.page_id").Joins("inner join tbl_spaces on tbl_spaces.id = tbl_page.spaces_id").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.page_id = tbl_page.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
-		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-		Where("tbl_page.is_deleted = 0 and tbl_page_aliases.is_deleted = 0 and tbl_page.parent_id = 0 and tbl_spaces.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_page.spaces_id = ? and tbl_members.id=?",spaceId,memberid).Find(&pages)
-
-		db.Debug().Table("tbl_page_aliases").Select("distinct on (tbl_page.id) tbl_page.id,tbl_page_aliases.page_title,tbl_page_aliases.page_description,tbl_page.page_group_id,tbl_page_aliases.page_suborder,tbl_page.parent_id,tbl_page_aliases.status,tbl_page_aliases.created_on,tbl_page_aliases.created_by,tbl_page_aliases.modified_on,tbl_page_aliases.modified_by").
-		Joins("inner join tbl_page on tbl_page.id = tbl_page_aliases.page_id").Joins("inner join tbl_spaces on tbl_spaces.id = tbl_page.spaces_id").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.page_id = tbl_page.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
-		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-		Where("tbl_page.is_deleted = 0 and tbl_page_aliases.is_deleted = 0 and tbl_page.parent_id != 0 and tbl_spaces.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_page.spaces_id = ? and tbl_members.id=?",spaceId,memberid).Find(&subpages)
-
-		db.Debug().Table("tbl_pages_group_aliases").Select("distinct on (tbl_pages_group.id) tbl_pages_group.id,tbl_pages_group_aliases.group_name,tbl_pages_group_aliases.order_index,tbl_pages_group_aliases.created_on,tbl_pages_group_aliases.created_by,tbl_pages_group_aliases.modified_by,tbl_pages_group_aliases.modified_on,tbl_pages_group_aliases.is_deleted,tbl_pages_group_aliases.deleted_on,tbl_pages_group_aliases.deleted_by").
-		Joins("inner join tbl_pages_group on tbl_pages_group.id = tbl_pages_group_aliases.page_group_id").Joins("inner join tbl_spaces on tbl_spaces.id = tbl_pages_group.spaces_id").Joins("inner join tbl_access_control_pages on tbl_access_control_pages.page_group_id = tbl_pages_group.id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
-		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id").
-		Where("tbl_pages_group.is_deleted = 0 and tbl_pages_group_aliases.is_deleted = 0 and tbl_spaces.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_pages_group.spaces_id = ? and tbl_members.id = ?",spaceId,memberid).Find(&pagegroups)
+		return model.PageAndPageGroups{},err
 	}
 
-	return model.PageAndPageGroups{Pages: pages,Subpages: subpages,Pagegroups: pagegroups},nil
+	var conv_pages []model.Page
+
+	var conv_subpages []model.SubPage
+
+	var conv_pagegroups []model.PageGroup
+
+	for _,page := range pagez{
+
+		conv_page := model.Page{
+			ID: page.Id,
+			PageName: page.PageTitle,
+			Content: page.PageDescription,
+			PagegroupID: page.PageGroupId,
+			OrderIndex: page.OrderIndex,
+			ParentID: page.ParentId,
+			Status: page.Status,
+			CreatedOn: page.CreatedOn,
+			CreatedBy: page.CreatedBy,
+			ModifiedOn: &page.ModifiedOn,
+			ModifiedBy: &page.ModifiedBy,
+			IsDeleted: page.IsDeleted,
+			DeletedOn: &page.DeletedOn,
+			DeletedBy: &page.DeletedBy,
+
+		}
+
+		conv_pages = append(conv_pages, conv_page)
+	}
+
+	
+	for _,subpage := range subpagez{
+
+		conv_subpage := model.SubPage{
+			ID: subpage.Id,
+			SubpageName: subpage.PageTitle,
+			Conent: subpage.PageDescription,
+			ParentID: subpage.ParentId,
+			PageGroupID: subpage.PageGroupId,
+			OrderIndex: subpage.PageSuborder,
+			Status: subpage.Status,
+			CreatedOn: subpage.CreatedOn,
+			CreatedBy: subpage.CreatedBy,
+			ModifiedOn: &subpage.ModifiedOn,
+			ModifiedBy: &subpage.ModifiedBy,
+			IsDeleted: subpage.IsDeleted,
+			DeletedOn: &subpage.DeletedOn,
+			DeletedBy: &subpage.DeletedBy,
+		}
+
+		conv_subpages = append(conv_subpages, conv_subpage)
+	}
+
+	for _,pagegroup := range pagegroupz{
+
+		conv_pagegroup := model.PageGroup{
+			ID: pagegroup.Id,
+			PagegroupName: pagegroup.GroupName,
+			OrderIndex: pagegroup.OrderIndex,
+			CreatedOn: pagegroup.CreatedOn,
+			CreatedBy: pagegroup.CreatedBy,
+			ModifiedOn: &pagegroup.ModifiedOn,
+			ModifiedBy: &pagegroup.ModifiedBy,
+			IsDeleted: pagegroup.IsDeleted,
+			DeletedOn: &pagegroup.DeletedOn,
+			DeletedBy: &pagegroup.DeletedBy,
+		}
+
+		conv_pagegroups = append(conv_pagegroups, conv_pagegroup)
+	}
+
+
+	return model.PageAndPageGroups{Pages: conv_pages, Subpages: conv_subpages, Pagegroups:conv_pagegroups}, nil
 
 }
