@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type CategoriesList struct {
+	Categories []TblCategory `json:"categories"`
+	Count      int           `json:"count"`
+}
+
 type ChannelDetails struct {
 	Channellist []TblChannel `json:"channellist"`
 	Count       int          `json:"count"`
@@ -82,9 +87,9 @@ type MemberGroup struct {
 
 type Page struct {
 	ID          int        `json:"id"`
-	PageName    string     `json:"pageName" gorm:"column:page_title"`
-	Content     string     `json:"content" gorm:"column:page_description"`
-	PagegroupID int        `json:"pagegroupId" gorm:"column: page_group_id"`
+	PageName    string     `json:"pageName"`
+	Content     string     `json:"content"`
+	PagegroupID int        `json:"pagegroupId"`
 	OrderIndex  int        `json:"orderIndex"`
 	ParentID    int        `json:"parentId"`
 	Status      string     `json:"status"`
@@ -105,7 +110,7 @@ type PageAndPageGroups struct {
 
 type PageGroup struct {
 	ID            int        `json:"id"`
-	PagegroupName string     `json:"pagegroupName" gorm:"column:group_name"`
+	PagegroupName string     `json:"pagegroupName"`
 	OrderIndex    int        `json:"orderIndex"`
 	CreatedOn     time.Time  `json:"createdOn"`
 	CreatedBy     int        `json:"created_by"`
@@ -118,9 +123,9 @@ type PageGroup struct {
 
 type Space struct {
 	ID               int           `json:"id"`
-	SpaceName        string        `json:"spaceName" gorm:"column:spaces_name"`
-	SpaceSlug        string        `json:"spaceSlug" gorm:"column:spaces_slug"`
-	SpaceDescription string        `json:"spaceDescription" gorm:"column:spaces_description"`
+	SpaceName        string        `json:"spaceName"`
+	SpaceSlug        string        `json:"spaceSlug"`
+	SpaceDescription string        `json:"spaceDescription"`
 	ImagePath        string        `json:"imagePath"`
 	LanguageID       int           `json:"languageId"`
 	CreatedOn        time.Time     `json:"createdOn"`
@@ -130,8 +135,8 @@ type Space struct {
 	IsDeleted        int           `json:"isDeleted"`
 	DeletedOn        *time.Time    `json:"deletedOn,omitempty"`
 	DeletedBy        *int          `json:"deletedBy,omitempty"`
-	CategoryID       int           `json:"categoryId" gorm:"column:page_category_id;<-:false"`
-	Categories       []TblCategory `json:"categories" gorm:"-"`
+	CategoryID       int           `json:"categoryId"`
+	Categories       []TblCategory `json:"categories"`
 }
 
 type SpaceDetails struct {
@@ -141,11 +146,11 @@ type SpaceDetails struct {
 
 type SubPage struct {
 	ID          int        `json:"id"`
-	SubpageName string     `json:"subpageName" gorm:"column:page_title"`
-	Conent      string     `json:"conent" gorm:"column:page_description"`
+	SubpageName string     `json:"subpageName"`
+	Conent      string     `json:"conent"`
 	ParentID    int        `json:"parentId"`
-	PageGroupID int        `json:"pageGroupId" gorm:"column: page_group_id"`
-	OrderIndex  int        `json:"orderIndex,omitempty" gorm:"column:page_suborder"`
+	PageGroupID int        `json:"pageGroupId"`
+	OrderIndex  int        `json:"orderIndex"`
 	Status      string     `json:"status"`
 	CreatedOn   time.Time  `json:"createdOn"`
 	CreatedBy   int        `json:"created_by"`
@@ -157,19 +162,20 @@ type SubPage struct {
 }
 
 type TblCategory struct {
-	ID           int        `json:"id"`
-	CategoryName string     `json:"categoryName"`
-	CategorySlug string     `json:"categorySlug"`
-	Description  string     `json:"description"`
-	ImagePath    string     `json:"imagePath"`
-	CreatedOn    time.Time  `json:"createdOn"`
-	CreatedBy    int        `json:"createdBy"`
-	ModifiedOn   *time.Time `json:"modifiedOn,omitempty"`
-	ModifiedBy   *int       `json:"modifiedBy,omitempty"`
-	IsDeleted    int        `json:"isDeleted"`
-	DeletedOn    *time.Time `json:"deletedOn,omitempty"`
-	DeletedBy    *int       `json:"deletedBy,omitempty"`
-	ParentID     int        `json:"parentId"`
+	ID              int           `json:"id"`
+	CategoryName    string        `json:"categoryName"`
+	CategorySlug    string        `json:"categorySlug"`
+	Description     string        `json:"description"`
+	ImagePath       string        `json:"imagePath"`
+	CreatedOn       time.Time     `json:"createdOn"`
+	CreatedBy       int           `json:"createdBy"`
+	ModifiedOn      *time.Time    `json:"modifiedOn,omitempty"`
+	ModifiedBy      *int          `json:"modifiedBy,omitempty"`
+	IsDeleted       int           `json:"isDeleted"`
+	DeletedOn       *time.Time    `json:"deletedOn,omitempty"`
+	DeletedBy       *int          `json:"deletedBy,omitempty"`
+	ParentID        int           `json:"parentId"`
+	ChildCategories []TblCategory `json:"childCategories,omitempty" gorm:"-"`
 }
 
 type TblChannel struct {
@@ -209,5 +215,5 @@ type TblChannelEntries struct {
 	Keyword         string          `json:"keyword"`
 	CategoriesID    string          `json:"categoriesId"`
 	RelatedArticles string          `json:"relatedArticles"`
-	Categories      [][]TblCategory `json:"categories" gorm:"-"`
+	Categories      [][]TblCategory `json:"categories"`
 }

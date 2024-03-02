@@ -54,6 +54,11 @@ func (r *queryResolver) PagesAndPageGroupsUnderSpace(ctx context.Context, spaceI
 	return PagesAndPageGroupsUnderSpace(r.DB, ctx, spaceID)
 }
 
+// CategoriesList is the resolver for the categoriesList field.
+func (r *queryResolver) CategoriesList(ctx context.Context, limit int, offset int) (model.CategoriesList, error) {
+	return CategoriesList(r.DB, ctx, limit, offset)
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

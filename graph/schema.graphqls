@@ -118,6 +118,7 @@ type TblCategory{
 	deletedOn:          Time 
 	deletedBy:          Int     
 	parentId:           Int!
+	childCategories:    [TblCategory!]
 }
 
 type SpaceDetails{
@@ -196,6 +197,11 @@ type PageGroup{
 	deletedBy:      Int
 }
 
+type CategoriesList{
+	categories:   [TblCategory!]!
+	count:        Int! 
+}
+
 type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int!): TblChannel! @auth
@@ -203,6 +209,7 @@ type Query{
 	spaceList(limit: Int!,offset: Int!): SpaceDetails! @auth
 	spaceDetails(spaceId: Int!): Space! @auth
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
+	categoriesList(limit: Int!,offset: Int!): CategoriesList! @auth
 }
 
 type Mutation{
