@@ -3,6 +3,9 @@ package controller
 import (
 	"context"
 	"gqlserver/graph/model"
+	"strconv"
+
+	// "log"
 	"os"
 	"strings"
 
@@ -33,34 +36,45 @@ func CategoriesList(db *gorm.DB,ctx context.Context,limit, offset int)(model.Cat
 
 	var count int64
 
-	if err := db.Table("tbl_categories").Select("tbl_categories.*").Where("tbl_categories.is_deleted=0 and parent_id=0").Order("tbl_categories.id desc").Limit(limit).Offset(offset).Find(&categories).Error;err!=nil{
+	res := `WITH RECURSIVE cat_tree AS (
+		SELECT id, category_name, category_slug,image_path, parent_id,created_on,modified_on,is_deleted
+		FROM tbl_categories
+		WHERE id = 8
+		UNION ALL
+		SELECT cat.id, cat.category_name, cat.category_slug, cat.image_path ,cat.parent_id,cat.created_on,cat.modified_on,
+		cat.is_deleted
+		FROM tbl_categories AS cat
+		JOIN cat_tree ON cat.parent_id = cat_tree.id )`
+
+	if err := db.Debug().Raw(` `+res+` SELECT cat_tree.* FROM cat_tree where is_deleted = 0 and id not in (8) and parent_id =8  order by id desc`).Limit(limit).Offset(offset).Find(&categories).Error;err!=nil{
 
 		return model.CategoriesList{},err
 	}
-
-	if err := db.Table("tbl_categories").Where("tbl_categories.is_deleted=0 and parent_id=0").Count(&count).Error;err!=nil{
+   
+	if err:= db.Debug().Raw(` `+res+` SELECT count(*) FROM cat_tree where is_deleted = 0 and id not in (8) and parent_id =8 group by id order by id desc`).Count(&count).Error;err!=nil{
 
 		return model.CategoriesList{},err
 	}
 
 	var final_categoriesList []model.TblCategory
 
-	for _,category := range categories{
+	for _,parentCat := range categories{
 
-		modified_path :=  pathUrl + strings.TrimPrefix(category.ImagePath,"/")
+		modified_path :=  pathUrl + strings.TrimPrefix(parentCat.ImagePath,"/")
 
-		category.ImagePath = modified_path
+		parentCat.ImagePath = modified_path
 
 		var childCategories []model.TblCategory
 
-		err := db.Table("tbl_categories").Select("tbl_categories.*").Where("tbl_categories.is_deleted=0 and parent_id=?",category.ID).Find(&childCategories).Error
+		err := db.Debug().Raw(` `+res+` SELECT cat_tree.* FROM cat_tree where is_deleted = 0 and id not in (`+strconv.Itoa(parentCat.ID)+`) and parent_id =`+strconv.Itoa(parentCat.ID)+` order by id desc`).Limit(limit).Offset(offset).Find(&childCategories).Error
 
 		if err==nil{
 
-			category.ChildCategories = childCategories
+			parentCat.ChildCategories = childCategories
 		}
 
-		final_categoriesList = append(final_categoriesList, category)
+		final_categoriesList = append(final_categoriesList, parentCat)
+
 	}
 
 	return model.CategoriesList{Categories: final_categoriesList,Count: int(count)},nil
