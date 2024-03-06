@@ -102,6 +102,7 @@ type TblChannelEntries{
 	categoriesId:         String!
 	relatedArticles:      String!
 	categories:           [[TblCategory!]!]!
+	additionalFields:     [AdditionalFields!]
 }
 
 type TblCategory{
@@ -200,6 +201,58 @@ type PageGroup{
 type CategoriesList{
 	categories:   [TblCategory!]!
 	count:        Int! 
+}
+
+type AdditionalFields{
+	fieldId:           Int!
+	fieldName:         String!
+	fieldTypeId:       Int!
+	fieldTypeName:     String!
+	mandatoryField:    Int!
+	optionExist:       Int!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+	isDeleted:         Int!
+	deletedBy:         Int
+	deletedOn:         Time
+	fieldDesc:         String!
+	orderIndex:        Int!
+	initialValue:      Int
+	placeholder:       String
+	imagePath:         String!
+	datetimeFormat:    String
+	timeFormat:        String
+	url:               String
+	sectionParentId:   Int
+	characterAllowed:  Int
+	fieldValue:        FieldValue
+	fieldOptions:      [FieldOptions!]
+}
+
+type FieldValue{
+	id:                Int!
+	fieldValue:        String!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+	deletedBy:         Int
+	deletedOn:         Time
+}
+
+type FieldOptions{
+	id:                Int!
+	optionName:        String!
+	optionValue:       String!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+	isDeleted:         Int!
+	deletedBy:         Int
+	deletedOn:         Time
 }
 
 type Query{

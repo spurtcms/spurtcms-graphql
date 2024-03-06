@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"gqlserver/graph/model"
+	"log"
 	"strconv"
 
 	// "log"
@@ -55,6 +56,8 @@ func CategoriesList(db *gorm.DB,ctx context.Context,limit, offset int)(model.Cat
 
 		return model.CategoriesList{},err
 	}
+
+	log.Println("chkkk",categories)
 
 	var final_categoriesList []model.TblCategory
 

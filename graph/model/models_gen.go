@@ -6,6 +6,34 @@ import (
 	"time"
 )
 
+type AdditionalFields struct {
+	FieldID          int            `json:"fieldId" gorm:"column:id"`
+	FieldName        string         `json:"fieldName"`
+	FieldTypeID      int            `json:"fieldTypeId"`
+	FieldTypeName    string         `json:"fieldTypeName" gorm:"column:type_name"`
+	MandatoryField   int            `json:"mandatoryField"`
+	OptionExist      int            `json:"optionExist"`
+	CreatedOn        time.Time      `json:"createdOn"`
+	CreatedBy        int            `json:"createdBy"`
+	ModifiedOn       *time.Time     `json:"modifiedOn,omitempty"`
+	ModifiedBy       *int           `json:"modifiedBY,omitempty"`
+	IsDeleted        int            `json:"isDeleted"`
+	DeletedBy        *int           `json:"deletedBy,omitempty"`
+	DeletedOn        *time.Time     `json:"deletedOn,omitempty"`
+	FieldDesc        string         `json:"fieldDesc"`
+	OrderIndex       int            `json:"orderIndex"`
+	InitialValue     *int           `json:"initialValue,omitempty"`
+	Placeholder      *string        `json:"placeholder,omitempty"`
+	ImagePath        string         `json:"imagePath"`
+	DatetimeFormat   *string        `json:"datetimeFormat,omitempty"`
+	TimeFormat       *string        `json:"timeFormat,omitempty"`
+	URL              *string        `json:"url,omitempty"`
+	SectionParentID  *int           `json:"sectionParentId,omitempty"`
+	CharacterAllowed *int           `json:"characterAllowed,omitempty"`
+	FieldValue       *FieldValue    `json:"fieldValue,omitempty" gorm:"-"`
+	FieldOptions     []FieldOptions `json:"fieldOptions,omitempty" gorm:"-"`
+}
+
 type CategoriesList struct {
 	Categories []TblCategory `json:"categories"`
 	Count      int           `json:"count"`
@@ -24,6 +52,30 @@ type ChannelEntries struct {
 type ChannelEntryDetails struct {
 	ChannelEntryList *ChannelEntries    `json:"channelEntryList,omitempty"`
 	ChannelEntry     *TblChannelEntries `json:"channelEntry,omitempty"`
+}
+
+type FieldOptions struct {
+	ID          int        `json:"id"`
+	OptionName  string     `json:"optionName"`
+	OptionValue string     `json:"optionValue"`
+	CreatedOn   time.Time  `json:"createdOn"`
+	CreatedBy   int        `json:"createdBy"`
+	ModifiedOn  *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy  *int       `json:"modifiedBY,omitempty"`
+	IsDeleted   int        `json:"isDeleted"`
+	DeletedBy   *int       `json:"deletedBy,omitempty"`
+	DeletedOn   *time.Time `json:"deletedOn,omitempty"`
+}
+
+type FieldValue struct {
+	ID         int        `json:"id"`
+	FieldValue string     `json:"fieldValue"`
+	CreatedOn  time.Time  `json:"createdOn"`
+	CreatedBy  int        `json:"createdBy"`
+	ModifiedOn *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy *int       `json:"modifiedBY,omitempty"`
+	DeletedBy  *int       `json:"deletedBy,omitempty"`
+	DeletedOn  *time.Time `json:"deletedOn,omitempty"`
 }
 
 type LoginCredentials struct {
@@ -193,27 +245,28 @@ type TblChannel struct {
 }
 
 type TblChannelEntries struct {
-	ID              int             `json:"id"`
-	Title           string          `json:"title"`
-	Slug            string          `json:"slug"`
-	Description     string          `json:"description"`
-	UserID          int             `json:"userId"`
-	ChannelID       int             `json:"channelId"`
-	Status          int             `json:"status"`
-	IsActive        int             `json:"isActive"`
-	IsDeleted       int             `json:"isDeleted"`
-	DeletedBy       *int            `json:"deletedBy,omitempty"`
-	DeletedOn       *time.Time      `json:"deletedOn,omitempty"`
-	CreatedOn       time.Time       `json:"createdOn"`
-	CreatedBy       int             `json:"createdBy"`
-	ModifiedBy      *int            `json:"modifiedBy,omitempty"`
-	ModifiedOn      *time.Time      `json:"modifiedOn,omitempty"`
-	CoverImage      string          `json:"coverImage"`
-	ThumbnailImage  string          `json:"thumbnailImage"`
-	MetaTitle       string          `json:"metaTitle"`
-	MetaDescription string          `json:"metaDescription"`
-	Keyword         string          `json:"keyword"`
-	CategoriesID    string          `json:"categoriesId"`
-	RelatedArticles string          `json:"relatedArticles"`
-	Categories      [][]TblCategory `json:"categories"`
+	ID               int                `json:"id"`
+	Title            string             `json:"title"`
+	Slug             string             `json:"slug"`
+	Description      string             `json:"description"`
+	UserID           int                `json:"userId"`
+	ChannelID        int                `json:"channelId"`
+	Status           int                `json:"status"`
+	IsActive         int                `json:"isActive"`
+	IsDeleted        int                `json:"isDeleted"`
+	DeletedBy        *int               `json:"deletedBy,omitempty"`
+	DeletedOn        *time.Time         `json:"deletedOn,omitempty"`
+	CreatedOn        time.Time          `json:"createdOn"`
+	CreatedBy        int                `json:"createdBy"`
+	ModifiedBy       *int               `json:"modifiedBy,omitempty"`
+	ModifiedOn       *time.Time         `json:"modifiedOn,omitempty"`
+	CoverImage       string             `json:"coverImage"`
+	ThumbnailImage   string             `json:"thumbnailImage"`
+	MetaTitle        string             `json:"metaTitle"`
+	MetaDescription  string             `json:"metaDescription"`
+	Keyword          string             `json:"keyword"`
+	CategoriesID     string             `json:"categoriesId"`
+	RelatedArticles  string             `json:"relatedArticles"`
+	Categories       [][]TblCategory    `json:"categories" gorm:"-"`
+	AdditionalFields []AdditionalFields `json:"additionalFields,omitempty" gorm"-"`
 }
