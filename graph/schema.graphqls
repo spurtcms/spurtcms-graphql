@@ -207,7 +207,6 @@ type AdditionalFields{
 	fieldId:           Int!
 	fieldName:         String!
 	fieldTypeId:       Int!
-	fieldTypeName:     String!
 	mandatoryField:    Int!
 	optionExist:       Int!
 	createdOn:         Time!
@@ -219,7 +218,7 @@ type AdditionalFields{
 	deletedOn:         Time
 	fieldDesc:         String!
 	orderIndex:        Int!
-	initialValue:      Int
+	initialValue:      String
 	placeholder:       String
 	imagePath:         String!
 	datetimeFormat:    String
@@ -227,6 +226,7 @@ type AdditionalFields{
 	url:               String
 	sectionParentId:   Int
 	characterAllowed:  Int
+	fieldTypeName:     String!
 	fieldValue:        FieldValue
 	fieldOptions:      [FieldOptions!]
 }

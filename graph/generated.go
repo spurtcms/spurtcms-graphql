@@ -2342,50 +2342,6 @@ func (ec *executionContext) fieldContext_AdditionalFields_fieldTypeId(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _AdditionalFields_fieldTypeName(ctx context.Context, field graphql.CollectedField, obj *model.AdditionalFields) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AdditionalFields_fieldTypeName(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.FieldTypeName, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AdditionalFields_fieldTypeName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AdditionalFields",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _AdditionalFields_mandatoryField(ctx context.Context, field graphql.CollectedField, obj *model.AdditionalFields) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AdditionalFields_mandatoryField(ctx, field)
 	if err != nil {
@@ -2881,9 +2837,9 @@ func (ec *executionContext) _AdditionalFields_initialValue(ctx context.Context, 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_AdditionalFields_initialValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2893,7 +2849,7 @@ func (ec *executionContext) fieldContext_AdditionalFields_initialValue(ctx conte
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3184,6 +3140,50 @@ func (ec *executionContext) fieldContext_AdditionalFields_characterAllowed(ctx c
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdditionalFields_fieldTypeName(ctx context.Context, field graphql.CollectedField, obj *model.AdditionalFields) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AdditionalFields_fieldTypeName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FieldTypeName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AdditionalFields_fieldTypeName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdditionalFields",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11872,8 +11872,6 @@ func (ec *executionContext) fieldContext_TblChannelEntries_additionalFields(ctx 
 				return ec.fieldContext_AdditionalFields_fieldName(ctx, field)
 			case "fieldTypeId":
 				return ec.fieldContext_AdditionalFields_fieldTypeId(ctx, field)
-			case "fieldTypeName":
-				return ec.fieldContext_AdditionalFields_fieldTypeName(ctx, field)
 			case "mandatoryField":
 				return ec.fieldContext_AdditionalFields_mandatoryField(ctx, field)
 			case "optionExist":
@@ -11912,6 +11910,8 @@ func (ec *executionContext) fieldContext_TblChannelEntries_additionalFields(ctx 
 				return ec.fieldContext_AdditionalFields_sectionParentId(ctx, field)
 			case "characterAllowed":
 				return ec.fieldContext_AdditionalFields_characterAllowed(ctx, field)
+			case "fieldTypeName":
+				return ec.fieldContext_AdditionalFields_fieldTypeName(ctx, field)
 			case "fieldValue":
 				return ec.fieldContext_AdditionalFields_fieldValue(ctx, field)
 			case "fieldOptions":
@@ -13878,11 +13878,6 @@ func (ec *executionContext) _AdditionalFields(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "fieldTypeName":
-			out.Values[i] = ec._AdditionalFields_fieldTypeName(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "mandatoryField":
 			out.Values[i] = ec._AdditionalFields_mandatoryField(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13945,6 +13940,11 @@ func (ec *executionContext) _AdditionalFields(ctx context.Context, sel ast.Selec
 			out.Values[i] = ec._AdditionalFields_sectionParentId(ctx, field, obj)
 		case "characterAllowed":
 			out.Values[i] = ec._AdditionalFields_characterAllowed(ctx, field, obj)
+		case "fieldTypeName":
+			out.Values[i] = ec._AdditionalFields_fieldTypeName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "fieldValue":
 			out.Values[i] = ec._AdditionalFields_fieldValue(ctx, field, obj)
 		case "fieldOptions":

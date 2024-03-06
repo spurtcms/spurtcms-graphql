@@ -10,7 +10,6 @@ type AdditionalFields struct {
 	FieldID          int            `json:"fieldId" gorm:"column:id"`
 	FieldName        string         `json:"fieldName"`
 	FieldTypeID      int            `json:"fieldTypeId"`
-	FieldTypeName    string         `json:"fieldTypeName" gorm:"column:type_name"`
 	MandatoryField   int            `json:"mandatoryField"`
 	OptionExist      int            `json:"optionExist"`
 	CreatedOn        time.Time      `json:"createdOn"`
@@ -22,7 +21,7 @@ type AdditionalFields struct {
 	DeletedOn        *time.Time     `json:"deletedOn,omitempty"`
 	FieldDesc        string         `json:"fieldDesc"`
 	OrderIndex       int            `json:"orderIndex"`
-	InitialValue     *int           `json:"initialValue,omitempty"`
+	InitialValue     *string        `json:"initialValue,omitempty"`
 	Placeholder      *string        `json:"placeholder,omitempty"`
 	ImagePath        string         `json:"imagePath"`
 	DatetimeFormat   *string        `json:"datetimeFormat,omitempty"`
@@ -30,6 +29,7 @@ type AdditionalFields struct {
 	URL              *string        `json:"url,omitempty"`
 	SectionParentID  *int           `json:"sectionParentId,omitempty"`
 	CharacterAllowed *int           `json:"characterAllowed,omitempty"`
+	FieldTypeName    string         `json:"fieldTypeName" gorm:"column:type_name"`
 	FieldValue       *FieldValue    `json:"fieldValue,omitempty" gorm:"-"`
 	FieldOptions     []FieldOptions `json:"fieldOptions,omitempty" gorm:"-"`
 }
@@ -268,5 +268,5 @@ type TblChannelEntries struct {
 	CategoriesID     string             `json:"categoriesId"`
 	RelatedArticles  string             `json:"relatedArticles"`
 	Categories       [][]TblCategory    `json:"categories" gorm:"-"`
-	AdditionalFields []AdditionalFields `json:"additionalFields,omitempty" gorm"-"`
+	AdditionalFields []AdditionalFields `json:"additionalFields,omitempty" gorm:"-"`
 }
