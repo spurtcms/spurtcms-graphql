@@ -32,15 +32,15 @@ func Channellist(db *gorm.DB,ctx context.Context,limit, offset int) (model.Chann
 	return controller.Channellist(db,ctx,limit,offset)
 }
 
-func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID, channelEntryID, categoryId *int, limit, offset *int) (model.ChannelEntryDetails, error) {
-	return controller.ChannelEntriesList(db,ctx,channelID,channelEntryID,categoryId,limit,offset)
+func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID, categoryId *int, limit, offset int) (model.ChannelEntriesDetails, error) {
+	return controller.ChannelEntriesList(db,ctx,channelID,categoryId,limit,offset)
 }
 
 func MemberUpdate(db *gorm.DB,ctx context.Context, memberdata model.MemberDetails) (bool, error) {
 	return controller.UpdateMember(db,ctx,memberdata)
 }
 
-func ChannelDetail(db *gorm.DB,ctx context.Context, channelID int) (model.TblChannel, error) {
+func ChannelDetail(db *gorm.DB,ctx context.Context, channelID int) (model.Channel, error) {
 	return controller.ChannelDetail(db,ctx,channelID)
 }
 
@@ -56,8 +56,12 @@ func PagesAndPageGroupsUnderSpace(db *gorm.DB,ctx context.Context, spaceID int) 
 	return controller.PagesAndPageGroupsBySpaceId(db,ctx,spaceID)
 }
 
-func CategoriesList(db *gorm.DB,ctx context.Context, limit int, offset int) (model.CategoriesList, error) {
+func CategoriesList(db *gorm.DB,ctx context.Context, limit, offset *int) (model.CategoriesList, error) {
 	return controller.CategoriesList(db,ctx,limit,offset)
+}
+
+func ChannelEntryDetail(db *gorm.DB,ctx context.Context, channelID *int,categoryID *int, channelEntryID int) (model.ChannelEntries, error) {
+	return controller.ChannelEntryDetail(db,ctx,channelEntryID,channelID,categoryID)
 }
 
 

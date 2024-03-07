@@ -7,11 +7,12 @@ import (
 
 	"os"
 	"strings"
+
 	// "github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset int) (model.CategoriesList, error) {
+func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset *int) (model.CategoriesList, error) {
 
 	// c,_ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -30,7 +31,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset int) (model.
 		pathUrl = os.Getenv("LOCAL_URL")
 	}
 
-	var categories []model.TblCategory
+	var categories []model.Category
 
 	var count int64
 
@@ -44,7 +45,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset int) (model.
 		FROM tbl_categories AS cat
 		JOIN cat_tree ON cat.parent_id = cat_tree.id )`
 
-	if err := db.Debug().Raw(` ` + res + ` SELECT cat_tree.* FROM cat_tree where is_deleted = 0 and id not in (1) and parent_id =1  order by id desc limit ` + strconv.Itoa(limit) + ` offset ` + strconv.Itoa(offset)).Find(&categories).Error; err != nil {
+	if err := db.Debug().Raw(` ` + res + ` SELECT cat_tree.* FROM cat_tree where is_deleted = 0 and id not in (1) and parent_id =1  order by id desc limit ` + strconv.Itoa(*limit) + ` offset ` + strconv.Itoa(*offset)).Find(&categories).Error; err != nil {
 
 		return model.CategoriesList{}, err
 	}
@@ -54,7 +55,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset int) (model.
 		return model.CategoriesList{}, err
 	}
 
-	var final_categoriesList []model.TblCategory
+	var final_categoriesList []model.Category
 
 	for _, parentCat := range categories {
 
@@ -62,7 +63,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset int) (model.
 
 		parentCat.ImagePath = modified_path
 
-		var childCategories []model.TblCategory
+		var childCategories []model.Category
 
 		err := db.Debug().Raw(` ` + res + ` SELECT cat_tree.* FROM cat_tree where is_deleted = 0 and id not in (` + strconv.Itoa(parentCat.ID) + `) and parent_id =` + strconv.Itoa(parentCat.ID) + ` order by id desc`).Find(&childCategories).Error
 

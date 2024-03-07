@@ -30,13 +30,18 @@ func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) 
 }
 
 // ChannelDetail is the resolver for the channelDetail field.
-func (r *queryResolver) ChannelDetail(ctx context.Context, channelID int) (model.TblChannel, error) {
+func (r *queryResolver) ChannelDetail(ctx context.Context, channelID int) (model.Channel, error) {
 	return ChannelDetail(r.DB, ctx, channelID)
 }
 
 // ChannelEntriesList is the resolver for the channelEntriesList field.
-func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, channelEntryID *int, categoryID *int, limit *int, offset *int) (model.ChannelEntryDetails, error) {
-	return ChannelEntriesList(r.DB, ctx, channelID, channelEntryID, categoryID, limit, offset)
+func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int) (model.ChannelEntriesDetails, error) {
+	return ChannelEntriesList(r.DB, ctx, channelID, categoryID, limit, offset)
+}
+
+// ChannelEntryDetail is the resolver for the channelEntryDetail field.
+func (r *queryResolver) ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID int) (model.ChannelEntries, error) {
+	return ChannelEntryDetail(r.DB, ctx, channelID, categoryID, channelEntryID)
 }
 
 // SpaceList is the resolver for the spaceList field.
@@ -55,7 +60,7 @@ func (r *queryResolver) PagesAndPageGroupsUnderSpace(ctx context.Context, spaceI
 }
 
 // CategoriesList is the resolver for the categoriesList field.
-func (r *queryResolver) CategoriesList(ctx context.Context, limit int, offset int) (model.CategoriesList, error) {
+func (r *queryResolver) CategoriesList(ctx context.Context, limit *int, offset *int) (model.CategoriesList, error) {
 	return CategoriesList(r.DB, ctx, limit, offset)
 }
 

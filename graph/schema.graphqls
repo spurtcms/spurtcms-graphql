@@ -10,7 +10,6 @@ scalar Map
 
 type Member{
     id:               Int! 
-    uuid:             String!
     firstName:        String!
     lastName:         String!
     email:            String!
@@ -18,21 +17,12 @@ type Member{
     isActive:         Int!
     profileImage:     String!
     profileImagePath: String!
-    lastLogin:        Int!
-    isDeleted:        Int!
-    deletedOn:        Time 
-    deletedBy:        Int      
     createdOn:        Time! 
-    createdDate:      String    
     createdBy:        Int!
     modifiedOn:       Time 
     modifiedBy:       Int       
     memberGroupId:    Int!
     group:            [MemberGroup!] 
-    password:         String!
-    username:         String!    
-    otp:              Int       
-    otpExpiry:        Time 
 }
 
 type MemberGroup{
@@ -41,22 +31,19 @@ type MemberGroup{
 	slug:         String!
 	description:  String!
 	isActive:     Int!
-	isDeleted:    Int!
 	createdOn:    Time! 
 	createdBy:    Int!
 	modifiedOn:   Time 
-	modifiedBy:   Int      
-	dateString:   String   
+	modifiedBy:   Int 
 }
 
-type TblChannel{
+type Channel{
 	id:                  Int!
 	channelName:         String!
 	channelDescription:  String!
 	slugName:            String!
 	fieldGroupId:        Int!
 	isActive:            Int!
-	isDeleted:           Int!
 	createdOn:           Time!
 	createdBy:           Int!
 	modifiedOn:          Time          
@@ -64,21 +51,16 @@ type TblChannel{
 }
 
 type ChannelDetails{
-    channellist: [TblChannel!]!
+    channellist: [Channel!]!
     count:       Int!
 }
 
-type ChannelEntryDetails{
-    channelEntryList: ChannelEntries
-    channelEntry: TblChannelEntries
+type ChannelEntriesDetails{
+    channelEntriesList: [ChannelEntries!]!
+    count:              Int!
 }
 
 type ChannelEntries{
-    channelEntryList: [TblChannelEntries!]!
-    count:            Int!
-}
-
-type TblChannelEntries{
 	id:                   Int!
 	title:                String! 
 	slug:                 String! 
@@ -87,9 +69,6 @@ type TblChannelEntries{
 	channelId:            Int!
 	status:               Int!
 	isActive:             Int!
-	isDeleted:            Int! 
-	deletedBy:            Int       
-	deletedOn:            Time 
 	createdOn:            Time!
 	createdBy:            Int!
 	modifiedBy:           Int     
@@ -101,11 +80,43 @@ type TblChannelEntries{
 	keyword:              String!
 	categoriesId:         String!
 	relatedArticles:      String!
-	categories:           [[TblCategory!]!]!
-	additionalFields:     [AdditionalFields!]
+	categories:           [[Category!]!]!
+	additionalFields:     AdditionalFields
+	authorDetails:        Author!
+	memberProfile:        MemberProfile!
 }
 
-type TblCategory{
+type Author{
+	AuthorId:             Int! 
+	FirstName:            String!
+	LastName:             String!
+	Email:                String!
+	MobileNo:             String
+	IsActive:             Int
+	ProfileImage:         String
+	ProfileImagePath:     String
+	CreatedOn:            Time!
+	CreatedBy:            Int!
+	ModifiedOn:           Time 
+	ModifiedBy:           Int        
+}
+
+type MemberProfile{
+	memberId:          Int
+	profileName:       String
+	profileSlug:       String
+	profilePage:       String
+	memberDetails:     Map
+	companyName:       String
+	companyLocation:   String
+	companyLogo:       String
+	about:             String
+	seoTitle:          String
+	seoDescription:    String
+	seoKeyword:        String
+}
+
+type Category{
 	id:                 Int!
 	categoryName:       String!
 	categorySlug:       String!
@@ -115,11 +126,8 @@ type TblCategory{
 	createdBy:          Int!
 	modifiedOn:         Time 
 	modifiedBy:         Int       
-	isDeleted:          Int!
-	deletedOn:          Time 
-	deletedBy:          Int     
 	parentId:           Int!
-	childCategories:    [TblCategory!]
+	childCategories:    [Category!]
 }
 
 type SpaceDetails{
@@ -138,11 +146,8 @@ type Space{
 	createdBy:            Int!
 	modifiedOn:           Time        
 	modifiedBy:           Int 
-	isDeleted:            Int!                        
-	deletedOn:            Time               
-	deletedBy:            Int 
 	categoryId:           Int!                                                                                                
-	categories:           [TblCategory!]!                                                                               
+	categories:           [Category!]!                                                                               
 }
 
 type PageAndPageGroups{
@@ -163,9 +168,6 @@ type Page{
 	created_by:       Int!
 	modifiedOn:       Time
 	modifiedBy:       Int
-	isDeleted:        Int!
-	deletedOn:        Time
-	deletedBy:        Int
 }
 
 type SubPage{
@@ -180,9 +182,6 @@ type SubPage{
     created_by:     Int!
     modifiedOn:     Time
     modifiedBy:     Int
-	isDeleted:      Int!
-	deletedOn:      Time
-	deletedBy:      Int
 }
 
 type PageGroup{
@@ -193,17 +192,30 @@ type PageGroup{
     created_by:     Int!
     modifiedOn:     Time
     modifiedBy:     Int
-	isDeleted:      Int!
-	deletedOn:      Time
-	deletedBy:      Int
 }
 
 type CategoriesList{
-	categories:   [TblCategory!]!
+	categories:   [Category!]!
 	count:        Int! 
 }
 
 type AdditionalFields{
+	sections:   [Section!]
+	fields:     [Field!]
+}
+
+type Section{
+	sectionId:         Int
+	sectionName:       String!
+	sectionTypeId:     Int!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+	orderIndex:        Int!
+}
+
+type Field{
 	fieldId:           Int!
 	fieldName:         String!
 	fieldTypeId:       Int!
@@ -213,17 +225,11 @@ type AdditionalFields{
 	createdBy:         Int!
 	modifiedOn:        Time
 	modifiedBY:        Int
-	isDeleted:         Int!
-	deletedBy:         Int
-	deletedOn:         Time
 	fieldDesc:         String!
 	orderIndex:        Int!
-	initialValue:      String
-	placeholder:       String
 	imagePath:         String!
 	datetimeFormat:    String
 	timeFormat:        String
-	url:               String
 	sectionParentId:   Int
 	characterAllowed:  Int
 	fieldTypeName:     String!
@@ -238,8 +244,6 @@ type FieldValue{
 	createdBy:         Int!
 	modifiedOn:        Time
 	modifiedBY:        Int
-	deletedBy:         Int
-	deletedOn:         Time
 }
 
 type FieldOptions{
@@ -250,19 +254,17 @@ type FieldOptions{
 	createdBy:         Int!
 	modifiedOn:        Time
 	modifiedBY:        Int
-	isDeleted:         Int!
-	deletedBy:         Int
-	deletedOn:         Time
 }
 
 type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
-	channelDetail(channelId: Int!): TblChannel! @auth
-    channelEntriesList(channelId: Int,channelEntryId: Int,categoryId: Int,limit: Int,offset: Int): ChannelEntryDetails! @auth
+	channelDetail(channelId: Int!): Channel! @auth
+    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!): ChannelEntriesDetails! @auth
+	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int!): ChannelEntries! @auth
 	spaceList(limit: Int!,offset: Int!): SpaceDetails! @auth
 	spaceDetails(spaceId: Int!): Space! @auth
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
-	categoriesList(limit: Int!,offset: Int!): CategoriesList! @auth
+	categoriesList(limit: Int,offset: Int): CategoriesList! @auth
 }
 
 type Mutation{

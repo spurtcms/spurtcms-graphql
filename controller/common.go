@@ -26,6 +26,7 @@ var(
 	IST, _ = time.LoadLocation("Asia/Kolkata")
 	ProfileImagePath = "Uploads/ProfileImages/"
 	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
+	SectionTypeId = 12
 )
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {

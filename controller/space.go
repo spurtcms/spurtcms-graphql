@@ -40,11 +40,11 @@ func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int) (model.Space
 
 	for _, space := range spacelist {
 
-		var conv_categories []model.TblCategory
+		var conv_categories []model.Category
 
 		for _, category := range space.CategoryNames {
 
-			conv_category := model.TblCategory{
+			conv_category := model.Category{
 				ID:           category.Id,
 				CategoryName: category.CategoryName,
 				CategorySlug: category.CategorySlug,
@@ -54,9 +54,6 @@ func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int) (model.Space
 				CreatedBy:    category.CreatedBy,
 				ModifiedOn:   &category.ModifiedOn,
 				ModifiedBy:   &category.ModifiedBy,
-				IsDeleted:    category.IsDeleted,
-				DeletedOn:    &category.DeletedOn,
-				DeletedBy:    &category.DeletedBy,
 				ParentID:     category.ParentId,
 			}
 
@@ -74,9 +71,6 @@ func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int) (model.Space
 			CreatedBy:        space.CreatedBy,
 			ModifiedOn:       &space.ModifiedOn,
 			ModifiedBy:       &space.ModifiedBy,
-			IsDeleted:        space.IsDeleted,
-			DeletedOn:        &space.DeletedOn,
-			DeletedBy:        &space.DeletedBy,
 			CategoryID:       space.PageCategoryId,
 			Categories:       conv_categories,
 		}
@@ -114,11 +108,11 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, e
 		return model.Space{},err
 	}
 
-	var conv_categories []model.TblCategory
+	var conv_categories []model.Category
 
 	for _, category := range space.CategoryNames {
 
-		conv_category := model.TblCategory{
+		conv_category := model.Category{
 			ID:           category.Id,
 			CategoryName: category.CategoryName,
 			CategorySlug: category.CategorySlug,
@@ -128,9 +122,6 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, e
 			CreatedBy:    category.CreatedBy,
 			ModifiedOn:   &category.ModifiedOn,
 			ModifiedBy:   &category.ModifiedBy,
-			IsDeleted:    category.IsDeleted,
-			DeletedOn:    &category.DeletedOn,
-			DeletedBy:    &category.DeletedBy,
 			ParentID:     category.ParentId,
 		}
 
@@ -148,9 +139,6 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, e
 		CreatedBy:        space.CreatedBy,
 		ModifiedOn:       &space.ModifiedOn,
 		ModifiedBy:       &space.ModifiedBy,
-		IsDeleted:        space.IsDeleted,
-		DeletedOn:        &space.DeletedOn,
-		DeletedBy:        &space.DeletedBy,
 		CategoryID:       space.PageCategoryId,
 		Categories:       conv_categories,
 	}
@@ -193,10 +181,6 @@ func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) 
 			CreatedBy: page.CreatedBy,
 			ModifiedOn: &page.ModifiedOn,
 			ModifiedBy: &page.ModifiedBy,
-			IsDeleted: page.IsDeleted,
-			DeletedOn: &page.DeletedOn,
-			DeletedBy: &page.DeletedBy,
-
 		}
 
 		conv_pages = append(conv_pages, conv_page)
@@ -217,9 +201,6 @@ func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) 
 			CreatedBy: subpage.CreatedBy,
 			ModifiedOn: &subpage.ModifiedOn,
 			ModifiedBy: &subpage.ModifiedBy,
-			IsDeleted: subpage.IsDeleted,
-			DeletedOn: &subpage.DeletedOn,
-			DeletedBy: &subpage.DeletedBy,
 		}
 
 		conv_subpages = append(conv_subpages, conv_subpage)
@@ -235,9 +216,6 @@ func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) 
 			CreatedBy: pagegroup.CreatedBy,
 			ModifiedOn: &pagegroup.ModifiedOn,
 			ModifiedBy: &pagegroup.ModifiedBy,
-			IsDeleted: pagegroup.IsDeleted,
-			DeletedOn: &pagegroup.DeletedOn,
-			DeletedBy: &pagegroup.DeletedBy,
 		}
 
 		conv_pagegroups = append(conv_pagegroups, conv_pagegroup)
