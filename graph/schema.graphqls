@@ -8,6 +8,8 @@ scalar Time
 
 scalar Map
 
+scalar Any
+
 type Member{
     id:               Int! 
     firstName:        String!
@@ -83,7 +85,7 @@ type ChannelEntries{
 	categories:           [[Category!]!]!
 	additionalFields:     AdditionalFields
 	authorDetails:        Author!
-	memberProfile:        MemberProfile!
+	memberProfile:        [MemberProfile!]
 }
 
 type Author{
@@ -96,9 +98,7 @@ type Author{
 	ProfileImage:         String
 	ProfileImagePath:     String
 	CreatedOn:            Time!
-	CreatedBy:            Int!
-	ModifiedOn:           Time 
-	ModifiedBy:           Int        
+	CreatedBy:            Int!      
 }
 
 type MemberProfile{
@@ -106,7 +106,7 @@ type MemberProfile{
 	profileName:       String
 	profileSlug:       String
 	profilePage:       String
-	memberDetails:     Map
+	memberDetails:     Any
 	companyName:       String
 	companyLocation:   String
 	companyLogo:       String

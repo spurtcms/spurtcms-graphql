@@ -4,6 +4,8 @@ package model
 
 import (
 	"time"
+
+	"gorm.io/datatypes"
 )
 
 type AdditionalFields struct {
@@ -22,8 +24,6 @@ type Author struct {
 	ProfileImagePath *string    `json:"ProfileImagePath,omitempty"`
 	CreatedOn        time.Time  `json:"CreatedOn"`
 	CreatedBy        int        `json:"CreatedBy"`
-	ModifiedOn       *time.Time `json:"ModifiedOn,omitempty"`
-	ModifiedBy       *int       `json:"ModifiedBy,omitempty"`
 }
 
 type CategoriesList struct {
@@ -86,7 +86,7 @@ type ChannelEntries struct {
 	Categories       [][]Category      `json:"categories"`
 	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"`
 	AuthorDetails    *Author           `json:"authorDetails"`
-	MemberProfile    *MemberProfile    `json:"memberProfile"`
+	MemberProfile    []MemberProfile   `json:"memberProfile,omitempty"`
 }
 
 type ChannelEntriesDetails struct {
@@ -187,7 +187,7 @@ type MemberProfile struct {
 	ProfileName     *string                `json:"profileName,omitempty"`
 	ProfileSlug     *string                `json:"profileSlug,omitempty"`
 	ProfilePage     *string                `json:"profilePage,omitempty"`
-	MemberDetails   map[string]interface{} `json:"memberDetails,omitempty"`
+	MemberDetails   datatypes.JSONMap      `json:"memberDetails,omitempty" gorm:"column:member_details;type:jsonb"`
 	CompanyName     *string                `json:"companyName,omitempty"`
 	CompanyLocation *string                `json:"companyLocation,omitempty"`
 	CompanyLogo     *string                `json:"companyLogo,omitempty"`

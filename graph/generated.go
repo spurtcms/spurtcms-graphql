@@ -63,8 +63,6 @@ type ComplexityRoot struct {
 		IsActive         func(childComplexity int) int
 		LastName         func(childComplexity int) int
 		MobileNo         func(childComplexity int) int
-		ModifiedBy       func(childComplexity int) int
-		ModifiedOn       func(childComplexity int) int
 		ProfileImage     func(childComplexity int) int
 		ProfileImagePath func(childComplexity int) int
 	}
@@ -419,20 +417,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Author.MobileNo(childComplexity), true
-
-	case "Author.ModifiedBy":
-		if e.complexity.Author.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.Author.ModifiedBy(childComplexity), true
-
-	case "Author.ModifiedOn":
-		if e.complexity.Author.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.Author.ModifiedOn(childComplexity), true
 
 	case "Author.ProfileImage":
 		if e.complexity.Author.ProfileImage == nil {
@@ -2761,88 +2745,6 @@ func (ec *executionContext) fieldContext_Author_CreatedBy(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Author_ModifiedOn(ctx context.Context, field graphql.CollectedField, obj *model.Author) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Author_ModifiedOn(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ModifiedOn, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Author_ModifiedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Author",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Author_ModifiedBy(ctx context.Context, field graphql.CollectedField, obj *model.Author) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Author_ModifiedBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ModifiedBy, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Author_ModifiedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Author",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _CategoriesList_categories(ctx context.Context, field graphql.CollectedField, obj *model.CategoriesList) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CategoriesList_categories(ctx, field)
 	if err != nil {
@@ -5002,10 +4904,6 @@ func (ec *executionContext) fieldContext_ChannelEntries_authorDetails(ctx contex
 				return ec.fieldContext_Author_CreatedOn(ctx, field)
 			case "CreatedBy":
 				return ec.fieldContext_Author_CreatedBy(ctx, field)
-			case "ModifiedOn":
-				return ec.fieldContext_Author_ModifiedOn(ctx, field)
-			case "ModifiedBy":
-				return ec.fieldContext_Author_ModifiedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Author", field.Name)
 		},
@@ -5034,14 +4932,11 @@ func (ec *executionContext) _ChannelEntries_memberProfile(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.MemberProfile)
+	res := resTmp.([]model.MemberProfile)
 	fc.Result = res
-	return ec.marshalNMemberProfile2ᚖgqlserverᚋgraphᚋmodelᚐMemberProfile(ctx, field.Selections, res)
+	return ec.marshalOMemberProfile2ᚕgqlserverᚋgraphᚋmodelᚐMemberProfileᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7825,9 +7720,9 @@ func (ec *executionContext) _MemberProfile_memberDetails(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(map[string]interface{})
+	res := resTmp.(interface{})
 	fc.Result = res
-	return ec.marshalOMap2map(ctx, field.Selections, res)
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_MemberProfile_memberDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7837,7 +7732,7 @@ func (ec *executionContext) fieldContext_MemberProfile_memberDetails(ctx context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Map does not have child fields")
+			return nil, errors.New("field of type Any does not have child fields")
 		},
 	}
 	return fc, nil
@@ -13645,10 +13540,6 @@ func (ec *executionContext) _Author(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "ModifiedOn":
-			out.Values[i] = ec._Author_ModifiedOn(ctx, field, obj)
-		case "ModifiedBy":
-			out.Values[i] = ec._Author_ModifiedBy(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14032,9 +13923,6 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			}
 		case "memberProfile":
 			out.Values[i] = ec._ChannelEntries_memberProfile(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15906,14 +15794,8 @@ func (ec *executionContext) marshalNMemberGroup2gqlserverᚋgraphᚋmodelᚐMemb
 	return ec._MemberGroup(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMemberProfile2ᚖgqlserverᚋgraphᚋmodelᚐMemberProfile(ctx context.Context, sel ast.SelectionSet, v *model.MemberProfile) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MemberProfile(ctx, sel, v)
+func (ec *executionContext) marshalNMemberProfile2gqlserverᚋgraphᚋmodelᚐMemberProfile(ctx context.Context, sel ast.SelectionSet, v model.MemberProfile) graphql.Marshaler {
+	return ec._MemberProfile(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNPage2gqlserverᚋgraphᚋmodelᚐPage(ctx context.Context, sel ast.SelectionSet, v model.Page) graphql.Marshaler {
@@ -16410,6 +16292,22 @@ func (ec *executionContext) marshalOAdditionalFields2ᚖgqlserverᚋgraphᚋmode
 	return ec._AdditionalFields(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalAny(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAny2interface(ctx context.Context, sel ast.SelectionSet, v interface{}) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalAny(v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -16600,22 +16498,6 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalOMap2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalMap(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOMap2map(ctx context.Context, sel ast.SelectionSet, v map[string]interface{}) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalMap(v)
-	return res
-}
-
 func (ec *executionContext) marshalOMemberGroup2ᚕgqlserverᚋgraphᚋmodelᚐMemberGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MemberGroup) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -16644,6 +16526,53 @@ func (ec *executionContext) marshalOMemberGroup2ᚕgqlserverᚋgraphᚋmodelᚐM
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNMemberGroup2gqlserverᚋgraphᚋmodelᚐMemberGroup(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOMemberProfile2ᚕgqlserverᚋgraphᚋmodelᚐMemberProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MemberProfile) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMemberProfile2gqlserverᚋgraphᚋmodelᚐMemberProfile(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

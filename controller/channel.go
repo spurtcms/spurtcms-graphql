@@ -3,7 +3,10 @@ package controller
 import (
 	"context"
 	"gqlserver/graph/model"
+	// "log"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
@@ -75,14 +78,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	var err error
 
-	if channelID == nil{
-
-		channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(categoryId, limit, offset, pathUrl)
-
-    }else{
-
-		channelEntries, count, err = channelAuth.GetGraphqlChannelEntriesByChannelId(channelID, categoryId, limit, offset, pathUrl)
-	}
+	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID,categoryId, limit, offset,SectionTypeId, pathUrl)
 
 	if err != nil {
 
@@ -122,43 +118,75 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		}
 
-		var sections []model.Section
-
-		db.Table("tbl_group_fields").Select("tbl_fields.*,tbl_field_types.type_name").Joins("inner join tbl_fields on tbl_fields.id = tbl_group_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").
-			Where("tbl_fields.is_deleted = 0 and tbl_field_types.is_deleted = 0 and tbl_fields.field_type_id = ? and tbl_group_fields.channel_id = ?",SectionTypeId, entry.ChannelId).Find(&sections)
-
-		var fields []model.Field
-
-		db.Table("tbl_group_fields").Select("tbl_fields.*,tbl_field_types.type_name").Joins("inner join tbl_fields on tbl_fields.id = tbl_group_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").
-			Where("tbl_fields.is_deleted = 0 and tbl_field_types.is_deleted = 0 and tbl_fields.field_type_id != ? and tbl_group_fields.channel_id = ?",SectionTypeId,entry.ChannelId).Find(&fields)
-
-		var final_fieldsList []model.Field
-
-		for _, field := range fields {
-
-			var fieldValue model.FieldValue
-
-			db.Table("tbl_channel_entry_fields").Where("tbl_channel_entry_fields.field_id = ? and tbl_channel_entry_fields.channel_entry_id = ?", field.FieldID, entry.Id).First(&fieldValue)
-
-			if fieldValue.ID != 0 {
-
-				field.FieldValue = &fieldValue
-			}
-
-			var fieldOptions []model.FieldOptions
-
-			db.Table("tbl_field_options").Where("tbl_field_options.is_deleted = 0 and tbl_field_options.field_id = ?", field.FieldID).Find(&fieldOptions)
-
-			if len(fieldOptions) > 0 {
-
-				field.FieldOptions = fieldOptions
-
-			}
-
-			final_fieldsList = append(final_fieldsList, field)
+        authorDetails := &model.Author{
+			AuthorID: entry.AuthorDetail.AuthorID,
+			FirstName: entry.AuthorDetail.FirstName,
+			LastName: entry.AuthorDetail.LastName,
+			Email: entry.AuthorDetail.Email,
+			MobileNo: entry.AuthorDetail.MobileNo,
+			IsActive: entry.AuthorDetail.IsActive,
+			ProfileImage: entry.AuthorDetail.ProfileImage,
+			ProfileImagePath: entry.AuthorDetail.ProfileImagePath,
+			CreatedOn: entry.AuthorDetail.CreatedOn,
+			CreatedBy: entry.AuthorDetail.CreatedBy,
 		}
 
-		additionalFields := &model.AdditionalFields{Sections: sections, Fields: final_fieldsList}
+		var conv_sections []model.Section
+
+	    for _,section :=  range entry.Sections{
+			
+		  conv_section:= model.Section{
+			SectionID: &section.Id,
+			SectionName: section.FieldName,
+			SectionTypeID: section.FieldTypeId,
+			CreatedOn: section.CreatedOn,
+			CreatedBy: section.CreatedBy,
+			ModifiedOn: &section.ModifiedOn,
+			ModifiedBy: &section.ModifiedBy,
+			OrderIndex: section.OrderIndex,
+		  }
+
+		  conv_sections = append(conv_sections, conv_section)
+		}
+
+		var conv_fields []model.Field
+
+		for _,field := range entry.Fields{
+
+			conv_field_value := model.FieldValue{
+				ID: field.FieldValue.FieldId,
+				FieldValue: field.FieldValue.FieldValue,
+				CreatedOn: field.FieldValue.CreatedOn,
+				CreatedBy: field.FieldValue.CreatedBy,
+				ModifiedOn: &field.FieldValue.ModifiedOn,
+				ModifiedBy: &field.FieldValue.ModifiedBy,
+			}
+
+			conv_field := model.Field{
+				FieldID: field.Id,
+				FieldName: field.FieldName,
+				FieldTypeID: field.FieldTypeId,
+				MandatoryField: field.MandatoryField,
+				OptionExist: field.OptionExist,
+				CreatedOn: field.CreatedOn,
+				CreatedBy: field.CreatedBy,
+				ModifiedOn: &field.ModifiedOn,
+				ModifiedBy: &field.ModifiedBy,
+				FieldDesc: field.FieldDesc,
+				OrderIndex: field.OrderIndex,
+				ImagePath: field.ImagePath,
+				DatetimeFormat: &field.DatetimeFormat,
+				TimeFormat: &field.TimeFormat,
+				SectionParentID: &field.SectionParentId,
+				CharacterAllowed: &field.CharacterAllowed,
+				FieldTypeName: field.FieldTypeName,
+				FieldValue: &conv_field_value,
+			}
+
+			conv_fields = append(conv_fields, conv_field)
+		}
+
+		additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
 		conv_channelEntry := model.ChannelEntries{
 			ID:               entry.Id,
@@ -182,6 +210,9 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			RelatedArticles:  entry.RelatedArticles,
 			Categories:       conv_categories,
 			AdditionalFields: additionalFields,
+			// MemberProfile: memberProfiles,
+			AuthorDetails: authorDetails,
+
 		}
 
 		conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
@@ -243,7 +274,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId int, ch
 		pathUrl = os.Getenv("LOCAL_URL")
 	}
 
-	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(channelEntryId, channelId, categoryId, pathUrl)
+	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(channelEntryId, channelId, categoryId, pathUrl,SectionTypeId)
 
 	if err != nil {
 
@@ -279,15 +310,17 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId int, ch
 
 	}
 
+	var memberids string
+
 	var sections []model.Section
 
 	db.Table("tbl_group_fields").Select("tbl_fields.*,tbl_field_types.type_name").Joins("inner join tbl_fields on tbl_fields.id = tbl_group_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").
-		Where("tbl_fields.is_deleted = 0 and tbl_field_types.is_deleted = 0 and tbl_fields.field_type_id = ? and tbl_group_fields.channel_id = ?",SectionTypeId, channelEntry.ChannelId).Find(&sections)
+		Where("tbl_fields.is_deleted = 0 and tbl_field_types.is_deleted = 0 and tbl_fields.field_type_id = ? and tbl_group_fields.channel_id = ?", SectionTypeId, channelEntry.ChannelId).Find(&sections)
 
 	var fields []model.Field
 
 	db.Table("tbl_group_fields").Select("tbl_fields.*,tbl_field_types.type_name").Joins("inner join tbl_fields on tbl_fields.id = tbl_group_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").
-		Where("tbl_fields.is_deleted = 0 and tbl_field_types.is_deleted = 0 and tbl_fields.field_type_id != ? and tbl_group_fields.channel_id = ?",SectionTypeId, channelEntry.ChannelId).Find(&fields)
+		Where("tbl_fields.is_deleted = 0 and tbl_field_types.is_deleted = 0 and tbl_fields.field_type_id != ? and tbl_group_fields.channel_id = ?", SectionTypeId, channelEntry.ChannelId).Find(&fields)
 
 	var final_fieldsList []model.Field
 
@@ -300,6 +333,11 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId int, ch
 		if fieldValue.ID != 0 {
 
 			field.FieldValue = &fieldValue
+
+			if field.FieldTypeID == 14 {
+
+				memberids = fieldValue.FieldValue
+			}
 		}
 
 		var fieldOptions []model.FieldOptions
@@ -313,6 +351,21 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId int, ch
 		}
 
 		final_fieldsList = append(final_fieldsList, field)
+	}
+
+	var memberProfiles []model.MemberProfile
+
+	MemIds := strings.Split(memberids, ",")
+
+	for _, memberid := range MemIds {
+
+		var memberProfile model.MemberProfile
+
+		conv_memid,_ := strconv.Atoi(memberid)
+
+		db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_members.id = ?", conv_memid).First(&memberProfile)
+
+		memberProfiles = append(memberProfiles, memberProfile)
 	}
 
 	additionalFields := &model.AdditionalFields{Sections: sections, Fields: final_fieldsList}
@@ -339,8 +392,9 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId int, ch
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
 		AdditionalFields: additionalFields,
+		MemberProfile: memberProfiles,
 	}
 
-	return conv_channelEntry,nil
+	return conv_channelEntry, nil
 
 }
