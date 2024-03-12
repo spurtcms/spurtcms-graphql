@@ -56,8 +56,8 @@ func PagesAndPageGroupsUnderSpace(db *gorm.DB,ctx context.Context, spaceID int) 
 	return controller.PagesAndPageGroupsBySpaceId(db,ctx,spaceID)
 }
 
-func CategoriesList(db *gorm.DB,ctx context.Context, limit, offset *int) (model.CategoriesList, error) {
-	return controller.CategoriesList(db,ctx,limit,offset)
+func CategoriesList(db *gorm.DB,ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel *int) (model.CategoriesList, error) {
+	return controller.CategoriesList(db,ctx,limit,offset,categoryGroupId,hierarchyLevel)
 }
 
 func ChannelEntryDetail(db *gorm.DB,ctx context.Context, channelID *int,categoryID *int, channelEntryID int) (model.ChannelEntries, error) {

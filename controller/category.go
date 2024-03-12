@@ -3,20 +3,14 @@ package controller
 import (
 	"context"
 	"gqlserver/graph/model"
-	"strconv"
 	"os"
+	"strconv"
 	"strings"
-	// "github.com/gin-gonic/gin"
+
 	"gorm.io/gorm"
 )
 
-func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset *int) (model.CategoriesList, error) {
-
-	// c,_ := ctx.Value(ContextKey).(*gin.Context)
-
-	// token := c.GetString("token")
-
-	// memberid := c.GetInt("memberid")
+func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel *int) (model.CategoriesList, error) {
 
 	var pathUrl string
 
@@ -33,49 +27,80 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset *int) (model
 
 	var count int64
 
+	category_string := ""
+
+	selectGroupRemove := ""
+
+	if categoryGroupId != nil {
+
+		category_string = `WHERE id = ` + strconv.Itoa(*categoryGroupId)
+
+		selectGroupRemove = `AND id != ` + strconv.Itoa(*categoryGroupId)
+	}
+
+	hierarchy_string := ""
+
+	fromhierarchy_string := ""
+
+	selecthierarchy_string := ""
+
+	if hierarchyLevel != nil {
+
+		hierarchy_string = ` WHERE CAT_TREE.LEVEL < ` + strconv.Itoa(*hierarchyLevel)
+
+		fromhierarchy_string = `,CAT_TREE.LEVEL + 1`
+
+		selecthierarchy_string = `,0 AS LEVEL`
+
+	}
+
+	limit_offString := ""
+
+	if limit != nil && offset != nil {
+
+		limit_offString = `limit ` + strconv.Itoa(*limit) + ` offset ` + strconv.Itoa(*offset)
+	}
+
 	res := `WITH RECURSIVE cat_tree AS (
-		SELECT id, category_name, category_slug,image_path, parent_id,created_on,modified_on,is_deleted
-		FROM tbl_categories
-		WHERE id = 8
+		SELECT id, category_name, category_slug,image_path, parent_id,created_on,modified_on,is_deleted` + selecthierarchy_string + `
+		FROM tbl_categories ` + category_string + `
 		UNION ALL
 		SELECT cat.id, cat.category_name, cat.category_slug, cat.image_path ,cat.parent_id,cat.created_on,cat.modified_on,
-		cat.is_deleted
+		cat.is_deleted` + fromhierarchy_string + `
 		FROM tbl_categories AS cat
-		JOIN cat_tree ON cat.parent_id = cat_tree.id )`
+		JOIN cat_tree ON cat.parent_id = cat_tree.id ` + hierarchy_string + ` )`
 
-	if err := db.Debug().Raw(` ` + res + ` SELECT cat_tree.* FROM cat_tree where is_deleted = 0 and id not in (8) order by id desc limit ` + strconv.Itoa(*limit) + ` offset ` + strconv.Itoa(*offset)).Find(&categories).Error; err != nil {
-
-		return model.CategoriesList{}, err
-	}
-
-	if err := db.Raw(` ` + res + ` SELECT count(*) FROM cat_tree where is_deleted = 0 and id not in (8) and parent_id =8 group by id order by id desc`).Count(&count).Error; err != nil {
+	if err := db.Debug().Raw(` ` + res + `SELECT cat_tree.* FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + ` order by parent_id asc ` + limit_offString).Find(&categories).Error; err != nil {
 
 		return model.CategoriesList{}, err
 	}
 
-	// db.Debug().Raw("select ab2.* from tbl_categories as ab left join tbl_categories as ab2 on ab.id = ab2.parent_id;").Find(&categories)
-	
-	// log.Println("categories", categories)
+	if err := db.Raw(` ` + res + ` SELECT count(*) FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + ` group by id order by id desc`).Count(&count).Error; err != nil {
+
+		return model.CategoriesList{}, err
+	}
 
 	var final_categoriesList []model.Category
 
-	for _, parentCat := range categories {
+	seenCategory := make(map[int]bool)
 
-		modified_path := pathUrl + strings.TrimPrefix(parentCat.ImagePath, "/")
+	for _, category := range categories {
 
-		parentCat.ImagePath = modified_path
+		if !seenCategory[category.ID] {
 
-		var childCategories []model.Category
+			var modified_path string
 
-		err := db.Raw(` ` + res + ` SELECT cat_tree.* FROM cat_tree where is_deleted = 0 and id not in (` + strconv.Itoa(parentCat.ID) + `) and parent_id =` + strconv.Itoa(parentCat.ID) + ` order by id desc`).Find(&childCategories).Error
+			if category.ImagePath != "" {
 
-		if err == nil {
+				modified_path = pathUrl + strings.TrimPrefix(category.ImagePath, "/")
+			}
 
-			parentCat.ChildCategories = childCategories
+			category.ImagePath = modified_path
+
+			final_categoriesList = append(final_categoriesList, category)
+
+			seenCategory[category.ID] = true
 		}
-
-		final_categoriesList = append(final_categoriesList, parentCat)
-
 	}
 
 	return model.CategoriesList{Categories: final_categoriesList, Count: int(count)}, nil

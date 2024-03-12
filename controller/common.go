@@ -27,6 +27,8 @@ var(
 	ProfileImagePath = "Uploads/ProfileImages/"
 	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
 	SectionTypeId = 12
+	DefaultCategoryGroupId = 1
+    MemberFieldTypeId = 14
 )
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {

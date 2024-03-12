@@ -73,17 +73,16 @@ type ComplexityRoot struct {
 	}
 
 	Category struct {
-		CategoryName    func(childComplexity int) int
-		CategorySlug    func(childComplexity int) int
-		ChildCategories func(childComplexity int) int
-		CreatedBy       func(childComplexity int) int
-		CreatedOn       func(childComplexity int) int
-		Description     func(childComplexity int) int
-		ID              func(childComplexity int) int
-		ImagePath       func(childComplexity int) int
-		ModifiedBy      func(childComplexity int) int
-		ModifiedOn      func(childComplexity int) int
-		ParentID        func(childComplexity int) int
+		CategoryName func(childComplexity int) int
+		CategorySlug func(childComplexity int) int
+		CreatedBy    func(childComplexity int) int
+		CreatedOn    func(childComplexity int) int
+		Description  func(childComplexity int) int
+		ID           func(childComplexity int) int
+		ImagePath    func(childComplexity int) int
+		ModifiedBy   func(childComplexity int) int
+		ModifiedOn   func(childComplexity int) int
+		ParentID     func(childComplexity int) int
 	}
 
 	Channel struct {
@@ -114,6 +113,7 @@ type ComplexityRoot struct {
 		CreatedBy        func(childComplexity int) int
 		CreatedOn        func(childComplexity int) int
 		Description      func(childComplexity int) int
+		FeaturedEntry    func(childComplexity int) int
 		ID               func(childComplexity int) int
 		IsActive         func(childComplexity int) int
 		Keyword          func(childComplexity int) int
@@ -257,7 +257,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CategoriesList               func(childComplexity int, limit *int, offset *int) int
+		CategoriesList               func(childComplexity int, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int) int
 		ChannelDetail                func(childComplexity int, channelID int) int
 		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int) int
 		ChannelEntryDetail           func(childComplexity int, categoryID *int, channelID *int, channelEntryID int) int
@@ -326,7 +326,7 @@ type QueryResolver interface {
 	SpaceList(ctx context.Context, limit int, offset int) (model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (model.PageAndPageGroups, error)
-	CategoriesList(ctx context.Context, limit *int, offset *int) (model.CategoriesList, error)
+	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int) (model.CategoriesList, error)
 }
 
 type executableSchema struct {
@@ -459,13 +459,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Category.CategorySlug(childComplexity), true
-
-	case "Category.childCategories":
-		if e.complexity.Category.ChildCategories == nil {
-			break
-		}
-
-		return e.complexity.Category.ChildCategories(childComplexity), true
 
 	case "Category.createdBy":
 		if e.complexity.Category.CreatedBy == nil {
@@ -669,6 +662,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChannelEntries.Description(childComplexity), true
+
+	case "ChannelEntries.featuredEntry":
+		if e.complexity.ChannelEntries.FeaturedEntry == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.FeaturedEntry(childComplexity), true
 
 	case "ChannelEntries.id":
 		if e.complexity.ChannelEntries.ID == nil {
@@ -1444,7 +1444,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CategoriesList(childComplexity, args["limit"].(*int), args["offset"].(*int)), true
+		return e.complexity.Query.CategoriesList(childComplexity, args["limit"].(*int), args["offset"].(*int), args["categoryGroupId"].(*int), args["hierarchyLevel"].(*int)), true
 
 	case "Query.channelDetail":
 		if e.complexity.Query.ChannelDetail == nil {
@@ -1983,6 +1983,24 @@ func (ec *executionContext) field_Query_categoriesList_args(ctx context.Context,
 		}
 	}
 	args["offset"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["categoryGroupId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryGroupId"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryGroupId"] = arg2
+	var arg3 *int
+	if tmp, ok := rawArgs["hierarchyLevel"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hierarchyLevel"))
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["hierarchyLevel"] = arg3
 	return args, nil
 }
 
@@ -2804,8 +2822,6 @@ func (ec *executionContext) fieldContext_CategoriesList_categories(ctx context.C
 				return ec.fieldContext_Category_modifiedBy(ctx, field)
 			case "parentId":
 				return ec.fieldContext_Category_parentId(ctx, field)
-			case "childCategories":
-				return ec.fieldContext_Category_childCategories(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
 		},
@@ -3286,71 +3302,6 @@ func (ec *executionContext) fieldContext_Category_parentId(ctx context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Category_childCategories(ctx context.Context, field graphql.CollectedField, obj *model.Category) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Category_childCategories(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ChildCategories, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]model.Category)
-	fc.Result = res
-	return ec.marshalOCategory2ᚕgqlserverᚋgraphᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Category_childCategories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Category",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
-			case "categoryName":
-				return ec.fieldContext_Category_categoryName(ctx, field)
-			case "categorySlug":
-				return ec.fieldContext_Category_categorySlug(ctx, field)
-			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
-			case "imagePath":
-				return ec.fieldContext_Category_imagePath(ctx, field)
-			case "createdOn":
-				return ec.fieldContext_Category_createdOn(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_Category_createdBy(ctx, field)
-			case "modifiedOn":
-				return ec.fieldContext_Category_modifiedOn(ctx, field)
-			case "modifiedBy":
-				return ec.fieldContext_Category_modifiedBy(ctx, field)
-			case "parentId":
-				return ec.fieldContext_Category_parentId(ctx, field)
-			case "childCategories":
-				return ec.fieldContext_Category_childCategories(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
 		},
 	}
 	return fc, nil
@@ -4730,6 +4681,47 @@ func (ec *executionContext) fieldContext_ChannelEntries_relatedArticles(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelEntries_featuredEntry(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_featuredEntry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FeaturedEntry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_featuredEntry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelEntries_categories(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChannelEntries_categories(ctx, field)
 	if err != nil {
@@ -4789,8 +4781,6 @@ func (ec *executionContext) fieldContext_ChannelEntries_categories(ctx context.C
 				return ec.fieldContext_Category_modifiedBy(ctx, field)
 			case "parentId":
 				return ec.fieldContext_Category_parentId(ctx, field)
-			case "childCategories":
-				return ec.fieldContext_Category_childCategories(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
 		},
@@ -5055,6 +5045,8 @@ func (ec *executionContext) fieldContext_ChannelEntriesDetails_channelEntriesLis
 				return ec.fieldContext_ChannelEntries_categoriesId(ctx, field)
 			case "relatedArticles":
 				return ec.fieldContext_ChannelEntries_relatedArticles(ctx, field)
+			case "featuredEntry":
+				return ec.fieldContext_ChannelEntries_featuredEntry(ctx, field)
 			case "categories":
 				return ec.fieldContext_ChannelEntries_categories(ctx, field)
 			case "additionalFields":
@@ -9542,6 +9534,8 @@ func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Co
 				return ec.fieldContext_ChannelEntries_categoriesId(ctx, field)
 			case "relatedArticles":
 				return ec.fieldContext_ChannelEntries_relatedArticles(ctx, field)
+			case "featuredEntry":
+				return ec.fieldContext_ChannelEntries_featuredEntry(ctx, field)
 			case "categories":
 				return ec.fieldContext_ChannelEntries_categories(ctx, field)
 			case "additionalFields":
@@ -9848,7 +9842,7 @@ func (ec *executionContext) _Query_categoriesList(ctx context.Context, field gra
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().CategoriesList(rctx, fc.Args["limit"].(*int), fc.Args["offset"].(*int))
+			return ec.resolvers.Query().CategoriesList(rctx, fc.Args["limit"].(*int), fc.Args["offset"].(*int), fc.Args["categoryGroupId"].(*int), fc.Args["hierarchyLevel"].(*int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -10923,8 +10917,6 @@ func (ec *executionContext) fieldContext_Space_categories(ctx context.Context, f
 				return ec.fieldContext_Category_modifiedBy(ctx, field)
 			case "parentId":
 				return ec.fieldContext_Category_parentId(ctx, field)
-			case "childCategories":
-				return ec.fieldContext_Category_childCategories(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
 		},
@@ -13662,8 +13654,6 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "childCategories":
-			out.Values[i] = ec._Category_childCategories(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13909,6 +13899,8 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "featuredEntry":
+			out.Values[i] = ec._ChannelEntries_featuredEntry(ctx, field, obj)
 		case "categories":
 			out.Values[i] = ec._ChannelEntries_categories(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -16332,53 +16324,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOCategory2ᚕgqlserverᚋgraphᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Category) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNCategory2gqlserverᚋgraphᚋmodelᚐCategory(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalOField2ᚕgqlserverᚋgraphᚋmodelᚐFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Field) graphql.Marshaler {

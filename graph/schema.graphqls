@@ -82,6 +82,7 @@ type ChannelEntries{
 	keyword:              String!
 	categoriesId:         String!
 	relatedArticles:      String!
+	featuredEntry:        Int
 	categories:           [[Category!]!]!
 	additionalFields:     AdditionalFields
 	authorDetails:        Author!
@@ -127,7 +128,6 @@ type Category{
 	modifiedOn:         Time 
 	modifiedBy:         Int       
 	parentId:           Int!
-	childCategories:    [Category!]
 }
 
 type SpaceDetails{
@@ -264,7 +264,7 @@ type Query{
 	spaceList(limit: Int!,offset: Int!): SpaceDetails! @auth
 	spaceDetails(spaceId: Int!): Space! @auth
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
-	categoriesList(limit: Int,offset: Int): CategoriesList! @auth
+	categoriesList(limit: Int,offset: Int,categoryGroupId: Int,hierarchyLevel: Int): CategoriesList! @auth
 }
 
 type Mutation{

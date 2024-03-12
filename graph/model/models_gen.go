@@ -4,8 +4,6 @@ package model
 
 import (
 	"time"
-
-	"gorm.io/datatypes"
 )
 
 type AdditionalFields struct {
@@ -14,16 +12,16 @@ type AdditionalFields struct {
 }
 
 type Author struct {
-	AuthorID         int        `json:"AuthorId" gorm:"column:id"`
-	FirstName        string     `json:"FirstName"`
-	LastName         string     `json:"LastName"`
-	Email            string     `json:"Email"`
-	MobileNo         *string    `json:"MobileNo,omitempty"`
-	IsActive         *int       `json:"IsActive,omitempty"`
-	ProfileImage     *string    `json:"ProfileImage,omitempty"`
-	ProfileImagePath *string    `json:"ProfileImagePath,omitempty"`
-	CreatedOn        time.Time  `json:"CreatedOn"`
-	CreatedBy        int        `json:"CreatedBy"`
+	AuthorID         int       `json:"AuthorId"`
+	FirstName        string    `json:"FirstName"`
+	LastName         string    `json:"LastName"`
+	Email            string    `json:"Email"`
+	MobileNo         *string   `json:"MobileNo,omitempty"`
+	IsActive         *int      `json:"IsActive,omitempty"`
+	ProfileImage     *string   `json:"ProfileImage,omitempty"`
+	ProfileImagePath *string   `json:"ProfileImagePath,omitempty"`
+	CreatedOn        time.Time `json:"CreatedOn"`
+	CreatedBy        int       `json:"CreatedBy"`
 }
 
 type CategoriesList struct {
@@ -32,17 +30,16 @@ type CategoriesList struct {
 }
 
 type Category struct {
-	ID              int        `json:"id"`
-	CategoryName    string     `json:"categoryName"`
-	CategorySlug    string     `json:"categorySlug"`
-	Description     string     `json:"description"`
-	ImagePath       string     `json:"imagePath"`
-	CreatedOn       time.Time  `json:"createdOn"`
-	CreatedBy       int        `json:"createdBy"`
-	ModifiedOn      *time.Time `json:"modifiedOn,omitempty"`
-	ModifiedBy      *int       `json:"modifiedBy,omitempty"`
-	ParentID        int        `json:"parentId"`
-	ChildCategories []Category `json:"childCategories,omitempty" gorm:"-"`
+	ID           int        `json:"id"`
+	CategoryName string     `json:"categoryName"`
+	CategorySlug string     `json:"categorySlug"`
+	Description  string     `json:"description"`
+	ImagePath    string     `json:"imagePath"`
+	CreatedOn    time.Time  `json:"createdOn"`
+	CreatedBy    int        `json:"createdBy"`
+	ModifiedOn   *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy   *int       `json:"modifiedBy,omitempty"`
+	ParentID     int        `json:"parentId"`
 }
 
 type Channel struct {
@@ -83,6 +80,7 @@ type ChannelEntries struct {
 	Keyword          string            `json:"keyword"`
 	CategoriesID     string            `json:"categoriesId"`
 	RelatedArticles  string            `json:"relatedArticles"`
+	FeaturedEntry    *int              `json:"featuredEntry,omitempty"`
 	Categories       [][]Category      `json:"categories"`
 	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"`
 	AuthorDetails    *Author           `json:"authorDetails"`
@@ -95,7 +93,7 @@ type ChannelEntriesDetails struct {
 }
 
 type Field struct {
-	FieldID          int            `json:"fieldId" gorm:"column:id"`
+	FieldID          int            `json:"fieldId"`
 	FieldName        string         `json:"fieldName"`
 	FieldTypeID      int            `json:"fieldTypeId"`
 	MandatoryField   int            `json:"mandatoryField"`
@@ -111,9 +109,9 @@ type Field struct {
 	TimeFormat       *string        `json:"timeFormat,omitempty"`
 	SectionParentID  *int           `json:"sectionParentId,omitempty"`
 	CharacterAllowed *int           `json:"characterAllowed,omitempty"`
-	FieldTypeName    string         `json:"fieldTypeName" gorm:"column:type_name"`
-	FieldValue       *FieldValue    `json:"fieldValue,omitempty" gorm:"-"`
-	FieldOptions     []FieldOptions `json:"fieldOptions,omitempty" gorm:"-"`
+	FieldTypeName    string         `json:"fieldTypeName"`
+	FieldValue       *FieldValue    `json:"fieldValue,omitempty"`
+	FieldOptions     []FieldOptions `json:"fieldOptions,omitempty"`
 }
 
 type FieldOptions struct {
@@ -183,18 +181,18 @@ type MemberGroup struct {
 }
 
 type MemberProfile struct {
-	MemberID        *int                   `json:"memberId,omitempty" gorm:"column:id"`
-	ProfileName     *string                `json:"profileName,omitempty"`
-	ProfileSlug     *string                `json:"profileSlug,omitempty"`
-	ProfilePage     *string                `json:"profilePage,omitempty"`
-	MemberDetails   datatypes.JSONMap      `json:"memberDetails,omitempty" gorm:"column:member_details;type:jsonb"`
-	CompanyName     *string                `json:"companyName,omitempty"`
-	CompanyLocation *string                `json:"companyLocation,omitempty"`
-	CompanyLogo     *string                `json:"companyLogo,omitempty"`
-	About           *string                `json:"about,omitempty"`
-	SeoTitle        *string                `json:"seoTitle,omitempty"`
-	SeoDescription  *string                `json:"seoDescription,omitempty"`
-	SeoKeyword      *string                `json:"seoKeyword,omitempty"`
+	MemberID        *int        `json:"memberId,omitempty"`
+	ProfileName     *string     `json:"profileName,omitempty"`
+	ProfileSlug     *string     `json:"profileSlug,omitempty"`
+	ProfilePage     *string     `json:"profilePage,omitempty"`
+	MemberDetails   interface{} `json:"memberDetails,omitempty"`
+	CompanyName     *string     `json:"companyName,omitempty"`
+	CompanyLocation *string     `json:"companyLocation,omitempty"`
+	CompanyLogo     *string     `json:"companyLogo,omitempty"`
+	About           *string     `json:"about,omitempty"`
+	SeoTitle        *string     `json:"seoTitle,omitempty"`
+	SeoDescription  *string     `json:"seoDescription,omitempty"`
+	SeoKeyword      *string     `json:"seoKeyword,omitempty"`
 }
 
 type Page struct {
@@ -228,9 +226,9 @@ type PageGroup struct {
 }
 
 type Section struct {
-	SectionID     *int       `json:"sectionId,omitempty" gorm:"column:id"`
-	SectionName   string     `json:"sectionName" gorm:"column:field_name"`
-	SectionTypeID int        `json:"sectionTypeId" gorm:"column:field_type_id"`
+	SectionID     *int       `json:"sectionId,omitempty"`
+	SectionName   string     `json:"sectionName"`
+	SectionTypeID int        `json:"sectionTypeId"`
 	CreatedOn     time.Time  `json:"createdOn"`
 	CreatedBy     int        `json:"createdBy"`
 	ModifiedOn    *time.Time `json:"modifiedOn,omitempty"`
