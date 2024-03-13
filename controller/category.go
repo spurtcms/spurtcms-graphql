@@ -44,6 +44,8 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 	selecthierarchy_string := ""
 
+	outerlevel := ""
+
 	if hierarchyLevel != nil {
 
 		hierarchy_string = ` WHERE CAT_TREE.LEVEL < ` + strconv.Itoa(*hierarchyLevel)
@@ -51,6 +53,8 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 		fromhierarchy_string = `,CAT_TREE.LEVEL + 1`
 
 		selecthierarchy_string = `,0 AS LEVEL`
+
+		outerlevel = ` and level = `+strconv.Itoa(*hierarchyLevel)
 
 	}
 
@@ -70,12 +74,12 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 		FROM tbl_categories AS cat
 		JOIN cat_tree ON cat.parent_id = cat_tree.id ` + hierarchy_string + ` )`
 
-	if err := db.Debug().Raw(` ` + res + `SELECT cat_tree.* FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + ` order by parent_id asc ` + limit_offString).Find(&categories).Error; err != nil {
+	if err := db.Debug().Raw(` ` + res + `SELECT cat_tree.* FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0 order by id desc ` + limit_offString).Find(&categories).Error; err != nil {
 
 		return model.CategoriesList{}, err
 	}
 
-	if err := db.Raw(` ` + res + ` SELECT count(*) FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + ` group by id order by id desc`).Count(&count).Error; err != nil {
+	if err := db.Raw(` ` + res + ` SELECT count(*) FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0 group by id order by id desc`).Count(&count).Error; err != nil {
 
 		return model.CategoriesList{}, err
 	}

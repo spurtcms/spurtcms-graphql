@@ -10,6 +10,8 @@ scalar Map
 
 scalar Any
 
+scalar JSON
+
 type Member{
     id:               Int! 
     firstName:        String!
@@ -82,7 +84,7 @@ type ChannelEntries{
 	keyword:              String!
 	categoriesId:         String!
 	relatedArticles:      String!
-	featuredEntry:        Int
+	featuredEntry:        Int!
 	categories:           [[Category!]!]!
 	additionalFields:     AdditionalFields
 	authorDetails:        Author!
@@ -271,6 +273,7 @@ type Mutation{
     memberLogin(input: LoginCredentials!): String!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
+	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
 }
 
 input LoginCredentials{
@@ -289,6 +292,11 @@ input MemberDetails{
     profileImagePath: String
     username:         String
     groupId:          Int 
+}
+
+input ProfileData{
+	memberProfileId: Int!
+	memberProfile: JSON!
 }
 
 

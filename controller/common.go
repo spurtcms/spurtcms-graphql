@@ -27,7 +27,6 @@ var(
 	ProfileImagePath = "Uploads/ProfileImages/"
 	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
 	SectionTypeId = 12
-	DefaultCategoryGroupId = 1
     MemberFieldTypeId = 14
 )
 

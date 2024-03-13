@@ -31,58 +31,75 @@
               endpoint: '/query',
               name: 'Channel Entries',
               query: 
-`query($channelId: Int,$categoryId: Int,$limit: Int!,$offset: Int!){
+`query($channelId: Int, $categoryId: Int,$limit: Int!,$offset: Int!){
   channelEntriesList(channelId: $channelId,categoryId: $categoryId, limit: $limit,offset: $offset){
-      channelEntriesList{
+    channelEntriesList{
+      id
+      title
+      slug
+      description
+      userId
+      channelId
+      status
+      isActive
+      createdOn
+      createdBy
+      modifiedBy
+      modifiedOn
+      coverImage
+      thumbnailImage
+      metaTitle
+      metaDescription
+      keyword
+      categoriesId
+      relatedArticles
+      featuredEntry
+      categories{
         id
-        title
-        slug
-        description
-        userId
-        channelId
-        status
-        isActive
-        createdOn
-        createdBy
-        modifiedBy
-        modifiedOn
-        coverImage
-        thumbnailImage
-        metaTitle
-        metaDescription
-        keyword
-        categoriesId
-        relatedArticles
-        categories{
-          id
-          categoryName
-          parentId
+        categoryName
+        imagePath
+        parentId
+      }
+      additionalFields{
+        sections{
+          sectionId
+          sectionName
+          sectionTypeId
+          createdOn
+          createdBy
           modifiedOn
+          modifiedBY
+          orderIndex
         }
-        additionalFields{
-          sections{
-            sectionId
-            sectionName
-            orderIndex
-          }
-          fields{
-            fieldId
-            fieldName
-            mandatoryField
-            fieldValue{
-              id
-              fieldValue
-            }
-            fieldOptions{
-              id
-              optionName
-              optionValue
-            }
-          }
+        fields{
+          fieldId
+          fieldName
+          fieldTypeId
+          mandatoryField
+          optionExist
+          createdOn
+          createdBy
+          imagePath
         }
       }
-      count
+      memberProfile{
+        memberId
+        profileName
+        companyLogo
+        memberDetails
+        profilePage
+      }
+      authorDetails{
+        AuthorId
+        FirstName
+        LastName
+        ProfileImagePath
+        IsActive
+        CreatedBy
+      }
     }
+    count
+  }
 }`,
 variables:`{
   "limit": 10,

@@ -64,5 +64,9 @@ func ChannelEntryDetail(db *gorm.DB,ctx context.Context, channelID *int,category
 	return controller.ChannelEntryDetail(db,ctx,channelEntryID,channelID,categoryID)
 }
 
+func MemberProfileUpdate(db *gorm.DB,ctx context.Context, profiledata model.ProfileData) (bool, error) {
+	return controller.MemberProfileUpdate(db,ctx,profiledata)
+}
+
 
 

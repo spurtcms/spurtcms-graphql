@@ -24,6 +24,11 @@ func (r *mutationResolver) MemberUpdate(ctx context.Context, memberdata model.Me
 	return MemberUpdate(r.DB, ctx, memberdata)
 }
 
+// MemberProfileUpdate is the resolver for the memberProfileUpdate field.
+func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error) {
+	return MemberProfileUpdate(r.DB, ctx, profiledata)
+}
+
 // Channellist is the resolver for the channellist field.
 func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error) {
 	return Channellist(r.DB, ctx, limit, offset)

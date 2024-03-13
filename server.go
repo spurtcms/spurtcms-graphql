@@ -6,6 +6,8 @@ import (
 	"gqlserver/middleware"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -33,7 +35,24 @@ func main() {
 
 	r.Use(middleware.CorsMiddleware())
 
-	r.LoadHTMLGlob("view/*")
+	r.Static("/public","./public")
+
+	var htmlfiles []string
+
+	filepath.Walk("./", func(path string, info os.FileInfo, err error) error {
+
+		if strings.HasSuffix(path, ".html") {
+
+			htmlfiles = append(htmlfiles, path)
+
+		}
+
+		return nil
+	})
+
+	r.LoadHTMLFiles(htmlfiles...)
+
+	r.GET("/apidocs",controller.GetDocumentationView)
 
 	r.POST("/query", ginhandler.GraphQLHandler())
 

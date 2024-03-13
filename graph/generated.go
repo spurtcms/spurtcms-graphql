@@ -221,9 +221,10 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		MemberLogin    func(childComplexity int, input model.LoginCredentials) int
-		MemberRegister func(childComplexity int, input model.MemberDetails) int
-		MemberUpdate   func(childComplexity int, memberdata model.MemberDetails) int
+		MemberLogin         func(childComplexity int, input model.LoginCredentials) int
+		MemberProfileUpdate func(childComplexity int, profiledata model.ProfileData) int
+		MemberRegister      func(childComplexity int, input model.MemberDetails) int
+		MemberUpdate        func(childComplexity int, memberdata model.MemberDetails) int
 	}
 
 	Page struct {
@@ -317,6 +318,7 @@ type MutationResolver interface {
 	MemberLogin(ctx context.Context, input model.LoginCredentials) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
+	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error)
 }
 type QueryResolver interface {
 	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
@@ -1263,6 +1265,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.MemberLogin(childComplexity, args["input"].(model.LoginCredentials)), true
 
+	case "Mutation.memberProfileUpdate":
+		if e.complexity.Mutation.MemberProfileUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_memberProfileUpdate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MemberProfileUpdate(childComplexity, args["profiledata"].(model.ProfileData)), true
+
 	case "Mutation.memberRegister":
 		if e.complexity.Mutation.MemberRegister == nil {
 			break
@@ -1771,6 +1785,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputLoginCredentials,
 		ec.unmarshalInputMemberDetails,
+		ec.unmarshalInputProfileData,
 	)
 	first := true
 
@@ -1899,6 +1914,21 @@ func (ec *executionContext) field_Mutation_memberLogin_args(ctx context.Context,
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_memberProfileUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ProfileData
+	if tmp, ok := rawArgs["profiledata"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profiledata"))
+		arg0, err = ec.unmarshalNProfileData2gqlserverᚋgraphᚋmodelᚐProfileData(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["profiledata"] = arg0
 	return args, nil
 }
 
@@ -4702,11 +4732,14 @@ func (ec *executionContext) _ChannelEntries_featuredEntry(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_featuredEntry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8196,6 +8229,81 @@ func (ec *executionContext) fieldContext_Mutation_memberUpdate(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_memberUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_memberProfileUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_memberProfileUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_memberProfileUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_memberProfileUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -13437,6 +13545,44 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj interface{}) (model.ProfileData, error) {
+	var it model.ProfileData
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"memberProfileId", "memberProfile"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "memberProfileId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memberProfileId"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MemberProfileID = data
+		case "memberProfile":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memberProfile"))
+			data, err := ec.unmarshalNJSON2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MemberProfile = data
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -13901,6 +14047,9 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			}
 		case "featuredEntry":
 			out.Values[i] = ec._ChannelEntries_featuredEntry(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "categories":
 			out.Values[i] = ec._ChannelEntries_categories(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -14470,6 +14619,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "memberUpdate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_memberUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "memberProfileUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_memberProfileUpdate(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -15772,6 +15928,21 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNJSON2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNJSON2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNLoginCredentials2gqlserverᚋgraphᚋmodelᚐLoginCredentials(ctx context.Context, v interface{}) (model.LoginCredentials, error) {
 	res, err := ec.unmarshalInputLoginCredentials(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -15888,6 +16059,11 @@ func (ec *executionContext) marshalNPageGroup2ᚕgqlserverᚋgraphᚋmodelᚐPag
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNProfileData2gqlserverᚋgraphᚋmodelᚐProfileData(ctx context.Context, v interface{}) (model.ProfileData, error) {
+	res, err := ec.unmarshalInputProfileData(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNSection2gqlserverᚋgraphᚋmodelᚐSection(ctx context.Context, sel ast.SelectionSet, v model.Section) graphql.Marshaler {

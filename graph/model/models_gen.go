@@ -80,7 +80,7 @@ type ChannelEntries struct {
 	Keyword          string            `json:"keyword"`
 	CategoriesID     string            `json:"categoriesId"`
 	RelatedArticles  string            `json:"relatedArticles"`
-	FeaturedEntry    *int              `json:"featuredEntry,omitempty"`
+	FeaturedEntry    int               `json:"featuredEntry"`
 	Categories       [][]Category      `json:"categories"`
 	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"`
 	AuthorDetails    *Author           `json:"authorDetails"`
@@ -223,6 +223,11 @@ type PageGroup struct {
 	CreatedBy     int        `json:"created_by"`
 	ModifiedOn    *time.Time `json:"modifiedOn,omitempty"`
 	ModifiedBy    *int       `json:"modifiedBy,omitempty"`
+}
+
+type ProfileData struct {
+	MemberProfileID int    `json:"memberProfileId"`
+	MemberProfile   string `json:"memberProfile"`
 }
 
 type Section struct {

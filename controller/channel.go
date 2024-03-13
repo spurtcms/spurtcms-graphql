@@ -249,7 +249,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			AdditionalFields: additionalFields,
 			MemberProfile: conv_memberProfiles,
 			AuthorDetails: authorDetails,
-			FeaturedEntry: &entry.Feature,
+			FeaturedEntry: entry.Feature,
 
 		}
 
@@ -481,7 +481,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId int, ch
 		AdditionalFields: additionalFields,
 		MemberProfile: conv_memberProfiles,
 		AuthorDetails: authorDetails,
-		FeaturedEntry: &channelEntry.Feature,
+		FeaturedEntry: channelEntry.Feature,
 
 	}
 
