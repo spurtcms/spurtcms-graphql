@@ -98,7 +98,6 @@ type Author{
 	Email:                String!
 	MobileNo:             String
 	IsActive:             Int
-	ProfileImage:         String
 	ProfileImagePath:     String
 	CreatedOn:            Time!
 	CreatedBy:            Int!      
@@ -261,7 +260,7 @@ type FieldOptions{
 type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int!): Channel! @auth
-    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!): ChannelEntriesDetails! @auth
+    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String): ChannelEntriesDetails! @auth
 	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int!): ChannelEntries! @auth
 	spaceList(limit: Int!,offset: Int!): SpaceDetails! @auth
 	spaceDetails(spaceId: Int!): Space! @auth

@@ -18,7 +18,6 @@ type Author struct {
 	Email            string    `json:"Email"`
 	MobileNo         *string   `json:"MobileNo,omitempty"`
 	IsActive         *int      `json:"IsActive,omitempty"`
-	ProfileImage     *string   `json:"ProfileImage,omitempty"`
 	ProfileImagePath *string   `json:"ProfileImagePath,omitempty"`
 	CreatedOn        time.Time `json:"CreatedOn"`
 	CreatedBy        int       `json:"CreatedBy"`

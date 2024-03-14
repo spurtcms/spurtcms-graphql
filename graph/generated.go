@@ -63,7 +63,6 @@ type ComplexityRoot struct {
 		IsActive         func(childComplexity int) int
 		LastName         func(childComplexity int) int
 		MobileNo         func(childComplexity int) int
-		ProfileImage     func(childComplexity int) int
 		ProfileImagePath func(childComplexity int) int
 	}
 
@@ -260,7 +259,7 @@ type ComplexityRoot struct {
 	Query struct {
 		CategoriesList               func(childComplexity int, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int) int
 		ChannelDetail                func(childComplexity int, channelID int) int
-		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int) int
+		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int, title *string) int
 		ChannelEntryDetail           func(childComplexity int, categoryID *int, channelID *int, channelEntryID int) int
 		ChannelList                  func(childComplexity int, limit int, offset int) int
 		PagesAndPageGroupsUnderSpace func(childComplexity int, spaceID int) int
@@ -323,7 +322,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
 	ChannelDetail(ctx context.Context, channelID int) (model.Channel, error)
-	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int) (model.ChannelEntriesDetails, error)
+	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string) (model.ChannelEntriesDetails, error)
 	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID int) (model.ChannelEntries, error)
 	SpaceList(ctx context.Context, limit int, offset int) (model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (model.Space, error)
@@ -419,13 +418,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Author.MobileNo(childComplexity), true
-
-	case "Author.ProfileImage":
-		if e.complexity.Author.ProfileImage == nil {
-			break
-		}
-
-		return e.complexity.Author.ProfileImage(childComplexity), true
 
 	case "Author.ProfileImagePath":
 		if e.complexity.Author.ProfileImagePath == nil {
@@ -1482,7 +1474,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ChannelEntriesList(childComplexity, args["channelId"].(*int), args["categoryId"].(*int), args["limit"].(int), args["offset"].(int)), true
+		return e.complexity.Query.ChannelEntriesList(childComplexity, args["channelId"].(*int), args["categoryId"].(*int), args["limit"].(int), args["offset"].(int), args["title"].(*string)), true
 
 	case "Query.channelEntryDetail":
 		if e.complexity.Query.ChannelEntryDetail == nil {
@@ -2088,6 +2080,15 @@ func (ec *executionContext) field_Query_channelEntriesList_args(ctx context.Cont
 		}
 	}
 	args["offset"] = arg3
+	var arg4 *string
+	if tmp, ok := rawArgs["title"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+		arg4, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["title"] = arg4
 	return args, nil
 }
 
@@ -2618,47 +2619,6 @@ func (ec *executionContext) fieldContext_Author_IsActive(ctx context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Author_ProfileImage(ctx context.Context, field graphql.CollectedField, obj *model.Author) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Author_ProfileImage(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ProfileImage, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Author_ProfileImage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Author",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4919,8 +4879,6 @@ func (ec *executionContext) fieldContext_ChannelEntries_authorDetails(ctx contex
 				return ec.fieldContext_Author_MobileNo(ctx, field)
 			case "IsActive":
 				return ec.fieldContext_Author_IsActive(ctx, field)
-			case "ProfileImage":
-				return ec.fieldContext_Author_ProfileImage(ctx, field)
 			case "ProfileImagePath":
 				return ec.fieldContext_Author_ProfileImagePath(ctx, field)
 			case "CreatedOn":
@@ -9479,7 +9437,7 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["categoryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int))
+			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["categoryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["title"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -13664,8 +13622,6 @@ func (ec *executionContext) _Author(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Author_MobileNo(ctx, field, obj)
 		case "IsActive":
 			out.Values[i] = ec._Author_IsActive(ctx, field, obj)
-		case "ProfileImage":
-			out.Values[i] = ec._Author_ProfileImage(ctx, field, obj)
 		case "ProfileImagePath":
 			out.Values[i] = ec._Author_ProfileImagePath(ctx, field, obj)
 		case "CreatedOn":

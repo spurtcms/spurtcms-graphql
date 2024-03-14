@@ -50,7 +50,7 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (model.Cha
 }
 
 // this function provides the published channel entries list under a channel and channel entry details for a particular channeel entry by using its id
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int) (model.ChannelEntriesDetails, error) {
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int,title *string) (model.ChannelEntriesDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -75,7 +75,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	var err error
 
-	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID,categoryId, limit, offset,SectionTypeId, MemberFieldTypeId, pathUrl)
+	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID,categoryId, limit, offset,SectionTypeId, MemberFieldTypeId, pathUrl,title)
 
 	if err != nil {
 
@@ -122,7 +122,6 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			Email: entry.AuthorDetail.Email,
 			MobileNo: entry.AuthorDetail.MobileNo,
 			IsActive: entry.AuthorDetail.IsActive,
-			ProfileImage: entry.AuthorDetail.ProfileImage,
 			ProfileImagePath: entry.AuthorDetail.ProfileImagePath,
 			CreatedOn: entry.AuthorDetail.CreatedOn,
 			CreatedBy: entry.AuthorDetail.CreatedBy,
@@ -354,7 +353,6 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId int, ch
 		Email: channelEntry.AuthorDetail.Email,
 		MobileNo: channelEntry.AuthorDetail.MobileNo,
 		IsActive: channelEntry.AuthorDetail.IsActive,
-		ProfileImage: channelEntry.AuthorDetail.ProfileImage,
 		ProfileImagePath: channelEntry.AuthorDetail.ProfileImagePath,
 		CreatedOn: channelEntry.AuthorDetail.CreatedOn,
 		CreatedBy: channelEntry.AuthorDetail.CreatedBy,
