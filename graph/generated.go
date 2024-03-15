@@ -209,8 +209,12 @@ type ComplexityRoot struct {
 		CompanyLocation func(childComplexity int) int
 		CompanyLogo     func(childComplexity int) int
 		CompanyName     func(childComplexity int) int
+		CreatedBy       func(childComplexity int) int
+		CreatedOn       func(childComplexity int) int
 		MemberDetails   func(childComplexity int) int
 		MemberID        func(childComplexity int) int
+		ModifiedBy      func(childComplexity int) int
+		ModifiedOn      func(childComplexity int) int
 		ProfileName     func(childComplexity int) int
 		ProfilePage     func(childComplexity int) int
 		ProfileSlug     func(childComplexity int) int
@@ -220,7 +224,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		MemberLogin         func(childComplexity int, input model.LoginCredentials) int
+		MemberLogin         func(childComplexity int, email string) int
 		MemberProfileUpdate func(childComplexity int, profiledata model.ProfileData) int
 		MemberRegister      func(childComplexity int, input model.MemberDetails) int
 		MemberUpdate        func(childComplexity int, memberdata model.MemberDetails) int
@@ -314,7 +318,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	MemberLogin(ctx context.Context, input model.LoginCredentials) (string, error)
+	MemberLogin(ctx context.Context, email string) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
 	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error)
@@ -1189,6 +1193,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MemberProfile.CompanyName(childComplexity), true
 
+	case "MemberProfile.createdBy":
+		if e.complexity.MemberProfile.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.MemberProfile.CreatedBy(childComplexity), true
+
+	case "MemberProfile.createdOn":
+		if e.complexity.MemberProfile.CreatedOn == nil {
+			break
+		}
+
+		return e.complexity.MemberProfile.CreatedOn(childComplexity), true
+
 	case "MemberProfile.memberDetails":
 		if e.complexity.MemberProfile.MemberDetails == nil {
 			break
@@ -1202,6 +1220,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MemberProfile.MemberID(childComplexity), true
+
+	case "MemberProfile.modifiedBy":
+		if e.complexity.MemberProfile.ModifiedBy == nil {
+			break
+		}
+
+		return e.complexity.MemberProfile.ModifiedBy(childComplexity), true
+
+	case "MemberProfile.modifiedOn":
+		if e.complexity.MemberProfile.ModifiedOn == nil {
+			break
+		}
+
+		return e.complexity.MemberProfile.ModifiedOn(childComplexity), true
 
 	case "MemberProfile.profileName":
 		if e.complexity.MemberProfile.ProfileName == nil {
@@ -1255,7 +1287,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MemberLogin(childComplexity, args["input"].(model.LoginCredentials)), true
+		return e.complexity.Mutation.MemberLogin(childComplexity, args["email"].(string)), true
 
 	case "Mutation.memberProfileUpdate":
 		if e.complexity.Mutation.MemberProfileUpdate == nil {
@@ -1775,7 +1807,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputLoginCredentials,
 		ec.unmarshalInputMemberDetails,
 		ec.unmarshalInputProfileData,
 	)
@@ -1897,15 +1928,15 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_memberLogin_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.LoginCredentials
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNLoginCredentials2gqlserverᚋgraphᚋmodelᚐLoginCredentials(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["email"] = arg0
 	return args, nil
 }
 
@@ -4952,6 +4983,14 @@ func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx contex
 				return ec.fieldContext_MemberProfile_seoDescription(ctx, field)
 			case "seoKeyword":
 				return ec.fieldContext_MemberProfile_seoKeyword(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_MemberProfile_createdBy(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_MemberProfile_createdOn(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_MemberProfile_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -8008,6 +8047,170 @@ func (ec *executionContext) fieldContext_MemberProfile_seoKeyword(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _MemberProfile_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_createdBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MemberProfile_createdOn(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_createdOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_createdOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MemberProfile_modifiedOn(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_modifiedOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModifiedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_modifiedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MemberProfile_modifiedBy(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModifiedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_modifiedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_memberLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_memberLogin(ctx, field)
 	if err != nil {
@@ -8022,7 +8225,7 @@ func (ec *executionContext) _Mutation_memberLogin(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MemberLogin(rctx, fc.Args["input"].(model.LoginCredentials))
+		return ec.resolvers.Mutation().MemberLogin(rctx, fc.Args["email"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13355,44 +13558,6 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputLoginCredentials(ctx context.Context, obj interface{}) (model.LoginCredentials, error) {
-	var it model.LoginCredentials
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"email", "password"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "email":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Email = data
-		case "password":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Password = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj interface{}) (model.MemberDetails, error) {
 	var it model.MemberDetails
 	asMap := map[string]interface{}{}
@@ -14516,6 +14681,14 @@ func (ec *executionContext) _MemberProfile(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._MemberProfile_seoDescription(ctx, field, obj)
 		case "seoKeyword":
 			out.Values[i] = ec._MemberProfile_seoKeyword(ctx, field, obj)
+		case "createdBy":
+			out.Values[i] = ec._MemberProfile_createdBy(ctx, field, obj)
+		case "createdOn":
+			out.Values[i] = ec._MemberProfile_createdOn(ctx, field, obj)
+		case "modifiedOn":
+			out.Values[i] = ec._MemberProfile_modifiedOn(ctx, field, obj)
+		case "modifiedBy":
+			out.Values[i] = ec._MemberProfile_modifiedBy(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15897,11 +16070,6 @@ func (ec *executionContext) marshalNJSON2string(ctx context.Context, sel ast.Sel
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNLoginCredentials2gqlserverᚋgraphᚋmodelᚐLoginCredentials(ctx context.Context, v interface{}) (model.LoginCredentials, error) {
-	res, err := ec.unmarshalInputLoginCredentials(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNMemberDetails2gqlserverᚋgraphᚋmodelᚐMemberDetails(ctx context.Context, v interface{}) (model.MemberDetails, error) {

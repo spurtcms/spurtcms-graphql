@@ -116,6 +116,10 @@ type MemberProfile{
 	seoTitle:          String
 	seoDescription:    String
 	seoKeyword:        String
+	createdBy:         Int
+	createdOn:         Time
+	modifiedOn:        Time 
+	modifiedBy:        Int       
 }
 
 type Category{
@@ -269,15 +273,10 @@ type Query{
 }
 
 type Mutation{
-    memberLogin(input: LoginCredentials!): String!
+    memberLogin(email: String!): String!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
 	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
-}
-
-input LoginCredentials{
-    email: String!
-    password: String!
 }
 
 input MemberDetails{

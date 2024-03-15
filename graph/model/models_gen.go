@@ -132,11 +132,6 @@ type FieldValue struct {
 	ModifiedBy *int       `json:"modifiedBY,omitempty"`
 }
 
-type LoginCredentials struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type Member struct {
 	ID               int           `json:"id"`
 	FirstName        string        `json:"firstName"`
@@ -192,6 +187,10 @@ type MemberProfile struct {
 	SeoTitle        *string     `json:"seoTitle,omitempty"`
 	SeoDescription  *string     `json:"seoDescription,omitempty"`
 	SeoKeyword      *string     `json:"seoKeyword,omitempty"`
+	CreatedBy       *int        `json:"createdBy,omitempty"`
+	CreatedOn       *time.Time  `json:"createdOn,omitempty"`
+	ModifiedOn      *time.Time  `json:"modifiedOn,omitempty"`
+	ModifiedBy      *int        `json:"modifiedBy,omitempty"`
 }
 
 type Page struct {

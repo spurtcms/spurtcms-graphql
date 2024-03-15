@@ -14,14 +14,16 @@ import (
 	"gorm.io/gorm"
 )
 
-func MemberLogin(db *gorm.DB, input model.LoginCredentials) (string, error) {
+func MemberLogin(db *gorm.DB, ctx context.Context, email string) (string, error) {
 
-	token, err := Mem.CheckMemberLogin(member.MemberLogin{Emailid: input.Email, Password: input.Password}, db, os.Getenv("JWT_SECRET"))
+	token, err := Mem.GraphqlMemberLogin(email,db,os.Getenv("JWT_SECRET"))
 
 	if err != nil {
 
 		return "", err
 	}
+
+	
 
 	Auth = GetAuthorization(token, db)
 

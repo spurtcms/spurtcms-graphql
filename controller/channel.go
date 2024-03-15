@@ -219,6 +219,10 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 				SeoTitle: &memberProfile.SeoTitle,
 				SeoDescription: &memberProfile.SeoDescription,
 				SeoKeyword: &memberProfile.SeoKeyword,
+				CreatedBy: &memberProfile.CreatedBy,
+				CreatedOn: &memberProfile.CreatedOn,
+				ModifiedOn: &memberProfile.ModifiedOn,
+				ModifiedBy: &memberProfile.ModifiedBy,
 			}
 
 			conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)

@@ -1,12 +1,17 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/base64"
+	"fmt"
+	"html/template"
 	"log"
 	"math/rand"
+	"net/smtp"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spurtcms/pkgcore/auth"
@@ -97,5 +102,59 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 	return imageName,storageDestination,nil
 }
 
+func GenerateEmail(email, subject, message string, wg *sync.WaitGroup) error {
 
+	data := map[string]interface{}{
 
+		"Body": template.HTML(message),
+	}
+
+	t, err2 := template.ParseFiles("view/email/email-template.html")
+
+	if err2 != nil {
+
+		fmt.Println(err2)
+	}
+
+	var htmlBuffer bytes.Buffer
+
+	if err1 := t.Execute(&htmlBuffer, data); err1 != nil {
+
+		log.Println(err1)
+	}
+
+	result := htmlBuffer.String()
+
+	defer wg.Done()
+
+	from := os.Getenv("MAIL_USERNAME")
+
+	smtpHost := "smtp.gmail.com"
+
+	smtpPort := "587"
+
+	contentType := "text/html"
+
+	// Set up the SMTP server configuration.
+	auth := smtp.PlainAuth("", os.Getenv("MAIL_USERNAME"), os.Getenv("MAIL_PASSWORD"), smtpHost)
+
+	// Compose the email.
+	emailBody := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nContent-Type: %s; charset=UTF-8\r\n\r\n%s", from, email, subject, contentType, result)
+
+	// Connect to the SMTP server and send the email.
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{email}, []byte(emailBody))
+
+	if err != nil {
+
+		fmt.Println("Failed to send email:", err)
+
+		return err
+
+	} else {
+
+		fmt.Println("Email sent successfully to:", email)
+		
+		return nil
+	}
+
+}
