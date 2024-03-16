@@ -80,6 +80,7 @@ type ChannelEntries struct {
 	CategoriesID     string            `json:"categoriesId"`
 	RelatedArticles  string            `json:"relatedArticles"`
 	FeaturedEntry    int               `json:"featuredEntry"`
+	ViewCount        int               `json:"viewCount"`
 	Categories       [][]Category      `json:"categories"`
 	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"`
 	AuthorDetails    *Author           `json:"authorDetails"`

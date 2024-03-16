@@ -6,28 +6,51 @@ import (
 	"errors"
 	"gqlserver/graph/model"
 	"log"
-	"os"
+	"math/rand"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spurtcms/pkgcore/member"
+
 	// "gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
-func MemberLogin(db *gorm.DB, ctx context.Context, email string) (string, error) {
+func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
-	token, err := Mem.GraphqlMemberLogin(email,db,os.Getenv("JWT_SECRET"))
+	member_details, err := Mem.GraphqlMemberLogin(email,db)
 
 	if err != nil {
 
-		return "", err
+		return false, err
 	}
 
-	
+	conv_member := model.Member{
+		ID: member_details.Id,
+		FirstName: member_details.FirstName,
+		LastName: member_details.LastName,
+		Email: member_details.Email,
+		MobileNo: member_details.MobileNo,
+		IsActive: member_details.IsActive,
+		ProfileImagePath: member_details.ProfileImagePath,
+	}
 
-	Auth = GetAuthorization(token, db)
+    channel := make(chan bool)
 
-	return token, nil
+	rand.Seed(time.Now().UnixNano())
+
+    otp := rand.Intn(900000) + 100000 
+
+	go SendMail(conv_member,otp,channel)
+
+	if <-channel{
+
+		return true,nil
+
+	}else{
+
+		return false,nil
+	}
 }
 
 func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {

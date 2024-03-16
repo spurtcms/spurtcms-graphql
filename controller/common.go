@@ -1,17 +1,14 @@
 package controller
 
 import (
-	"bytes"
 	"encoding/base64"
-	"fmt"
-	"html/template"
+	"gqlserver/graph/model"
 	"log"
 	"math/rand"
 	"net/smtp"
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/spurtcms/pkgcore/auth"
@@ -102,59 +99,87 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 	return imageName,storageDestination,nil
 }
 
-func GenerateEmail(email, subject, message string, wg *sync.WaitGroup) error {
+func SendMail(member model.Member, otp int,channel chan bool) {
 
-	data := map[string]interface{}{
-
-		"Body": template.HTML(message),
-	}
-
-	t, err2 := template.ParseFiles("view/email/email-template.html")
-
-	if err2 != nil {
-
-		fmt.Println(err2)
-	}
-
-	var htmlBuffer bytes.Buffer
-
-	if err1 := t.Execute(&htmlBuffer, data); err1 != nil {
-
-		log.Println(err1)
-	}
-
-	result := htmlBuffer.String()
-
-	defer wg.Done()
-
+	// Sender data.
 	from := os.Getenv("MAIL_USERNAME")
+	password := os.Getenv("MAIL_PASSWORD")
 
+	// Receiver email address.
+	to := []string{
+		member.Email,
+	}
+
+	// smtp server configuration.
 	smtpHost := "smtp.gmail.com"
-
 	smtpPort := "587"
 
-	contentType := "text/html"
+	// Authentication.
+	auth := smtp.PlainAuth("", from, password, smtpHost)
 
-	// Set up the SMTP server configuration.
-	auth := smtp.PlainAuth("", os.Getenv("MAIL_USERNAME"), os.Getenv("MAIL_PASSWORD"), smtpHost)
+	subject := "Subject:Hello " + member.FirstName +" "+ member.LastName + "\n"
 
-	// Compose the email.
-	emailBody := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nContent-Type: %s; charset=UTF-8\r\n\r\n%s", from, email, subject, contentType, result)
+	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 
-	// Connect to the SMTP server and send the email.
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{email}, []byte(emailBody))
+	conv_otp := strconv.Itoa(otp)
+
+	body := `<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>OTP Email</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				background-color: #f4f4f4;
+				margin: 0;
+				padding: 0;
+			}
+			.container {
+				max-width: 600px;
+				margin: 20px auto;
+				background-color: #fff;
+				padding: 20px;
+				border-radius: 5px;
+				box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+			}
+			h2 {
+				color: #333;
+			}
+			p {
+				color: #666;
+			}
+			.otp {
+				font-size: 24px;
+				font-weight: bold;
+				color: #007bff;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h2>OTP Email</h2>
+			<p>Your One-Time Password (OTP) is:</p>
+			<p class="otp">`+conv_otp+`</p>
+			<p>Please use this OTP to proceed to Login into ownDesk</p>
+		</div>
+	</body>
+	</html>`
+
+	msg := []byte(subject + mime + body)
+
+	// Sending email.
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
 
 	if err != nil {
 
-		fmt.Println("Failed to send email:", err)
+		log.Println(err)
 
-		return err
+		channel <- false
 
-	} else {
-
-		fmt.Println("Email sent successfully to:", email)
-		
-		return nil
+		return
 	}
 
+	channel <- true
 }

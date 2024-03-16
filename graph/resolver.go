@@ -20,7 +20,7 @@ func NewResolver() *Resolver {
 	return &Resolver{DB: dbconfig.SetupDB()}
 }
 
-func MemberLogin(db *gorm.DB,ctx context.Context, email string)(string,error){
+func MemberLogin(db *gorm.DB,ctx context.Context, email string)(bool,error){
 	return controller.MemberLogin(db,ctx,email)
 }
 

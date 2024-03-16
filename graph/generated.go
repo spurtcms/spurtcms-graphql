@@ -127,6 +127,7 @@ type ComplexityRoot struct {
 		ThumbnailImage   func(childComplexity int) int
 		Title            func(childComplexity int) int
 		UserID           func(childComplexity int) int
+		ViewCount        func(childComplexity int) int
 	}
 
 	ChannelEntriesDetails struct {
@@ -318,7 +319,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	MemberLogin(ctx context.Context, email string) (string, error)
+	MemberLogin(ctx context.Context, email string) (bool, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
 	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error)
@@ -765,6 +766,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChannelEntries.UserID(childComplexity), true
+
+	case "ChannelEntries.viewCount":
+		if e.complexity.ChannelEntries.ViewCount == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.ViewCount(childComplexity), true
 
 	case "ChannelEntriesDetails.channelEntriesList":
 		if e.complexity.ChannelEntriesDetails.ChannelEntriesList == nil {
@@ -4746,6 +4754,50 @@ func (ec *executionContext) fieldContext_ChannelEntries_featuredEntry(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelEntries_viewCount(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_viewCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ViewCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_viewCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelEntries_categories(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChannelEntries_categories(ctx, field)
 	if err != nil {
@@ -5077,6 +5129,8 @@ func (ec *executionContext) fieldContext_ChannelEntriesDetails_channelEntriesLis
 				return ec.fieldContext_ChannelEntries_relatedArticles(ctx, field)
 			case "featuredEntry":
 				return ec.fieldContext_ChannelEntries_featuredEntry(ctx, field)
+			case "viewCount":
+				return ec.fieldContext_ChannelEntries_viewCount(ctx, field)
 			case "categories":
 				return ec.fieldContext_ChannelEntries_categories(ctx, field)
 			case "additionalFields":
@@ -8237,9 +8291,9 @@ func (ec *executionContext) _Mutation_memberLogin(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_memberLogin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8249,7 +8303,7 @@ func (ec *executionContext) fieldContext_Mutation_memberLogin(ctx context.Contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	defer func() {
@@ -9805,6 +9859,8 @@ func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Co
 				return ec.fieldContext_ChannelEntries_relatedArticles(ctx, field)
 			case "featuredEntry":
 				return ec.fieldContext_ChannelEntries_featuredEntry(ctx, field)
+			case "viewCount":
+				return ec.fieldContext_ChannelEntries_viewCount(ctx, field)
 			case "categories":
 				return ec.fieldContext_ChannelEntries_categories(ctx, field)
 			case "additionalFields":
@@ -14168,6 +14224,11 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			}
 		case "featuredEntry":
 			out.Values[i] = ec._ChannelEntries_featuredEntry(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "viewCount":
+			out.Values[i] = ec._ChannelEntries_viewCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

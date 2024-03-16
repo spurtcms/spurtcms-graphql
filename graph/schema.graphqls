@@ -85,6 +85,7 @@ type ChannelEntries{
 	categoriesId:         String!
 	relatedArticles:      String!
 	featuredEntry:        Int!
+	viewCount:            Int!
 	categories:           [[Category!]!]!
 	additionalFields:     AdditionalFields
 	authorDetails:        Author!
@@ -273,7 +274,7 @@ type Query{
 }
 
 type Mutation{
-    memberLogin(email: String!): String!
+    memberLogin(email: String!): Boolean!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
 	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth

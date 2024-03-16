@@ -10,7 +10,7 @@ import (
 )
 
 // MemberLogin is the resolver for the memberLogin field.
-func (r *mutationResolver) MemberLogin(ctx context.Context, email string) (string, error) {
+func (r *mutationResolver) MemberLogin(ctx context.Context, email string) (bool, error) {
 	return MemberLogin(r.DB, ctx, email)
 }
 

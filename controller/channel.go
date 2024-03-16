@@ -219,10 +219,10 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 				SeoTitle: &memberProfile.SeoTitle,
 				SeoDescription: &memberProfile.SeoDescription,
 				SeoKeyword: &memberProfile.SeoKeyword,
-				CreatedBy: &memberProfile.CreatedBy,
-				CreatedOn: &memberProfile.CreatedOn,
-				ModifiedOn: &memberProfile.ModifiedOn,
-				ModifiedBy: &memberProfile.ModifiedBy,
+				// CreatedBy: &memberProfile.CreatedBy,
+				// CreatedOn: &memberProfile.CreatedOn,
+				// ModifiedOn: &memberProfile.ModifiedOn,
+				// ModifiedBy: &memberProfile.ModifiedBy,
 			}
 
 			conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
@@ -253,6 +253,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			MemberProfile: conv_memberProfiles,
 			AuthorDetails: authorDetails,
 			FeaturedEntry: entry.Feature,
+			ViewCount: entry.ViewCount,
 
 		}
 
@@ -484,6 +485,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId int, ch
 		MemberProfile: conv_memberProfiles,
 		AuthorDetails: authorDetails,
 		FeaturedEntry: channelEntry.Feature,
+		ViewCount: channelEntry.ViewCount,
 
 	}
 
