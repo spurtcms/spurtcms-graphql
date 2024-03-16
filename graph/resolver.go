@@ -68,5 +68,9 @@ func MemberProfileUpdate(db *gorm.DB,ctx context.Context, profiledata model.Prof
 	return controller.MemberProfileUpdate(db,ctx,profiledata)
 }
 
+func VerifyMemberOtp(db *gorm.DB,ctx context.Context, otp int) (string, error) {
+	return controller.VerifyMemberOtp(db,ctx,otp)
+}
+
 
 

@@ -25,7 +25,7 @@ const ContextKey key = "ginContext"
 var(
 	Mem member.MemberAuth
 	Auth *auth.Authorization
-	IST, _ = time.LoadLocation("Asia/Kolkata")
+	TimeZone, _ = time.LoadLocation(os.Getenv("TIME_ZONE"))
 	ProfileImagePath = "Uploads/ProfileImages/"
 	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
 	SectionTypeId = 12
@@ -123,8 +123,7 @@ func SendMail(member model.Member, otp int,channel chan bool) {
 
 	conv_otp := strconv.Itoa(otp)
 
-	body := `<!DOCTYPE html>
-	<html lang="en">
+	body := `<html>
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -162,7 +161,8 @@ func SendMail(member model.Member, otp int,channel chan bool) {
 			<h2>OTP Email</h2>
 			<p>Your One-Time Password (OTP) is:</p>
 			<p class="otp">`+conv_otp+`</p>
-			<p>Please use this OTP to proceed to Login into ownDesk</p>
+			<p>Please use this OTP to proceed to Login into ownDesk.</p>
+			<p>Note:*This otp is valid only for 5 minutes only</p>
 		</div>
 	</body>
 	</html>`

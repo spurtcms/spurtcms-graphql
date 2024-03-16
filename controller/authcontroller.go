@@ -7,6 +7,7 @@ import (
 	"gqlserver/graph/model"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +19,9 @@ import (
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
-	member_details, err := Mem.GraphqlMemberLogin(email,db)
+	Mem.Auth = GetAuthorizationWithoutToken(db)
+
+	member_details, err := Mem.GraphqlMemberLogin(email)
 
 	if err != nil {
 
@@ -33,6 +36,10 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		MobileNo: member_details.MobileNo,
 		IsActive: member_details.IsActive,
 		ProfileImagePath: member_details.ProfileImagePath,
+		CreatedOn: member_details.CreatedOn,
+		CreatedBy: member_details.CreatedBy,
+		ModifiedOn: &member_details.ModifiedOn,
+		ModifiedBy: &member_details.ModifiedBy,
 	}
 
     channel := make(chan bool)
@@ -40,6 +47,15 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 	rand.Seed(time.Now().UnixNano())
 
     otp := rand.Intn(900000) + 100000 
+
+	otp_expiry_time := time.Now().Add(5*time.Minute).In(TimeZone).Format("2006-01-02 15:04:05")
+
+	err = Mem.StoreGraphqlMemberOtp(otp,conv_member.ID,otp_expiry_time)
+
+	if err!=nil{
+
+		return false, err
+	}
 
 	go SendMail(conv_member,otp,channel)
 
@@ -51,6 +67,23 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		return false,nil
 	}
+}
+
+func VerifyMemberOtp(db *gorm.DB,ctx context.Context,otp int)(string,error){
+
+	Mem.Auth = GetAuthorizationWithoutToken(db)
+
+	currentTime := time.Now().In(TimeZone).Unix()
+
+	token,err := Mem.VerifyLoginOtp(otp,currentTime,os.Getenv("JWT_SECRET"))
+
+	if err!=nil{
+
+		return "",nil
+	}
+
+	return  token,nil
+	
 }
 
 func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
@@ -166,3 +199,4 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	return true, nil
 }
+
