@@ -50,8 +50,8 @@ func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, 
 }
 
 // ChannelEntryDetail is the resolver for the channelEntryDetail field.
-func (r *queryResolver) ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID int) (model.ChannelEntries, error) {
-	return ChannelEntryDetail(r.DB, ctx, channelID, categoryID, channelEntryID)
+func (r *queryResolver) ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string) (model.ChannelEntries, error) {
+	return ChannelEntryDetail(r.DB, ctx, channelID, categoryID, channelEntryID, slug)
 }
 
 // SpaceList is the resolver for the spaceList field.

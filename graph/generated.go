@@ -266,7 +266,7 @@ type ComplexityRoot struct {
 		CategoriesList               func(childComplexity int, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int) int
 		ChannelDetail                func(childComplexity int, channelID int) int
 		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int, title *string) int
-		ChannelEntryDetail           func(childComplexity int, categoryID *int, channelID *int, channelEntryID int) int
+		ChannelEntryDetail           func(childComplexity int, categoryID *int, channelID *int, channelEntryID *int, slug *string) int
 		ChannelList                  func(childComplexity int, limit int, offset int) int
 		PagesAndPageGroupsUnderSpace func(childComplexity int, spaceID int) int
 		SpaceDetails                 func(childComplexity int, spaceID int) int
@@ -330,7 +330,7 @@ type QueryResolver interface {
 	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
 	ChannelDetail(ctx context.Context, channelID int) (model.Channel, error)
 	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string) (model.ChannelEntriesDetails, error)
-	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID int) (model.ChannelEntries, error)
+	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string) (model.ChannelEntries, error)
 	SpaceList(ctx context.Context, limit int, offset int) (model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (model.PageAndPageGroups, error)
@@ -1540,7 +1540,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ChannelEntryDetail(childComplexity, args["categoryId"].(*int), args["channelId"].(*int), args["channelEntryId"].(int)), true
+		return e.complexity.Query.ChannelEntryDetail(childComplexity, args["categoryId"].(*int), args["channelId"].(*int), args["channelEntryId"].(*int), args["slug"].(*string)), true
 
 	case "Query.channelList":
 		if e.complexity.Query.ChannelList == nil {
@@ -2181,15 +2181,24 @@ func (ec *executionContext) field_Query_channelEntryDetail_args(ctx context.Cont
 		}
 	}
 	args["channelId"] = arg1
-	var arg2 int
+	var arg2 *int
 	if tmp, ok := rawArgs["channelEntryId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelEntryId"))
-		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["channelEntryId"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["slug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("slug"))
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["slug"] = arg3
 	return args, nil
 }
 
@@ -9859,7 +9868,7 @@ func (ec *executionContext) _Query_channelEntryDetail(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ChannelEntryDetail(rctx, fc.Args["categoryId"].(*int), fc.Args["channelId"].(*int), fc.Args["channelEntryId"].(int))
+			return ec.resolvers.Query().ChannelEntryDetail(rctx, fc.Args["categoryId"].(*int), fc.Args["channelId"].(*int), fc.Args["channelEntryId"].(*int), fc.Args["slug"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {

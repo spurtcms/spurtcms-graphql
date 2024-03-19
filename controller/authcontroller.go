@@ -44,7 +44,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
     channel := make(chan bool)
 
-	rand.Seed(time.Now().UnixNano())
+	// rand.Seed(time.Now().UnixNano())
 
     otp := rand.Intn(900000) + 100000 
 
@@ -79,7 +79,7 @@ func VerifyMemberOtp(db *gorm.DB,ctx context.Context,otp int)(string,error){
 
 	if err!=nil{
 
-		return "",nil
+		return "",err
 	}
 
 	return  token,nil

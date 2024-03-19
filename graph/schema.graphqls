@@ -266,7 +266,7 @@ type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int!): Channel! @auth
     channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String): ChannelEntriesDetails! @auth
-	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int!): ChannelEntries! @auth
+	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String): ChannelEntries! @auth
 	spaceList(limit: Int!,offset: Int!): SpaceDetails! @auth
 	spaceDetails(spaceId: Int!): Space! @auth
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
