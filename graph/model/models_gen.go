@@ -92,6 +92,13 @@ type ChannelEntriesDetails struct {
 	Count              int              `json:"count"`
 }
 
+type ClaimData struct {
+	ProfileName   string `json:"profileName"`
+	WorkMail      string `json:"workMail"`
+	CompanyNumber int    `json:"companyNumber"`
+	PersonName    string `json:"personName"`
+}
+
 type Field struct {
 	FieldID          int            `json:"fieldId"`
 	FieldName        string         `json:"fieldName"`

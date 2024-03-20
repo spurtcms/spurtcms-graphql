@@ -1,6 +1,9 @@
 introspection:
   schemaFile: ./graph/schema.graphqls
 
+output:
+   path: ./default
+
 info:
   title: Spurtcms/GraphQL API
   description: This is a GraphQL API documentation for consuming the spurtcms data contents.

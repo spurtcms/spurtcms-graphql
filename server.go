@@ -4,25 +4,16 @@ import (
 	"gqlserver/controller"
 	ginhandler "gqlserver/ginHandler"
 	"gqlserver/middleware"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 const defaultPort string = "8080"
 
 func main() {
-
-	er := godotenv.Load()
-
-	if er != nil {
-
-		log.Fatalf("Error loading .env file")
-	}
 
 	port := os.Getenv("PORT")
 
@@ -36,6 +27,8 @@ func main() {
 	r.Use(middleware.CorsMiddleware())
 
 	r.Static("/public","./public")
+
+	r.Static("/view","./view")
 
 	var htmlfiles []string
 

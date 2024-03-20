@@ -34,6 +34,11 @@ func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata 
 	return MemberProfileUpdate(r.DB, ctx, profiledata)
 }
 
+// Memberclaimnow is the resolver for the memberclaimnow field.
+func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData) (bool, error) {
+	return Memberclaimnow(r.DB,ctx,input)
+}
+
 // Channellist is the resolver for the channellist field.
 func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error) {
 	return Channellist(r.DB, ctx, limit, offset)

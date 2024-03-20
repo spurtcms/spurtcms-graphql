@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/spurtcms/pkgcore/auth"
 	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
@@ -22,15 +23,32 @@ type key string
 
 const ContextKey key = "ginContext"
 
+
 var(
 	Mem member.MemberAuth
 	Auth *auth.Authorization
-	TimeZone, _ = time.LoadLocation(os.Getenv("TIME_ZONE"))
-	ProfileImagePath = "Uploads/ProfileImages/"
-	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
+	TimeZone *time.Location
+	ProfileImagePath,SpecialToken string
 	SectionTypeId = 12
     MemberFieldTypeId = 14
 )
+
+func init(){
+	
+	err := godotenv.Load()
+
+	if err != nil {
+
+		log.Fatalf("Error loading .env file")
+	}
+
+	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
+
+	TimeZone, _ = time.LoadLocation(os.Getenv("TIME_ZONE"))
+
+	ProfileImagePath = "Uploads/ProfileImages/"
+
+}
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
 
@@ -99,7 +117,7 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 	return imageName,storageDestination,nil
 }
 
-func SendMail(member model.Member, otp int,channel chan bool) {
+func SendMail(member model.Member,html_content string,channel chan bool) {
 
 	// Sender data.
 	from := os.Getenv("MAIL_USERNAME")
@@ -117,57 +135,11 @@ func SendMail(member model.Member, otp int,channel chan bool) {
 	// Authentication.
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
-	subject := "Subject:Hello " + member.FirstName +" "+ member.LastName + "\n"
+	subject := "Subject: Member Login Confirmation \n"
 
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 
-	conv_otp := strconv.Itoa(otp)
-
-	body := `<html>
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>OTP Email</title>
-		<style>
-			body {
-				font-family: Arial, sans-serif;
-				background-color: #f4f4f4;
-				margin: 0;
-				padding: 0;
-			}
-			.container {
-				max-width: 600px;
-				margin: 20px auto;
-				background-color: #fff;
-				padding: 20px;
-				border-radius: 5px;
-				box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-			}
-			h2 {
-				color: #333;
-			}
-			p {
-				color: #666;
-			}
-			.otp {
-				font-size: 24px;
-				font-weight: bold;
-				color: #007bff;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="container">
-			<h2>OTP Email</h2>
-			<p>Your One-Time Password (OTP) is:</p>
-			<p class="otp">`+conv_otp+`</p>
-			<p>Please use this OTP to proceed to Login into ownDesk.</p>
-			<p>Note:*This otp is valid only for 5 minutes only</p>
-		</div>
-	</body>
-	</html>`
-
-	msg := []byte(subject + mime + body)
+	msg := []byte(subject + mime + html_content)
 
 	// Sending email.
 	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)

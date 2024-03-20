@@ -273,12 +273,14 @@ type Query{
 	categoriesList(limit: Int,offset: Int,categoryGroupId: Int,hierarchyLevel: Int): CategoriesList! @auth
 }
 
+
 type Mutation{
     memberLogin(email: String!): Boolean!
 	verifyMemberOtp(otp: Int!): String!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
 	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
+	memberclaimnow(input: ClaimData!): Boolean! @auth
 }
 
 input MemberDetails{
@@ -297,6 +299,13 @@ input MemberDetails{
 input ProfileData{
 	memberProfileId: Int!
 	memberProfile: JSON!
+}
+
+input ClaimData{
+	profileName:     String!
+	workMail:        String!
+    companyNumber:   Int!
+	personName:      String!
 }
 
 

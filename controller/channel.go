@@ -4,7 +4,7 @@ import (
 	"context"
 	"gqlserver/graph/model"
 	"os"
-	"sync"
+	// "sync"
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
@@ -85,234 +85,184 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	var conv_channelEntries []model.ChannelEntries
 
-	var wgs sync.WaitGroup
+	for _, entry := range channelEntries {
 
-	wgs.Add(1)
+		var conv_categories [][]model.Category
 
-	go func() {
+		for _, categories := range entry.Categories {
 
-		for _, entry := range channelEntries {
+			var conv_categoryz []model.Category
 
-			var conv_categories [][]model.Category
+			for _, category := range categories {
 
-			var wg sync.WaitGroup
+				conv_category := model.Category{
+					ID:           category.Id,
+					CategoryName: category.CategoryName,
+					CategorySlug: category.CategorySlug,
+					Description:  category.Description,
+					ImagePath:    category.ImagePath,
+					CreatedOn:    category.CreatedOn,
+					CreatedBy:    category.CreatedBy,
+					ModifiedOn:   &category.ModifiedOn,
+					ModifiedBy:   &category.ModifiedBy,
+					ParentID:     category.ParentId,
+				}
 
-			for _, categories := range entry.Categories {
-
-				wg.Add(1)
-
-				go func() {
-
-					var conv_categoryz []model.Category
-
-					for _, category := range categories {
-
-						conv_category := model.Category{
-							ID:           category.Id,
-							CategoryName: category.CategoryName,
-							CategorySlug: category.CategorySlug,
-							Description:  category.Description,
-							ImagePath:    category.ImagePath,
-							CreatedOn:    category.CreatedOn,
-							CreatedBy:    category.CreatedBy,
-							ModifiedOn:   &category.ModifiedOn,
-							ModifiedBy:   &category.ModifiedBy,
-							ParentID:     category.ParentId,
-						}
-
-						conv_categoryz = append(conv_categoryz, conv_category)
-
-					}
-
-					conv_categories = append(conv_categories, conv_categoryz)
-
-					defer wg.Done()
-				}()
+				conv_categoryz = append(conv_categoryz, conv_category)
 
 			}
 
-			wg.Wait()
-
-			authorDetails := &model.Author{
-				AuthorID:         entry.AuthorDetail.AuthorID,
-				FirstName:        entry.AuthorDetail.FirstName,
-				LastName:         entry.AuthorDetail.LastName,
-				Email:            entry.AuthorDetail.Email,
-				MobileNo:         entry.AuthorDetail.MobileNo,
-				IsActive:         entry.AuthorDetail.IsActive,
-				ProfileImagePath: entry.AuthorDetail.ProfileImagePath,
-				CreatedOn:        entry.AuthorDetail.CreatedOn,
-				CreatedBy:        entry.AuthorDetail.CreatedBy,
-			}
-
-			var conv_sections []model.Section
-
-			for _, section := range entry.Sections {
-
-				wg.Add(1)
-
-				go func() {
-
-					conv_section := model.Section{
-						SectionID:     &section.Id,
-						SectionName:   section.FieldName,
-						SectionTypeID: section.FieldTypeId,
-						CreatedOn:     section.CreatedOn,
-						CreatedBy:     section.CreatedBy,
-						ModifiedOn:    &section.ModifiedOn,
-						ModifiedBy:    &section.ModifiedBy,
-						OrderIndex:    section.OrderIndex,
-					}
-
-					conv_sections = append(conv_sections, conv_section)
-
-					defer wg.Done()
-
-				}()
-
-			}
-
-			wg.Wait()
-
-			var conv_fields []model.Field
-
-			for _, field := range entry.Fields {
-
-				wg.Add(1)
-
-				go func() {
-
-					conv_field_value := model.FieldValue{
-						ID:         field.FieldValue.FieldId,
-						FieldValue: field.FieldValue.FieldValue,
-						CreatedOn:  field.FieldValue.CreatedOn,
-						CreatedBy:  field.FieldValue.CreatedBy,
-						ModifiedOn: &field.FieldValue.ModifiedOn,
-						ModifiedBy: &field.FieldValue.ModifiedBy,
-					}
-
-					var conv_fieldOptions []model.FieldOptions
-
-					for _, field_option := range field.FieldOptions {
-
-						conv_fieldOption := model.FieldOptions{
-							ID:          field_option.Id,
-							OptionName:  field_option.OptionName,
-							OptionValue: field_option.OptionValue,
-							CreatedOn:   field_option.CreatedOn,
-							CreatedBy:   field_option.CreatedBy,
-							ModifiedOn:  &field_option.ModifiedOn,
-							ModifiedBy:  &field_option.ModifiedBy,
-						}
-
-						conv_fieldOptions = append(conv_fieldOptions, conv_fieldOption)
-					}
-
-					conv_field := model.Field{
-						FieldID:          field.Id,
-						FieldName:        field.FieldName,
-						FieldTypeID:      field.FieldTypeId,
-						MandatoryField:   field.MandatoryField,
-						OptionExist:      field.OptionExist,
-						CreatedOn:        field.CreatedOn,
-						CreatedBy:        field.CreatedBy,
-						ModifiedOn:       &field.ModifiedOn,
-						ModifiedBy:       &field.ModifiedBy,
-						FieldDesc:        field.FieldDesc,
-						OrderIndex:       field.OrderIndex,
-						ImagePath:        field.ImagePath,
-						DatetimeFormat:   &field.DatetimeFormat,
-						TimeFormat:       &field.TimeFormat,
-						SectionParentID:  &field.SectionParentId,
-						CharacterAllowed: &field.CharacterAllowed,
-						FieldTypeName:    field.FieldTypeName,
-						FieldValue:       &conv_field_value,
-						FieldOptions:     conv_fieldOptions,
-					}
-
-					conv_fields = append(conv_fields, conv_field)
-
-					defer wg.Done()
-				}()
-
-			}
-
-			wg.Wait()
-
-			additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
-
-			var conv_memberProfiles []model.MemberProfile
-
-			for _, memberProfile := range entry.MemberProfiles {
-
-				wg.Add(1)
-
-				go func() {
-
-					conv_MemberProfile := model.MemberProfile{
-						MemberID:        &memberProfile.Id,
-						ProfileName:     &memberProfile.ProfileName,
-						ProfileSlug:     &memberProfile.ProfileSlug,
-						ProfilePage:     &memberProfile.ProfilePage,
-						MemberDetails:   memberProfile.MemberDetails,
-						CompanyName:     &memberProfile.CompanyName,
-						CompanyLocation: &memberProfile.CompanyLocation,
-						CompanyLogo:     &memberProfile.CompanyLogo,
-						About:           &memberProfile.About,
-						SeoTitle:        &memberProfile.SeoTitle,
-						SeoDescription:  &memberProfile.SeoDescription,
-						SeoKeyword:      &memberProfile.SeoKeyword,
-						// CreatedBy: &memberProfile.CreatedBy,
-						// CreatedOn: &memberProfile.CreatedOn,
-						// ModifiedOn: &memberProfile.ModifiedOn,
-						// ModifiedBy: &memberProfile.ModifiedBy,
-					}
-
-					conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
-
-					defer wg.Done()
-				}()
-
-			}
-
-			wg.Wait()
-
-			conv_channelEntry := model.ChannelEntries{
-				ID:               entry.Id,
-				Title:            entry.Title,
-				Slug:             entry.Slug,
-				Description:      entry.Description,
-				UserID:           entry.UserId,
-				ChannelID:        entry.ChannelId,
-				Status:           entry.Status,
-				IsActive:         entry.IsActive,
-				CreatedOn:        entry.CreatedOn,
-				CreatedBy:        entry.CreatedBy,
-				ModifiedBy:       &entry.ModifiedBy,
-				ModifiedOn:       &entry.ModifiedOn,
-				CoverImage:       entry.CoverImage,
-				ThumbnailImage:   entry.ThumbnailImage,
-				MetaTitle:        entry.MetaTitle,
-				MetaDescription:  entry.MetaDescription,
-				Keyword:          entry.Keyword,
-				CategoriesID:     entry.CategoriesId,
-				RelatedArticles:  entry.RelatedArticles,
-				Categories:       conv_categories,
-				AdditionalFields: additionalFields,
-				MemberProfile:    conv_memberProfiles,
-				AuthorDetails:    authorDetails,
-				FeaturedEntry:    entry.Feature,
-				ViewCount:        entry.ViewCount,
-			}
-
-			conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
+			conv_categories = append(conv_categories, conv_categoryz)
 
 		}
 
-		defer wgs.Done()
-	}()
+		authorDetails := &model.Author{
+			AuthorID:         entry.AuthorDetail.AuthorID,
+			FirstName:        entry.AuthorDetail.FirstName,
+			LastName:         entry.AuthorDetail.LastName,
+			Email:            entry.AuthorDetail.Email,
+			MobileNo:         entry.AuthorDetail.MobileNo,
+			IsActive:         entry.AuthorDetail.IsActive,
+			ProfileImagePath: entry.AuthorDetail.ProfileImagePath,
+			CreatedOn:        entry.AuthorDetail.CreatedOn,
+			CreatedBy:        entry.AuthorDetail.CreatedBy,
+		}
 
-	wgs.Wait()
+		var conv_sections []model.Section
+
+		for _, section := range entry.Sections {
+
+			conv_section := model.Section{
+				SectionID:     &section.Id,
+				SectionName:   section.FieldName,
+				SectionTypeID: section.FieldTypeId,
+				CreatedOn:     section.CreatedOn,
+				CreatedBy:     section.CreatedBy,
+				ModifiedOn:    &section.ModifiedOn,
+				ModifiedBy:    &section.ModifiedBy,
+				OrderIndex:    section.OrderIndex,
+			}
+
+			conv_sections = append(conv_sections, conv_section)
+
+		}
+
+		var conv_fields []model.Field
+
+		for _, field := range entry.Fields {
+
+			conv_field_value := model.FieldValue{
+				ID:         field.FieldValue.FieldId,
+				FieldValue: field.FieldValue.FieldValue,
+				CreatedOn:  field.FieldValue.CreatedOn,
+				CreatedBy:  field.FieldValue.CreatedBy,
+				ModifiedOn: &field.FieldValue.ModifiedOn,
+				ModifiedBy: &field.FieldValue.ModifiedBy,
+			}
+
+			var conv_fieldOptions []model.FieldOptions
+
+			for _, field_option := range field.FieldOptions {
+
+				conv_fieldOption := model.FieldOptions{
+					ID:          field_option.Id,
+					OptionName:  field_option.OptionName,
+					OptionValue: field_option.OptionValue,
+					CreatedOn:   field_option.CreatedOn,
+					CreatedBy:   field_option.CreatedBy,
+					ModifiedOn:  &field_option.ModifiedOn,
+					ModifiedBy:  &field_option.ModifiedBy,
+				}
+
+				conv_fieldOptions = append(conv_fieldOptions, conv_fieldOption)
+			}
+
+			conv_field := model.Field{
+				FieldID:          field.Id,
+				FieldName:        field.FieldName,
+				FieldTypeID:      field.FieldTypeId,
+				MandatoryField:   field.MandatoryField,
+				OptionExist:      field.OptionExist,
+				CreatedOn:        field.CreatedOn,
+				CreatedBy:        field.CreatedBy,
+				ModifiedOn:       &field.ModifiedOn,
+				ModifiedBy:       &field.ModifiedBy,
+				FieldDesc:        field.FieldDesc,
+				OrderIndex:       field.OrderIndex,
+				ImagePath:        field.ImagePath,
+				DatetimeFormat:   &field.DatetimeFormat,
+				TimeFormat:       &field.TimeFormat,
+				SectionParentID:  &field.SectionParentId,
+				CharacterAllowed: &field.CharacterAllowed,
+				FieldTypeName:    field.FieldTypeName,
+				FieldValue:       &conv_field_value,
+				FieldOptions:     conv_fieldOptions,
+			}
+
+			conv_fields = append(conv_fields, conv_field)
+
+		}
+
+		additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
+
+		var conv_memberProfiles []model.MemberProfile
+
+		for _, memberProfile := range entry.MemberProfiles {
+
+			conv_MemberProfile := model.MemberProfile{
+				MemberID:        &memberProfile.Id,
+				ProfileName:     &memberProfile.ProfileName,
+				ProfileSlug:     &memberProfile.ProfileSlug,
+				ProfilePage:     &memberProfile.ProfilePage,
+				MemberDetails:   memberProfile.MemberDetails,
+				CompanyName:     &memberProfile.CompanyName,
+				CompanyLocation: &memberProfile.CompanyLocation,
+				CompanyLogo:     &memberProfile.CompanyLogo,
+				About:           &memberProfile.About,
+				SeoTitle:        &memberProfile.SeoTitle,
+				SeoDescription:  &memberProfile.SeoDescription,
+				SeoKeyword:      &memberProfile.SeoKeyword,
+				// CreatedBy: &memberProfile.CreatedBy,
+				// CreatedOn: &memberProfile.CreatedOn,
+				// ModifiedOn: &memberProfile.ModifiedOn,
+				// ModifiedBy: &memberProfile.ModifiedBy,
+			}
+
+			conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
+
+		}
+
+		conv_channelEntry := model.ChannelEntries{
+			ID:               entry.Id,
+			Title:            entry.Title,
+			Slug:             entry.Slug,
+			Description:      entry.Description,
+			UserID:           entry.UserId,
+			ChannelID:        entry.ChannelId,
+			Status:           entry.Status,
+			IsActive:         entry.IsActive,
+			CreatedOn:        entry.CreatedOn,
+			CreatedBy:        entry.CreatedBy,
+			ModifiedBy:       &entry.ModifiedBy,
+			ModifiedOn:       &entry.ModifiedOn,
+			CoverImage:       entry.CoverImage,
+			ThumbnailImage:   entry.ThumbnailImage,
+			MetaTitle:        entry.MetaTitle,
+			MetaDescription:  entry.MetaDescription,
+			Keyword:          entry.Keyword,
+			CategoriesID:     entry.CategoriesId,
+			RelatedArticles:  entry.RelatedArticles,
+			Categories:       conv_categories,
+			AdditionalFields: additionalFields,
+			MemberProfile:    conv_memberProfiles,
+			AuthorDetails:    authorDetails,
+			FeaturedEntry:    entry.Feature,
+			ViewCount:        entry.ViewCount,
+		}
+
+		conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
+
+	}
 
 	channelEntryDetails := model.ChannelEntriesDetails{ChannelEntriesList: conv_channelEntries, Count: int(count)}
 
@@ -544,4 +494,9 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 	return conv_channelEntry, nil
 
+}
+
+func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData) (bool, error) {
+
+	return true, nil
 }

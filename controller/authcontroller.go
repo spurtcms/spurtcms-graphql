@@ -1,10 +1,12 @@
 package controller
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"gqlserver/graph/model"
+	"html/template"
 	"log"
 	"math/rand"
 	"os"
@@ -48,7 +50,13 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
     otp := rand.Intn(900000) + 100000 
 
-	otp_expiry_time := time.Now().Add(5*time.Minute).In(TimeZone).Format("2006-01-02 15:04:05")
+	current_time := time.Now().In(TimeZone)
+
+	otp_expiry_time := current_time.Add(5*time.Minute).Format("2006-01-02 15:04:05")
+
+	mail_expiry_time := current_time.Add(5*time.Minute).Format("02 Jan 2006 03:04 PM")
+
+	log.Println("chkkk", os.Getenv("TIME_ZONE")," ", TimeZone," ",mail_expiry_time)
 
 	err = Mem.StoreGraphqlMemberOtp(otp,conv_member.ID,otp_expiry_time)
 
@@ -57,7 +65,25 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, err
 	}
 
-	go SendMail(conv_member,otp,channel)
+	data := map[string]interface{}{"otp": otp,"expiry_time": mail_expiry_time,"member": conv_member}
+
+	tmpl, err := template.ParseFiles("view/email/login-template.html")
+
+	if err != nil {
+		
+		return false, err
+	}
+
+	var template_buffer bytes.Buffer
+	
+	if err := tmpl.Execute(&template_buffer,data); err != nil {
+
+		log.Println(err)
+	}
+
+	html_content := template_buffer.String()
+
+	go SendMail(conv_member,html_content,channel)
 
 	if <-channel{
 
