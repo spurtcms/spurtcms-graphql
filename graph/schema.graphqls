@@ -12,6 +12,8 @@ scalar Any
 
 scalar JSON
 
+scalar LargeInt
+
 type Member{
     id:               Int! 
     firstName:        String!
@@ -280,7 +282,7 @@ type Mutation{
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
 	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
-	memberclaimnow(input: ClaimData!): Boolean! @auth
+	memberclaimnow(input: ClaimData!,entryId: Int!): Boolean! @auth
 }
 
 input MemberDetails{
@@ -304,7 +306,7 @@ input ProfileData{
 input ClaimData{
 	profileName:     String!
 	workMail:        String!
-    companyNumber:   Int!
+    companyNumber:   LargeInt!
 	personName:      String!
 }
 

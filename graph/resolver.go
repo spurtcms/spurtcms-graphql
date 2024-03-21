@@ -72,7 +72,7 @@ func VerifyMemberOtp(db *gorm.DB,ctx context.Context, otp int) (string, error) {
 	return controller.VerifyMemberOtp(db,ctx,otp)
 }
 
-func Memberclaimnow(db *gorm.DB,ctx context.Context, input model.ClaimData) (bool, error) {
-	return controller.Memberclaimnow(db,ctx,input)
+func Memberclaimnow(db *gorm.DB,ctx context.Context, input model.ClaimData, entryId int) (bool, error) {
+	return controller.Memberclaimnow(db,ctx,input,entryId)
 }
 

@@ -1,10 +1,14 @@
 package controller
 
 import (
+	"bytes"
 	"context"
 	"gqlserver/graph/model"
+	"log"
 	"os"
+
 	// "sync"
+	"html/template"
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
@@ -496,7 +500,51 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 }
 
-func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData) (bool, error) {
+func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, entryId int) (bool, error) {
 
-	return true, nil
+	verify_chan := make(chan bool)
+
+	var channelEntry model.ChannelEntries
+
+    if err := db.Table("tbl_channel_entries").Where("is_deleted = 0 and id = ?",entryId).First(&channelEntry).Error;err!=nil{
+
+		return false,err
+	}
+
+	var AuthorDetails model.Author
+
+	if err :=db.Table("tbl_users").Where("is_deleted = 0 and id = ?",channelEntry.CreatedBy).First(&AuthorDetails).Error;err!=nil{
+
+		return false, err
+	}
+
+	log.Println("email",AuthorDetails.Email)
+
+	data := map[string]interface{}{"claimdata": profileData,"AuthorDetails":AuthorDetails,"Entry": channelEntry}
+
+	tmpl,_ := template.ParseFiles("view/email/claim-template.html")
+
+	var template_buff bytes.Buffer
+
+	err := tmpl.Execute(&template_buff,data)
+
+	if err!=nil{
+
+		return false, err
+	}
+
+	mail_data := MailConfig{Email: AuthorDetails.Email,MailUsername: os.Getenv("MAIL_USERNAME"),MailPassword: os.Getenv("MAIL_PASSWORD"),Subject: "OwnDesk - Member Profile Claim Request"}
+
+	html_content := template_buff.String()
+
+	go SendMail(mail_data,html_content,verify_chan)
+
+	if <-verify_chan{
+
+		return true,nil
+
+	}else{
+
+		return false,nil
+	}
 }

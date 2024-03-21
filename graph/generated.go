@@ -229,7 +229,7 @@ type ComplexityRoot struct {
 		MemberProfileUpdate func(childComplexity int, profiledata model.ProfileData) int
 		MemberRegister      func(childComplexity int, input model.MemberDetails) int
 		MemberUpdate        func(childComplexity int, memberdata model.MemberDetails) int
-		Memberclaimnow      func(childComplexity int, input model.ClaimData) int
+		Memberclaimnow      func(childComplexity int, input model.ClaimData, entryID int) int
 		VerifyMemberOtp     func(childComplexity int, otp int) int
 	}
 
@@ -326,7 +326,7 @@ type MutationResolver interface {
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
 	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error)
-	Memberclaimnow(ctx context.Context, input model.ClaimData) (bool, error)
+	Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int) (bool, error)
 }
 type QueryResolver interface {
 	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
@@ -1347,7 +1347,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Memberclaimnow(childComplexity, args["input"].(model.ClaimData)), true
+		return e.complexity.Mutation.Memberclaimnow(childComplexity, args["input"].(model.ClaimData), args["entryId"].(int)), true
 
 	case "Mutation.verifyMemberOtp":
 		if e.complexity.Mutation.VerifyMemberOtp == nil {
@@ -2034,6 +2034,15 @@ func (ec *executionContext) field_Mutation_memberclaimnow_args(ctx context.Conte
 		}
 	}
 	args["input"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["entryId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entryId"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["entryId"] = arg1
 	return args, nil
 }
 
@@ -8663,7 +8672,7 @@ func (ec *executionContext) _Mutation_memberclaimnow(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().Memberclaimnow(rctx, fc.Args["input"].(model.ClaimData))
+			return ec.resolvers.Mutation().Memberclaimnow(rctx, fc.Args["input"].(model.ClaimData), fc.Args["entryId"].(int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -13848,7 +13857,7 @@ func (ec *executionContext) unmarshalInputClaimData(ctx context.Context, obj int
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyNumber"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
+			data, err := ec.unmarshalNLargeInt2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16397,6 +16406,21 @@ func (ec *executionContext) unmarshalNJSON2string(ctx context.Context, v interfa
 }
 
 func (ec *executionContext) marshalNJSON2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNLargeInt2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLargeInt2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {

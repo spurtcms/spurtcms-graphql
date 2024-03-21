@@ -12,7 +12,7 @@ type AdditionalFields struct {
 }
 
 type Author struct {
-	AuthorID         int       `json:"AuthorId"`
+	AuthorID         int       `json:"AuthorId" gorm:"column:id"`
 	FirstName        string    `json:"FirstName"`
 	LastName         string    `json:"LastName"`
 	Email            string    `json:"Email"`
@@ -81,10 +81,10 @@ type ChannelEntries struct {
 	RelatedArticles  string            `json:"relatedArticles"`
 	FeaturedEntry    int               `json:"featuredEntry"`
 	ViewCount        int               `json:"viewCount"`
-	Categories       [][]Category      `json:"categories"`
-	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"`
-	AuthorDetails    *Author           `json:"authorDetails"`
-	MemberProfile    []MemberProfile   `json:"memberProfile,omitempty"`
+	Categories       [][]Category      `json:"categories" gorm:"-"`
+	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty" gorm:"-"`
+	AuthorDetails    *Author           `json:"authorDetails" gorm:"-"`
+	MemberProfile    []MemberProfile   `json:"memberProfile,omitempty" gorm:"-"`
 }
 
 type ChannelEntriesDetails struct {
@@ -95,7 +95,7 @@ type ChannelEntriesDetails struct {
 type ClaimData struct {
 	ProfileName   string `json:"profileName"`
 	WorkMail      string `json:"workMail"`
-	CompanyNumber int    `json:"companyNumber"`
+	CompanyNumber string `json:"companyNumber"`
 	PersonName    string `json:"personName"`
 }
 

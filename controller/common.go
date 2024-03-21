@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/base64"
-	"gqlserver/graph/model"
 	"log"
 	"math/rand"
 	"net/smtp"
@@ -32,6 +31,14 @@ var(
 	SectionTypeId = 12
     MemberFieldTypeId = 14
 )
+
+type MailConfig struct{
+	Email            string
+	MailUsername     string
+	MailPassword     string
+	Subject          string
+	AdditionalData   map[string]interface{}
+}
 
 func init(){
 	
@@ -117,15 +124,15 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 	return imageName,storageDestination,nil
 }
 
-func SendMail(member model.Member,html_content string,channel chan bool) {
+func SendMail(config MailConfig,html_content string,channel chan bool) {
 
 	// Sender data.
-	from := os.Getenv("MAIL_USERNAME")
-	password := os.Getenv("MAIL_PASSWORD")
+	from := config.MailUsername
+	password := config.MailPassword
 
 	// Receiver email address.
 	to := []string{
-		member.Email,
+		config.Email,
 	}
 
 	// smtp server configuration.
@@ -135,7 +142,7 @@ func SendMail(member model.Member,html_content string,channel chan bool) {
 	// Authentication.
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
-	subject := "Subject: Member Login Confirmation \n"
+	subject := "Subject:"+config.Subject+" \n"
 
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 

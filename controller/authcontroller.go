@@ -56,8 +56,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	mail_expiry_time := current_time.Add(5*time.Minute).Format("02 Jan 2006 03:04 PM")
 
-	log.Println("chkkk", os.Getenv("TIME_ZONE")," ", TimeZone," ",mail_expiry_time)
-
 	err = Mem.StoreGraphqlMemberOtp(otp,conv_member.ID,otp_expiry_time)
 
 	if err!=nil{
@@ -78,12 +76,14 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 	
 	if err := tmpl.Execute(&template_buffer,data); err != nil {
 
-		log.Println(err)
+		return false,err
 	}
+
+	mail_data := MailConfig{Email: conv_member.Email,MailUsername: os.Getenv("MAIL_USERNAME"),MailPassword: os.Getenv("MAIL_PASSWORD"),Subject: "OwnDesk - Login Otp Confirmation"}
 
 	html_content := template_buffer.String()
 
-	go SendMail(conv_member,html_content,channel)
+	go SendMail(mail_data,html_content,channel)
 
 	if <-channel{
 
