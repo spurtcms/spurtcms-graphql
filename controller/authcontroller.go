@@ -101,7 +101,7 @@ func VerifyMemberOtp(db *gorm.DB,ctx context.Context,otp int)(string,error){
 
 	currentTime := time.Now().In(TimeZone).Unix()
 
-	token,err := Mem.VerifyLoginOtp(otp,currentTime,os.Getenv("JWT_SECRET"))
+	token,err := Mem.VerifyLoginOtp(otp,currentTime)
 
 	if err!=nil{
 
@@ -218,7 +218,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		log.Println(err)
 	}
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("id = ?", profiledata.MemberProfileID).UpdateColumns(map[string]interface{}{"member_details": jsonData}).Error;err!=nil{
+	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and id = ?", profiledata.MemberProfileID).UpdateColumns(map[string]interface{}{"member_details": jsonData}).Error;err!=nil{
 
 		return false,err
 	}

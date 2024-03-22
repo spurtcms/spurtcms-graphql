@@ -67,7 +67,7 @@ func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
 
 func GetAuthorizationWithoutToken(db *gorm.DB)(*auth.Authorization){
 
-	auth := spurtcore.NewInstance(&auth.Option{DB: db, Token: "", Secret: ""})
+	auth := spurtcore.NewInstance(&auth.Option{DB: db, Token: "", Secret: os.Getenv("JWT_SECRET")})
 
 	return &auth
 }
