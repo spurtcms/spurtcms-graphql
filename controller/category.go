@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"gqlserver/graph/model"
-	"os"
 	"strconv"
 	"strings"
 
@@ -11,17 +10,6 @@ import (
 )
 
 func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel *int) (model.CategoriesList, error) {
-
-	var pathUrl string
-
-	if os.Getenv("DOMAIN_URL") != "" {
-
-		pathUrl = os.Getenv("DOMAIN_URL")
-
-	} else {
-
-		pathUrl = os.Getenv("LOCAL_URL")
-	}
 
 	var categories []model.Category
 
@@ -96,7 +84,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 			if category.ImagePath != "" {
 
-				modified_path = pathUrl + strings.TrimPrefix(category.ImagePath, "/")
+				modified_path = PathUrl + strings.TrimPrefix(category.ImagePath, "/")
 			}
 
 			category.ImagePath = modified_path

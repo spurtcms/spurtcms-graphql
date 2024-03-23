@@ -3,11 +3,11 @@ package controller
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	// "encoding/json"
 	"errors"
 	"gqlserver/graph/model"
 	"html/template"
-	"log"
+	// "log"
 	"math/rand"
 	"os"
 	"time"
@@ -207,22 +207,4 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 }
 
-func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData) (bool, error) {
-
-	var jsonData map[string]interface{}
-
-	err := json.Unmarshal([]byte(profiledata.MemberProfile), &jsonData)
-
-	if err != nil {
-
-		log.Println(err)
-	}
-
-	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and id = ?", profiledata.MemberProfileID).UpdateColumns(map[string]interface{}{"member_details": jsonData}).Error;err!=nil{
-
-		return false,err
-	}
-
-	return true, nil
-}
 

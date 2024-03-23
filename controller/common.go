@@ -30,6 +30,7 @@ var(
 	ProfileImagePath,SpecialToken string
 	SectionTypeId = 12
     MemberFieldTypeId = 14
+	PathUrl string
 )
 
 type MailConfig struct{
@@ -54,6 +55,15 @@ func init(){
 	TimeZone, _ = time.LoadLocation(os.Getenv("TIME_ZONE"))
 
 	ProfileImagePath = "Uploads/ProfileImages/"
+
+	if os.Getenv("DOMAIN_URL") != "" {
+
+		PathUrl = os.Getenv("DOMAIN_URL")
+
+	} else {
+
+		PathUrl = os.Getenv("LOCAL_URL")
+	}
 
 }
 

@@ -3,9 +3,12 @@ package controller
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"gqlserver/graph/model"
 	"log"
 	"os"
+	"time"
 
 	// "sync"
 	"html/template"
@@ -63,24 +66,13 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
-	var pathUrl string
-
-	if os.Getenv("DOMAIN_URL") != "" {
-
-		pathUrl = os.Getenv("DOMAIN_URL")
-
-	} else {
-
-		pathUrl = os.Getenv("LOCAL_URL")
-	}
-
 	var channelEntries []channel.TblChannelEntries
 
 	var count int64
 
 	var err error
 
-	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, pathUrl, title)
+	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, PathUrl, title)
 
 	if err != nil {
 
@@ -214,7 +206,8 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 		for _, memberProfile := range entry.MemberProfiles {
 
 			conv_MemberProfile := model.MemberProfile{
-				MemberID:        &memberProfile.Id,
+				ID:              &memberProfile.Id,
+				MemberID:        &memberProfile.MemberId,
 				ProfileName:     &memberProfile.ProfileName,
 				ProfileSlug:     &memberProfile.ProfileSlug,
 				ProfilePage:     &memberProfile.ProfilePage,
@@ -226,10 +219,13 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 				SeoTitle:        &memberProfile.SeoTitle,
 				SeoDescription:  &memberProfile.SeoDescription,
 				SeoKeyword:      &memberProfile.SeoKeyword,
-				// CreatedBy: &memberProfile.CreatedBy,
-				// CreatedOn: &memberProfile.CreatedOn,
-				// ModifiedOn: &memberProfile.ModifiedOn,
-				// ModifiedBy: &memberProfile.ModifiedBy,
+				CreatedBy:       &memberProfile.CreatedBy,
+				CreatedOn:       &memberProfile.CreatedOn,
+				ModifiedOn:      &memberProfile.ModifiedOn,
+				ModifiedBy:      &memberProfile.ModifiedBy,
+				Linkedin:        &memberProfile.Linkedin,
+				Twitter:         &memberProfile.Twitter,
+				Website:         &memberProfile.Website,
 			}
 
 			conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
@@ -313,18 +309,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
-	var pathUrl string
-
-	if os.Getenv("DOMAIN_URL") != "" {
-
-		pathUrl = os.Getenv("DOMAIN_URL")
-
-	} else {
-
-		pathUrl = os.Getenv("LOCAL_URL")
-	}
-
-	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(channelEntryId, channelId, categoryId, pathUrl, SectionTypeId, MemberFieldTypeId, slug)
+	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(channelEntryId, channelId, categoryId, PathUrl, SectionTypeId, MemberFieldTypeId, slug)
 
 	if err != nil {
 
@@ -502,49 +487,133 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, entryId int) (bool, error) {
 
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	token := c.GetString("token")
+
+	if token == SpecialToken {
+
+		return false, errors.New("login required")
+	}
+
 	verify_chan := make(chan bool)
 
 	var channelEntry model.ChannelEntries
 
-    if err := db.Table("tbl_channel_entries").Where("is_deleted = 0 and id = ?",entryId).First(&channelEntry).Error;err!=nil{
+	if err := db.Table("tbl_channel_entries").Where("is_deleted = 0 and id = ?", entryId).First(&channelEntry).Error; err != nil {
 
-		return false,err
+		return false, err
 	}
 
 	var AuthorDetails model.Author
 
-	if err :=db.Table("tbl_users").Where("is_deleted = 0 and id = ?",channelEntry.CreatedBy).First(&AuthorDetails).Error;err!=nil{
+	if err := db.Table("tbl_users").Where("is_deleted = 0 and id = ?", channelEntry.CreatedBy).First(&AuthorDetails).Error; err != nil {
 
 		return false, err
 	}
 
-	log.Println("email",AuthorDetails.Email)
+	log.Println("email", AuthorDetails.Email)
 
-	data := map[string]interface{}{"claimdata": profileData,"AuthorDetails":AuthorDetails,"Entry": channelEntry}
+	data := map[string]interface{}{"claimdata": profileData, "AuthorDetails": AuthorDetails, "Entry": channelEntry}
 
-	tmpl,_ := template.ParseFiles("view/email/claim-template.html")
+	tmpl, _ := template.ParseFiles("view/email/claim-template.html")
 
 	var template_buff bytes.Buffer
 
-	err := tmpl.Execute(&template_buff,data)
+	err := tmpl.Execute(&template_buff, data)
 
-	if err!=nil{
+	if err != nil {
 
 		return false, err
 	}
 
-	mail_data := MailConfig{Email: AuthorDetails.Email,MailUsername: os.Getenv("MAIL_USERNAME"),MailPassword: os.Getenv("MAIL_PASSWORD"),Subject: "OwnDesk - Member Profile Claim Request"}
+	mail_data := MailConfig{Email: AuthorDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "OwnDesk - Member Profile Claim Request"}
 
 	html_content := template_buff.String()
 
-	go SendMail(mail_data,html_content,verify_chan)
+	go SendMail(mail_data, html_content, verify_chan)
 
-	if <-verify_chan{
+	if <-verify_chan {
 
-		return true,nil
+		return true, nil
 
-	}else{
+	} else {
 
-		return false,nil
+		return false, nil
 	}
+}
+
+func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId int, updateExactMemberProfileOnly bool) (bool, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	token := c.GetString("token")
+
+	if token == SpecialToken {
+
+		return false, errors.New("login required")
+	}
+
+	memberid := c.GetInt("memberid")
+
+	log.Println("authmem",memberid)
+
+	channelAuth := channel.Channel{Authority: GetAuthorization(token, db)}
+
+	entryDetails, err := channelAuth.GetGraphqlChannelEntriesDetails(&entryId, nil, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil)
+
+	if err != nil {
+
+		return false, err
+	}
+
+	var claimedMembers []int
+
+	for _, memberProfile := range entryDetails.MemberProfiles {
+
+		log.Println("membid",memberProfile.MemberId)
+
+		if updateExactMemberProfileOnly {
+
+			if memberProfile.MemberId == memberid{
+
+				claimedMembers = append(claimedMembers, memberProfile.MemberId)
+
+			}
+
+		} else {
+
+			claimedMembers = append(claimedMembers, memberProfile.MemberId)
+
+		}
+
+	}
+
+	log.Println("memchkkk",claimedMembers)
+
+	var jsonData map[string]interface{}
+
+	err = json.Unmarshal([]byte(profiledata.MemberProfile), &jsonData)
+
+	if err != nil {
+
+		return false,err
+	}
+
+	currentTime,_ := time.Parse("2006-01-02 15:04:05", time.Now().In(TimeZone).Format("2006-01-02 15:04:05"))
+
+	memberProfileDetails := model.MemberProfile{
+		MemberDetails: profiledata.MemberProfile,
+		Linkedin: profiledata.Linkedin,
+		Twitter: profiledata.Twitter,
+		Website: profiledata.Website,
+		ModifiedOn : &currentTime,
+	}
+
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id in (?)",claimedMembers).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails,"linkedin": memberProfileDetails.Linkedin,"twitter": memberProfileDetails.Twitter,"website": memberProfileDetails.Website,"modified_on": memberProfileDetails.ModifiedOn}).Error;err!=nil{
+
+		return false,err
+	}
+
+	return true, nil
 }

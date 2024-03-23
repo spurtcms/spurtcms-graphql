@@ -207,11 +207,14 @@ type ComplexityRoot struct {
 
 	MemberProfile struct {
 		About           func(childComplexity int) int
+		ClaimStatus     func(childComplexity int) int
 		CompanyLocation func(childComplexity int) int
 		CompanyLogo     func(childComplexity int) int
 		CompanyName     func(childComplexity int) int
 		CreatedBy       func(childComplexity int) int
 		CreatedOn       func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Linkedin        func(childComplexity int) int
 		MemberDetails   func(childComplexity int) int
 		MemberID        func(childComplexity int) int
 		ModifiedBy      func(childComplexity int) int
@@ -222,11 +225,13 @@ type ComplexityRoot struct {
 		SeoDescription  func(childComplexity int) int
 		SeoKeyword      func(childComplexity int) int
 		SeoTitle        func(childComplexity int) int
+		Twitter         func(childComplexity int) int
+		Website         func(childComplexity int) int
 	}
 
 	Mutation struct {
 		MemberLogin         func(childComplexity int, email string) int
-		MemberProfileUpdate func(childComplexity int, profiledata model.ProfileData) int
+		MemberProfileUpdate func(childComplexity int, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) int
 		MemberRegister      func(childComplexity int, input model.MemberDetails) int
 		MemberUpdate        func(childComplexity int, memberdata model.MemberDetails) int
 		Memberclaimnow      func(childComplexity int, input model.ClaimData, entryID int) int
@@ -325,7 +330,7 @@ type MutationResolver interface {
 	VerifyMemberOtp(ctx context.Context, otp int) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
-	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error)
+	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) (bool, error)
 	Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int) (bool, error)
 }
 type QueryResolver interface {
@@ -1184,6 +1189,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MemberProfile.About(childComplexity), true
 
+	case "MemberProfile.claimStatus":
+		if e.complexity.MemberProfile.ClaimStatus == nil {
+			break
+		}
+
+		return e.complexity.MemberProfile.ClaimStatus(childComplexity), true
+
 	case "MemberProfile.companyLocation":
 		if e.complexity.MemberProfile.CompanyLocation == nil {
 			break
@@ -1218,6 +1230,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MemberProfile.CreatedOn(childComplexity), true
+
+	case "MemberProfile.id":
+		if e.complexity.MemberProfile.ID == nil {
+			break
+		}
+
+		return e.complexity.MemberProfile.ID(childComplexity), true
+
+	case "MemberProfile.linkedin":
+		if e.complexity.MemberProfile.Linkedin == nil {
+			break
+		}
+
+		return e.complexity.MemberProfile.Linkedin(childComplexity), true
 
 	case "MemberProfile.memberDetails":
 		if e.complexity.MemberProfile.MemberDetails == nil {
@@ -1289,6 +1315,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MemberProfile.SeoTitle(childComplexity), true
 
+	case "MemberProfile.twitter":
+		if e.complexity.MemberProfile.Twitter == nil {
+			break
+		}
+
+		return e.complexity.MemberProfile.Twitter(childComplexity), true
+
+	case "MemberProfile.website":
+		if e.complexity.MemberProfile.Website == nil {
+			break
+		}
+
+		return e.complexity.MemberProfile.Website(childComplexity), true
+
 	case "Mutation.memberLogin":
 		if e.complexity.Mutation.MemberLogin == nil {
 			break
@@ -1311,7 +1351,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MemberProfileUpdate(childComplexity, args["profiledata"].(model.ProfileData)), true
+		return e.complexity.Mutation.MemberProfileUpdate(childComplexity, args["profiledata"].(model.ProfileData), args["entryId"].(int), args["updateExactMemberProfileOnly"].(bool)), true
 
 	case "Mutation.memberRegister":
 		if e.complexity.Mutation.MemberRegister == nil {
@@ -1989,6 +2029,24 @@ func (ec *executionContext) field_Mutation_memberProfileUpdate_args(ctx context.
 		}
 	}
 	args["profiledata"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["entryId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entryId"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["entryId"] = arg1
+	var arg2 bool
+	if tmp, ok := rawArgs["updateExactMemberProfileOnly"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateExactMemberProfileOnly"))
+		arg2, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["updateExactMemberProfileOnly"] = arg2
 	return args, nil
 }
 
@@ -5088,6 +5146,8 @@ func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_MemberProfile_id(ctx, field)
 			case "memberId":
 				return ec.fieldContext_MemberProfile_memberId(ctx, field)
 			case "profileName":
@@ -5112,6 +5172,12 @@ func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx contex
 				return ec.fieldContext_MemberProfile_seoDescription(ctx, field)
 			case "seoKeyword":
 				return ec.fieldContext_MemberProfile_seoKeyword(ctx, field)
+			case "linkedin":
+				return ec.fieldContext_MemberProfile_linkedin(ctx, field)
+			case "twitter":
+				return ec.fieldContext_MemberProfile_twitter(ctx, field)
+			case "website":
+				return ec.fieldContext_MemberProfile_website(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_MemberProfile_createdBy(ctx, field)
 			case "createdOn":
@@ -5120,6 +5186,8 @@ func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx contex
 				return ec.fieldContext_MemberProfile_modifiedOn(ctx, field)
 			case "modifiedBy":
 				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
+			case "claimStatus":
+				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -7686,6 +7754,47 @@ func (ec *executionContext) fieldContext_MemberGroup_modifiedBy(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _MemberProfile_id(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MemberProfile_memberId(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MemberProfile_memberId(ctx, field)
 	if err != nil {
@@ -8178,6 +8287,129 @@ func (ec *executionContext) fieldContext_MemberProfile_seoKeyword(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _MemberProfile_linkedin(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_linkedin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Linkedin, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_linkedin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MemberProfile_twitter(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_twitter(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Twitter, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_twitter(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MemberProfile_website(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_website(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Website, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_website(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MemberProfile_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MemberProfile_createdBy(ctx, field)
 	if err != nil {
@@ -8330,6 +8562,47 @@ func (ec *executionContext) _MemberProfile_modifiedBy(ctx context.Context, field
 }
 
 func (ec *executionContext) fieldContext_MemberProfile_modifiedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MemberProfile_claimStatus(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_claimStatus(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClaimStatus, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_claimStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MemberProfile",
 		Field:      field,
@@ -8597,7 +8870,7 @@ func (ec *executionContext) _Mutation_memberProfileUpdate(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData))
+			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData), fc.Args["entryId"].(int), fc.Args["updateExactMemberProfileOnly"].(bool))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -13994,22 +14267,40 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"memberProfileId", "memberProfile"}
+	fieldsInOrder := [...]string{"website", "twitter", "linkedin", "memberProfile"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "memberProfileId":
+		case "website":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memberProfileId"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.MemberProfileID = data
+			it.Website = data
+		case "twitter":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("twitter"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Twitter = data
+		case "linkedin":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedin"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Linkedin = data
 		case "memberProfile":
 			var err error
 
@@ -14981,6 +15272,8 @@ func (ec *executionContext) _MemberProfile(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MemberProfile")
+		case "id":
+			out.Values[i] = ec._MemberProfile_id(ctx, field, obj)
 		case "memberId":
 			out.Values[i] = ec._MemberProfile_memberId(ctx, field, obj)
 		case "profileName":
@@ -15005,6 +15298,12 @@ func (ec *executionContext) _MemberProfile(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._MemberProfile_seoDescription(ctx, field, obj)
 		case "seoKeyword":
 			out.Values[i] = ec._MemberProfile_seoKeyword(ctx, field, obj)
+		case "linkedin":
+			out.Values[i] = ec._MemberProfile_linkedin(ctx, field, obj)
+		case "twitter":
+			out.Values[i] = ec._MemberProfile_twitter(ctx, field, obj)
+		case "website":
+			out.Values[i] = ec._MemberProfile_website(ctx, field, obj)
 		case "createdBy":
 			out.Values[i] = ec._MemberProfile_createdBy(ctx, field, obj)
 		case "createdOn":
@@ -15013,6 +15312,8 @@ func (ec *executionContext) _MemberProfile(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._MemberProfile_modifiedOn(ctx, field, obj)
 		case "modifiedBy":
 			out.Values[i] = ec._MemberProfile_modifiedBy(ctx, field, obj)
+		case "claimStatus":
+			out.Values[i] = ec._MemberProfile_claimStatus(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

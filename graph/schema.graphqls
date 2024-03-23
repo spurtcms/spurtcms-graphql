@@ -107,6 +107,7 @@ type Author{
 }
 
 type MemberProfile{
+	id:                Int
 	memberId:          Int
 	profileName:       String
 	profileSlug:       String
@@ -119,10 +120,14 @@ type MemberProfile{
 	seoTitle:          String
 	seoDescription:    String
 	seoKeyword:        String
+	linkedin:          String
+	twitter:           String
+	website:           String
 	createdBy:         Int
 	createdOn:         Time
 	modifiedOn:        Time 
-	modifiedBy:        Int       
+	modifiedBy:        Int 
+	claimStatus:       Int      
 }
 
 type Category{
@@ -281,7 +286,7 @@ type Mutation{
 	verifyMemberOtp(otp: Int!): String!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
-	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
+	memberProfileUpdate(profiledata: ProfileData!,entryId: Int!,updateExactMemberProfileOnly: Boolean!):Boolean! @auth
 	memberclaimnow(input: ClaimData!,entryId: Int!): Boolean! @auth
 }
 
@@ -299,8 +304,10 @@ input MemberDetails{
 }
 
 input ProfileData{
-	memberProfileId: Int!
-	memberProfile: JSON!
+	website:         String
+	twitter:         String
+	linkedin:        String
+	memberProfile:   JSON!
 }
 
 input ClaimData{

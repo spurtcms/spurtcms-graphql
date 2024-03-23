@@ -183,6 +183,7 @@ type MemberGroup struct {
 }
 
 type MemberProfile struct {
+	ID              *int        `json:"id,omitempty"`
 	MemberID        *int        `json:"memberId,omitempty"`
 	ProfileName     *string     `json:"profileName,omitempty"`
 	ProfileSlug     *string     `json:"profileSlug,omitempty"`
@@ -195,10 +196,14 @@ type MemberProfile struct {
 	SeoTitle        *string     `json:"seoTitle,omitempty"`
 	SeoDescription  *string     `json:"seoDescription,omitempty"`
 	SeoKeyword      *string     `json:"seoKeyword,omitempty"`
+	Linkedin        *string     `json:"linkedin,omitempty"`
+	Twitter         *string     `json:"twitter,omitempty"`
+	Website         *string     `json:"website,omitempty"`
 	CreatedBy       *int        `json:"createdBy,omitempty"`
 	CreatedOn       *time.Time  `json:"createdOn,omitempty"`
 	ModifiedOn      *time.Time  `json:"modifiedOn,omitempty"`
 	ModifiedBy      *int        `json:"modifiedBy,omitempty"`
+	ClaimStatus     *int        `json:"claimStatus,omitempty"`
 }
 
 type Page struct {
@@ -232,8 +237,10 @@ type PageGroup struct {
 }
 
 type ProfileData struct {
-	MemberProfileID int    `json:"memberProfileId"`
-	MemberProfile   string `json:"memberProfile"`
+	Website       *string `json:"website,omitempty"`
+	Twitter       *string `json:"twitter,omitempty"`
+	Linkedin      *string `json:"linkedin,omitempty"`
+	MemberProfile string  `json:"memberProfile"`
 }
 
 type Section struct {
