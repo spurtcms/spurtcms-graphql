@@ -283,7 +283,7 @@ type Query{
 
 type Mutation{
     memberLogin(email: String!): Boolean!
-	verifyMemberOtp(otp: Int!): String!
+	verifyMemberOtp(email: String!, otp: Int!): String!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
 	memberProfileUpdate(profiledata: ProfileData!,entryId: Int!,updateExactMemberProfileOnly: Boolean!):Boolean! @auth

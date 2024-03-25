@@ -6,11 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"gqlserver/graph/model"
-	"log"
 	"os"
 	"time"
 
-	// "sync"
 	"html/template"
 
 	"github.com/gin-gonic/gin"
@@ -436,7 +434,8 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 	for _, memberProfile := range channelEntry.MemberProfiles {
 
 		conv_MemberProfile := model.MemberProfile{
-			MemberID:        &memberProfile.Id,
+			ID:              &memberProfile.Id,
+			MemberID:        &memberProfile.MemberId,
 			ProfileName:     &memberProfile.ProfileName,
 			ProfileSlug:     &memberProfile.ProfileSlug,
 			ProfilePage:     &memberProfile.ProfilePage,
@@ -448,6 +447,13 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 			SeoTitle:        &memberProfile.SeoTitle,
 			SeoDescription:  &memberProfile.SeoDescription,
 			SeoKeyword:      &memberProfile.SeoKeyword,
+			CreatedBy:       &memberProfile.CreatedBy,
+			CreatedOn:       &memberProfile.CreatedOn,
+			ModifiedOn:      &memberProfile.ModifiedOn,
+			ModifiedBy:      &memberProfile.ModifiedBy,
+			Linkedin:        &memberProfile.Linkedin,
+			Twitter:         &memberProfile.Twitter,
+			Website:         &memberProfile.Website,
 		}
 
 		conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
@@ -512,8 +518,6 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	log.Println("email", AuthorDetails.Email)
-
 	data := map[string]interface{}{"claimdata": profileData, "AuthorDetails": AuthorDetails, "Entry": channelEntry}
 
 	tmpl, _ := template.ParseFiles("view/email/claim-template.html")
@@ -556,8 +560,6 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	memberid := c.GetInt("memberid")
 
-	log.Println("authmem",memberid)
-
 	channelAuth := channel.Channel{Authority: GetAuthorization(token, db)}
 
 	entryDetails, err := channelAuth.GetGraphqlChannelEntriesDetails(&entryId, nil, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil)
@@ -570,8 +572,6 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 	var claimedMembers []int
 
 	for _, memberProfile := range entryDetails.MemberProfiles {
-
-		log.Println("membid",memberProfile.MemberId)
 
 		if updateExactMemberProfileOnly {
 
@@ -588,8 +588,6 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		}
 
 	}
-
-	log.Println("memchkkk",claimedMembers)
 
 	var jsonData map[string]interface{}
 
@@ -610,7 +608,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		ModifiedOn : &currentTime,
 	}
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id in (?)",claimedMembers).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails,"linkedin": memberProfileDetails.Linkedin,"twitter": memberProfileDetails.Twitter,"website": memberProfileDetails.Website,"modified_on": memberProfileDetails.ModifiedOn}).Error;err!=nil{
+	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id in (?)",claimedMembers).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails,"linkedin": memberProfileDetails.Linkedin,"twitter": memberProfileDetails.Twitter,"website": memberProfileDetails.Website,"modified_on": memberProfileDetails.ModifiedOn}).Error;err!=nil{
 
 		return false,err
 	}

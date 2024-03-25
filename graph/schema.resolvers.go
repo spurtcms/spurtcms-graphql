@@ -15,8 +15,8 @@ func (r *mutationResolver) MemberLogin(ctx context.Context, email string) (bool,
 }
 
 // VerifyMemberOtp is the resolver for the verifyMemberOtp field.
-func (r *mutationResolver) VerifyMemberOtp(ctx context.Context, otp int) (string, error) {
-	return VerifyMemberOtp(r.DB, ctx, otp)
+func (r *mutationResolver) VerifyMemberOtp(ctx context.Context, email string, otp int) (string, error) {
+	return VerifyMemberOtp(r.DB, ctx, email, otp)
 }
 
 // MemberRegister is the resolver for the memberRegister field.

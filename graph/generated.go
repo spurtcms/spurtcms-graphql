@@ -235,7 +235,7 @@ type ComplexityRoot struct {
 		MemberRegister      func(childComplexity int, input model.MemberDetails) int
 		MemberUpdate        func(childComplexity int, memberdata model.MemberDetails) int
 		Memberclaimnow      func(childComplexity int, input model.ClaimData, entryID int) int
-		VerifyMemberOtp     func(childComplexity int, otp int) int
+		VerifyMemberOtp     func(childComplexity int, email string, otp int) int
 	}
 
 	Page struct {
@@ -327,7 +327,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	MemberLogin(ctx context.Context, email string) (bool, error)
-	VerifyMemberOtp(ctx context.Context, otp int) (string, error)
+	VerifyMemberOtp(ctx context.Context, email string, otp int) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
 	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) (bool, error)
@@ -1399,7 +1399,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.VerifyMemberOtp(childComplexity, args["otp"].(int)), true
+		return e.complexity.Mutation.VerifyMemberOtp(childComplexity, args["email"].(string), args["otp"].(int)), true
 
 	case "Page.content":
 		if e.complexity.Page.Content == nil {
@@ -2107,15 +2107,24 @@ func (ec *executionContext) field_Mutation_memberclaimnow_args(ctx context.Conte
 func (ec *executionContext) field_Mutation_verifyMemberOtp_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["otp"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("otp"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["otp"] = arg0
+	args["email"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["otp"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("otp"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["otp"] = arg1
 	return args, nil
 }
 
@@ -8684,7 +8693,7 @@ func (ec *executionContext) _Mutation_verifyMemberOtp(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().VerifyMemberOtp(rctx, fc.Args["otp"].(int))
+		return ec.resolvers.Mutation().VerifyMemberOtp(rctx, fc.Args["email"].(string), fc.Args["otp"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

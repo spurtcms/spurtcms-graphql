@@ -3,19 +3,15 @@ package controller
 import (
 	"bytes"
 	"context"
-	// "encoding/json"
 	"errors"
 	"gqlserver/graph/model"
 	"html/template"
-	// "log"
 	"math/rand"
 	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spurtcms/pkgcore/member"
-
-	// "gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -95,13 +91,13 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 	}
 }
 
-func VerifyMemberOtp(db *gorm.DB,ctx context.Context,otp int)(string,error){
+func VerifyMemberOtp(db *gorm.DB,ctx context.Context,email string,otp int)(string,error){
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
 	currentTime := time.Now().In(TimeZone).Unix()
 
-	token,err := Mem.VerifyLoginOtp(otp,currentTime)
+	token,err := Mem.VerifyLoginOtp(email,otp,currentTime)
 
 	if err!=nil{
 

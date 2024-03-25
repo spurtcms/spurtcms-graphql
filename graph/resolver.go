@@ -68,8 +68,8 @@ func MemberProfileUpdate(db *gorm.DB,ctx context.Context, profiledata model.Prof
 	return controller.MemberProfileUpdate(db,ctx,profiledata,entryId,updateExactMemberProfileOnly)
 }
 
-func VerifyMemberOtp(db *gorm.DB,ctx context.Context, otp int) (string, error) {
-	return controller.VerifyMemberOtp(db,ctx,otp)
+func VerifyMemberOtp(db *gorm.DB,ctx context.Context,email string ,otp int) (string, error) {
+	return controller.VerifyMemberOtp(db,ctx, email,otp)
 }
 
 func Memberclaimnow(db *gorm.DB,ctx context.Context, input model.ClaimData, entryId int) (bool, error) {
