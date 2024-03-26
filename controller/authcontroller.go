@@ -59,7 +59,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, err
 	}
 
-	data := map[string]interface{}{"otp": otp,"expiry_time": mail_expiry_time,"member": conv_member}
+	data := map[string]interface{}{"otp": otp,"expiryTime": mail_expiry_time,"member": conv_member,"additionalData": AdditionalData}
 
 	tmpl, err := template.ParseFiles("view/email/login-template.html")
 

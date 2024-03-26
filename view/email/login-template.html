@@ -84,7 +84,7 @@
             <tr>
                 <td style="padding:1.6875rem 0rem 1.1875rem;text-align: center;">
                     <a href="javascript:void(0)">
-                        <img src="/view/img/own-desk-logo.png" alt="" style="width: 6.5625rem;height: 4.125rem;">
+                        <img src="{{.additionalData.EmailImagePath.Owndesk}}" alt="" style="width: 6.5625rem;height: 4.125rem;">
                     </a>
                 </td>
             </tr>
@@ -93,11 +93,11 @@
                     <div style="margin-bottom: 1.25rem;">
                         <h3
                             style="margin-bottom: 1rem;color: #000000;font-size: 1.25rem;line-height: 1.6875rem;font-weight: bold;">
-                            Hi {{.member.FirstName}}  {{.member.LastName}} !
+                            Hi {{.member.FirstName}} {{.member.LastName}} !
                         </h3>
                         <p style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;">
                             Use the following one-time password (OTP) to sign in to your OwnDesk account. This OTP will
-                            be valid for 5 minutes till<span style="font-weight: bold;"> {{.expiry_time}}.</span>
+                            be valid for 5 minutes till<span style="font-weight: bold;"> {{.expiryTime}}.</span>
                         </p>
                     </div>
                 </td>
@@ -139,20 +139,25 @@
             <tr>
                 <td class="pt-5" style="text-align: center;">
                     <div style="margin-bottom: 1rem;">
-                        <a href="javascript:void(0)" style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="/view/img/social-media-icons1.png" alt="" style="width: auto;max-width: 100%;">
+                        <a href="javascript:void(0)"
+                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+                            <img src="{{.additionalData.EmailImagePath.Facebook}}" alt="" style="width: auto;max-width: 100%;">
                         </a>
-                        <a href="javascript:void(0)" style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="/view/img/social-media-icons2.png" alt="" style="width: auto;max-width: 100%;">
+                        <a href="javascript:void(0)"
+                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+                            <img src="{{.additionalData.EmailImagePath.LikedIn}}" alt="" style="width: auto;max-width: 100%;">
                         </a>
-                        <a href="javascript:void(0)" style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="/view/img/social-media-icons3.png" alt="" style="width: auto;max-width: 100%;">
+                        <a href="javascript:void(0)"
+                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+                            <img src="{{.additionalData.EmailImagePath.Twitter}}" alt="" style="width: auto;max-width: 100%;">
                         </a>
-                        <a href="javascript:void(0)" style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="/view/img/social-media-icons4.png" alt="" style="width: auto;max-width: 100%;">
+                        <a href="javascript:void(0)"
+                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+                            <img src="{{.additionalData.EmailImagePath.Youtube}}" alt="" style="width: auto;max-width: 100%;">
                         </a>
-                        <a href="javascript:void(0)" style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="/view/img/social-media-icons5.png" alt="" style="width: auto;max-width: 100%;">
+                        <a href="javascript:void(0)"
+                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+                            <img src="{{.additionalData.EmailImagePath.Instagram}}" alt="" style="width: auto;max-width: 100%;">
                         </a>
                     </div>
                 </td>

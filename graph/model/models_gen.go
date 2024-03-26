@@ -99,6 +99,32 @@ type ClaimData struct {
 	PersonName    string `json:"personName"`
 }
 
+type EcommerceProduct struct {
+	ID                 int        `json:"id"`
+	CategoriesID       int        `json:"categoriesId"`
+	ProductName        string     `json:"productName"`
+	ProductDescription string     `json:"productDescription"`
+	ProductImagePath   string     `json:"productImagePath"`
+	ProductVideoPath   string     `json:"productVideoPath"`
+	Sku                string     `json:"sku"`
+	ProductPrice       int        `json:"productPrice"`
+	Tax                int        `json:"tax"`
+	Totalcost          int        `json:"totalcost"`
+	IsActive           int        `json:"isActive"`
+	CreatedOn          time.Time  `json:"createdOn"`
+	CreatedBy          int        `json:"createdBy"`
+	ModifiedOn         *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy         *int       `json:"modifiedBy,omitempty"`
+	IsDeleted          int        `json:"isDeleted"`
+	DeletedBy          *int       `json:"deletedBy,omitempty"`
+	DeletedOn          *time.Time `json:"deletedOn,omitempty"`
+}
+
+type EcommerceProducts struct {
+	ProductList []EcommerceProduct `json:"productList"`
+	Count       int                `json:"count"`
+}
+
 type Field struct {
 	FieldID          int            `json:"fieldId"`
 	FieldName        string         `json:"fieldName"`
@@ -188,7 +214,7 @@ type MemberProfile struct {
 	ProfileName     *string     `json:"profileName,omitempty"`
 	ProfileSlug     *string     `json:"profileSlug,omitempty"`
 	ProfilePage     *string     `json:"profilePage,omitempty"`
-	MemberDetails   interface{} `json:"memberDetails,omitempty"`
+	MemberDetails   interface{} `json:"memberDetails,omitempty" gorm:"column:member_details;type:jsonb"`
 	CompanyName     *string     `json:"companyName,omitempty"`
 	CompanyLocation *string     `json:"companyLocation,omitempty"`
 	CompanyLogo     *string     `json:"companyLogo,omitempty"`
@@ -234,6 +260,20 @@ type PageGroup struct {
 	CreatedBy     int        `json:"created_by"`
 	ModifiedOn    *time.Time `json:"modifiedOn,omitempty"`
 	ModifiedBy    *int       `json:"modifiedBy,omitempty"`
+}
+
+type ProductFilter struct {
+	ReleaseDate   *time.Time `json:"releaseDate,omitempty"`
+	StartingPrice *int       `json:"startingPrice,omitempty"`
+	EndingPrice   *int       `json:"endingPrice,omitempty"`
+	CategoryName  *string    `json:"categoryName,omitempty"`
+	CategoryID    *int       `json:"categoryId,omitempty"`
+	StarRatings   *float64   `json:"starRatings,omitempty"`
+}
+
+type ProductSort struct {
+	Price *int `json:"price,omitempty"`
+	Date  *int `json:"date,omitempty"`
 }
 
 type ProfileData struct {

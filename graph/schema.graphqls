@@ -269,6 +269,32 @@ type FieldOptions{
 	modifiedBY:        Int
 }
 
+type EcommerceProducts{
+	productList:  [EcommerceProduct!]!
+	count:        Int!
+}
+
+type EcommerceProduct{
+	id:                        Int!
+	categoriesId:              Int!
+	productName:               String!
+	productDescription:        String!
+	productImagePath:          String!
+	productVideoPath:          String!
+	sku:                       String!
+	productPrice:              Int!
+	tax:                       Int!
+	totalcost:                 Int!
+	isActive:                  Int!
+	createdOn:                 Time!
+	createdBy:                 Int!
+	modifiedOn:                Time
+	modifiedBy:                Int
+	isDeleted:                 Int!
+	deletedBy:                 Int
+	deletedOn:                 Time
+}
+
 type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int!): Channel! @auth
@@ -278,8 +304,8 @@ type Query{
 	spaceDetails(spaceId: Int!): Space! @auth
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
 	categoriesList(limit: Int,offset: Int,categoryGroupId: Int,hierarchyLevel: Int): CategoriesList! @auth
+	ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
 }
-
 
 type Mutation{
     memberLogin(email: String!): Boolean!
@@ -315,6 +341,20 @@ input ClaimData{
 	workMail:        String!
     companyNumber:   LargeInt!
 	personName:      String!
+}
+
+input ProductFilter{
+	releaseDate:           Time
+	startingPrice:         Int
+	endingPrice:           Int
+	categoryName:          String
+	categoryId:            Int
+	starRatings:           Float
+}
+
+input ProductSort{
+	price:        Int
+	date:         Int
 }
 
 

@@ -518,7 +518,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	data := map[string]interface{}{"claimdata": profileData, "AuthorDetails": AuthorDetails, "Entry": channelEntry}
+	data := map[string]interface{}{"claimData": profileData, "authorDetails": AuthorDetails, "entry": channelEntry,"additionalData": AdditionalData}
 
 	tmpl, _ := template.ParseFiles("view/email/claim-template.html")
 

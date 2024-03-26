@@ -76,3 +76,7 @@ func Memberclaimnow(db *gorm.DB,ctx context.Context, input model.ClaimData, entr
 	return controller.Memberclaimnow(db,ctx,input,entryId)
 }
 
+func EcommerceProductList(db *gorm.DB,ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (model.EcommerceProducts, error) {
+	return controller.EcommerceProductList(db,ctx,limit,offset,filter,sort)
+}
+

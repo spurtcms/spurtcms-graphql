@@ -22,7 +22,6 @@ type key string
 
 const ContextKey key = "ginContext"
 
-
 var(
 	Mem member.MemberAuth
 	Auth *auth.Authorization
@@ -31,6 +30,7 @@ var(
 	SectionTypeId = 12
     MemberFieldTypeId = 14
 	PathUrl string
+	AdditionalData map[string]interface{}
 )
 
 type MailConfig struct{
@@ -64,6 +64,26 @@ func init(){
 
 		PathUrl = os.Getenv("LOCAL_URL")
 	}
+
+	EmailImagePath :=  struct{
+		Owndesk    string
+		Twitter    string
+		Facebook   string
+		LinkedIn   string
+		Youtube    string
+		Instagram  string
+	}{
+		Owndesk  :  PathUrl + strings.TrimPrefix("/view/img/own-desk-logo.png","/"),
+		Twitter  :  PathUrl + strings.TrimPrefix("/view/img/social-media-icons3.png","/"),
+		Facebook :  PathUrl + strings.TrimPrefix("/view/img/social-media-icons1.png","/"),
+		LinkedIn :  PathUrl + strings.TrimPrefix("/view/img/social-media-icons2.png","/"),
+		Youtube  :  PathUrl + strings.TrimPrefix("/view/img/social-media-icons4.png","/"),
+		Instagram:  PathUrl + strings.TrimPrefix("/view/img/social-media-icons5.png","/"),
+	}
+
+	AdditionalData = map[string]interface{}{"EmailImagePath": EmailImagePath}
+
+	log.Println("adds",AdditionalData)
 
 }
 

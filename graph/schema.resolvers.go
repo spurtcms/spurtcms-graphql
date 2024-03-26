@@ -79,6 +79,11 @@ func (r *queryResolver) CategoriesList(ctx context.Context, limit *int, offset *
 	return CategoriesList(r.DB, ctx, limit, offset, categoryGroupID, hierarchyLevel)
 }
 
+// EcommerceProductList is the resolver for the ecommerceProductList field.
+func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (model.EcommerceProducts, error) {
+	return EcommerceProductList(r.DB, ctx, limit, offset, filter, sort)
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
