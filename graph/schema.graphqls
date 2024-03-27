@@ -92,6 +92,7 @@ type ChannelEntries{
 	additionalFields:     AdditionalFields
 	authorDetails:        Author!
 	memberProfile:        [MemberProfile!]
+	claimStatus:          Boolean!
 }
 
 type Author{
@@ -344,7 +345,7 @@ input ClaimData{
 }
 
 input ProductFilter{
-	releaseDate:           Time
+	releaseDate:           String
 	startingPrice:         Int
 	endingPrice:           Int
 	categoryName:          String

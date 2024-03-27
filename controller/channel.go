@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"gqlserver/graph/model"
+	// "log"
 	"os"
 	"time"
 
@@ -61,6 +62,8 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	token, _ := c.Get("token")
+
+	memberid := c.GetInt("memberid")
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
@@ -201,7 +204,15 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		var conv_memberProfiles []model.MemberProfile
 
+		claimStatus := false
+
 		for _, memberProfile := range entry.MemberProfiles {
+
+			if memberid == memberProfile.MemberId && memberProfile.ClaimStatus == 1 {
+
+				claimStatus = true
+	
+			}
 
 			conv_MemberProfile := model.MemberProfile{
 				ID:              &memberProfile.Id,
@@ -224,6 +235,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 				Linkedin:        &memberProfile.Linkedin,
 				Twitter:         &memberProfile.Twitter,
 				Website:         &memberProfile.Website,
+				ClaimStatus:     &memberProfile.ClaimStatus,
 			}
 
 			conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
@@ -256,6 +268,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			AuthorDetails:    authorDetails,
 			FeaturedEntry:    entry.Feature,
 			ViewCount:        entry.ViewCount,
+			ClaimStatus:      claimStatus,
 		}
 
 		conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
@@ -304,6 +317,8 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	token, _ := c.Get("token")
+
+	memberid := c.GetInt("memberid")
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
@@ -431,7 +446,15 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 	var conv_memberProfiles []model.MemberProfile
 
+	claimStatus := false
+
 	for _, memberProfile := range channelEntry.MemberProfiles {
+
+		if memberid == memberProfile.MemberId && memberProfile.ClaimStatus == 1 {
+
+			claimStatus = true
+
+		}	
 
 		conv_MemberProfile := model.MemberProfile{
 			ID:              &memberProfile.Id,
@@ -454,6 +477,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 			Linkedin:        &memberProfile.Linkedin,
 			Twitter:         &memberProfile.Twitter,
 			Website:         &memberProfile.Website,
+			ClaimStatus:     &memberProfile.ClaimStatus,
 		}
 
 		conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
@@ -485,6 +509,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
+		ClaimStatus:      claimStatus,
 	}
 
 	return conv_channelEntry, nil
@@ -518,7 +543,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	data := map[string]interface{}{"claimData": profileData, "authorDetails": AuthorDetails, "entry": channelEntry,"additionalData": AdditionalData}
+	data := map[string]interface{}{"claimData": profileData, "authorDetails": AuthorDetails, "entry": channelEntry, "additionalData": AdditionalData}
 
 	tmpl, _ := template.ParseFiles("view/email/claim-template.html")
 
@@ -575,7 +600,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 		if updateExactMemberProfileOnly {
 
-			if memberProfile.MemberId == memberid{
+			if memberProfile.MemberId == memberid {
 
 				claimedMembers = append(claimedMembers, memberProfile.MemberId)
 
@@ -595,22 +620,22 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	if err != nil {
 
-		return false,err
+		return false, err
 	}
 
-	currentTime,_ := time.Parse("2006-01-02 15:04:05", time.Now().In(TimeZone).Format("2006-01-02 15:04:05"))
+	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().In(TimeZone).Format("2006-01-02 15:04:05"))
 
 	memberProfileDetails := model.MemberProfile{
 		MemberDetails: profiledata.MemberProfile,
-		Linkedin: profiledata.Linkedin,
-		Twitter: profiledata.Twitter,
-		Website: profiledata.Website,
-		ModifiedOn : &currentTime,
+		Linkedin:      profiledata.Linkedin,
+		Twitter:       profiledata.Twitter,
+		Website:       profiledata.Website,
+		ModifiedOn:    &currentTime,
 	}
 
-	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id in (?)",claimedMembers).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails,"linkedin": memberProfileDetails.Linkedin,"twitter": memberProfileDetails.Twitter,"website": memberProfileDetails.Website,"modified_on": memberProfileDetails.ModifiedOn}).Error;err!=nil{
+	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id in (?)", claimedMembers).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn}).Error; err != nil {
 
-		return false,err
+		return false, err
 	}
 
 	return true, nil

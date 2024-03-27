@@ -108,6 +108,7 @@ type ComplexityRoot struct {
 		Categories       func(childComplexity int) int
 		CategoriesID     func(childComplexity int) int
 		ChannelID        func(childComplexity int) int
+		ClaimStatus      func(childComplexity int) int
 		CoverImage       func(childComplexity int) int
 		CreatedBy        func(childComplexity int) int
 		CreatedOn        func(childComplexity int) int
@@ -670,6 +671,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChannelEntries.ChannelID(childComplexity), true
+
+	case "ChannelEntries.claimStatus":
+		if e.complexity.ChannelEntries.ClaimStatus == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.ClaimStatus(childComplexity), true
 
 	case "ChannelEntries.coverImage":
 		if e.complexity.ChannelEntries.CoverImage == nil {
@@ -5428,6 +5436,50 @@ func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelEntries_claimStatus(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClaimStatus, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_claimStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelEntriesDetails_channelEntriesList(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntriesDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChannelEntriesDetails_channelEntriesList(ctx, field)
 	if err != nil {
@@ -5517,6 +5569,8 @@ func (ec *executionContext) fieldContext_ChannelEntriesDetails_channelEntriesLis
 				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
 			case "memberProfile":
 				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
+			case "claimStatus":
+				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
 		},
@@ -11488,6 +11542,8 @@ func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Co
 				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
 			case "memberProfile":
 				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
+			case "claimStatus":
+				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
 		},
@@ -15478,7 +15534,7 @@ func (ec *executionContext) unmarshalInputProductFilter(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseDate"))
-			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16112,6 +16168,11 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			}
 		case "memberProfile":
 			out.Values[i] = ec._ChannelEntries_memberProfile(ctx, field, obj)
+		case "claimStatus":
+			out.Values[i] = ec._ChannelEntries_claimStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

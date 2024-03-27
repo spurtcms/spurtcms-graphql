@@ -81,10 +81,11 @@ type ChannelEntries struct {
 	RelatedArticles  string            `json:"relatedArticles"`
 	FeaturedEntry    int               `json:"featuredEntry"`
 	ViewCount        int               `json:"viewCount"`
-	Categories       [][]Category      `json:"categories" gorm:"-"`
-	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty" gorm:"-"`
-	AuthorDetails    *Author           `json:"authorDetails" gorm:"-"`
+	Categories       [][]Category      `json:"categories"  gorm:"-"`
+	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"  gorm:"-"`
+	AuthorDetails    *Author           `json:"authorDetails"  gorm:"-"`
 	MemberProfile    []MemberProfile   `json:"memberProfile,omitempty" gorm:"-"`
+	ClaimStatus      bool              `json:"claimStatus" gorm:"-"`
 }
 
 type ChannelEntriesDetails struct {
@@ -263,12 +264,12 @@ type PageGroup struct {
 }
 
 type ProductFilter struct {
-	ReleaseDate   *time.Time `json:"releaseDate,omitempty"`
-	StartingPrice *int       `json:"startingPrice,omitempty"`
-	EndingPrice   *int       `json:"endingPrice,omitempty"`
-	CategoryName  *string    `json:"categoryName,omitempty"`
-	CategoryID    *int       `json:"categoryId,omitempty"`
-	StarRatings   *float64   `json:"starRatings,omitempty"`
+	ReleaseDate   *string  `json:"releaseDate,omitempty"`
+	StartingPrice *int     `json:"startingPrice,omitempty"`
+	EndingPrice   *int     `json:"endingPrice,omitempty"`
+	CategoryName  *string  `json:"categoryName,omitempty"`
+	CategoryID    *int     `json:"categoryId,omitempty"`
+	StarRatings   *float64 `json:"starRatings,omitempty"`
 }
 
 type ProductSort struct {
