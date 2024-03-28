@@ -31,8 +31,8 @@
               endpoint: '/query',
               name: 'Channel Entries',
               query: 
-`query($channelId: Int, $categoryId: Int,$limit: Int!,$offset: Int!){
-  channelEntriesList(channelId: $channelId,categoryId: $categoryId, limit: $limit,offset: $offset){
+`query($channelId: Int, $categoryId: Int,$limit: Int!,$offset: Int!,$title: String){
+  channelEntriesList(channelId: $channelId,categoryId: $categoryId, limit: $limit,offset: $offset,title: $title){
     channelEntriesList{
       id
       title
@@ -54,6 +54,7 @@
       categoriesId
       relatedArticles
       featuredEntry
+      claimStatus
       categories{
         id
         categoryName
@@ -80,6 +81,14 @@
           createdOn
           createdBy
           imagePath
+          fieldValue{
+            id
+            fieldValue
+          }
+          fieldOptions{
+            optionValue
+            optionName
+          }
         }
       }
       memberProfile{
@@ -88,6 +97,11 @@
         companyLogo
         memberDetails
         profilePage
+        createdOn
+        createdBy
+        modifiedOn
+        modifiedBy
+        claimStatus
       }
       authorDetails{
         AuthorId

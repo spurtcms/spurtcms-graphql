@@ -38,6 +38,7 @@ var(
 	SectionTypeId = 12
     MemberFieldTypeId = 14
 	PathUrl string
+	EmailImageUrlPrefix string
 	AdditionalData map[string]interface{}
 )
 
@@ -65,6 +66,8 @@ func init(){
 		PathUrl = os.Getenv("LOCAL_URL")
 	}
 
+	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
+
 	EmailImagePath := struct{
 		Owndesk    string
 		Twitter    string
@@ -73,15 +76,17 @@ func init(){
 		Youtube    string
 		Instagram  string
 	}{
-		Owndesk  :  PathUrl + strings.TrimPrefix("/view/img/own-desk-logo.png","/"),
-		Twitter  :  PathUrl + strings.TrimPrefix("/view/img/social-media-icons3.png","/"),
-		Facebook :  PathUrl + strings.TrimPrefix("/view/img/social-media-icons1.png","/"),
-		LinkedIn :  PathUrl + strings.TrimPrefix("/view/img/social-media-icons2.png","/"),
-		Youtube  :  PathUrl + strings.TrimPrefix("/view/img/social-media-icons4.png","/"),
-		Instagram:  PathUrl + strings.TrimPrefix("/view/img/social-media-icons5.png","/"),
+		Owndesk  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/own-desk-logo.png","/"),
+		Twitter  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons3.png","/"),
+		Facebook :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons1.png","/"),
+		LinkedIn :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons2.png","/"),
+		Youtube  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons4.png","/"),
+		Instagram:  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons5.png","/"),
 	}
 
 	AdditionalData = map[string]interface{}{"emailImagePath": EmailImagePath}
+
+	log.Println("newbie",EmailImagePath)
 
 }
 

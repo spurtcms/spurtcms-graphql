@@ -283,7 +283,6 @@ type EcommerceProduct{
 	productImagePath:          String!
 	productVideoPath:          String!
 	sku:                       String!
-	productPrice:              Int!
 	tax:                       Int!
 	totalcost:                 Int!
 	isActive:                  Int!
@@ -294,6 +293,20 @@ type EcommerceProduct{
 	isDeleted:                 Int!
 	deletedBy:                 Int
 	deletedOn:                 Time
+	defaultPrice:              Int! 
+	discountPrice:             Int
+	specialPrice:              Int
+} 
+
+type ProductPricing{
+	id:          Int!
+	priceId:     Int!
+	sku:         String!
+	priority:    Int!
+	price:       Int!
+	startDtae:   Time!
+	endDate:     Time!
+	type:        String!
 }
 
 type Query{

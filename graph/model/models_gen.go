@@ -108,7 +108,6 @@ type EcommerceProduct struct {
 	ProductImagePath   string     `json:"productImagePath"`
 	ProductVideoPath   string     `json:"productVideoPath"`
 	Sku                string     `json:"sku"`
-	ProductPrice       int        `json:"productPrice"`
 	Tax                int        `json:"tax"`
 	Totalcost          int        `json:"totalcost"`
 	IsActive           int        `json:"isActive"`
@@ -119,6 +118,9 @@ type EcommerceProduct struct {
 	IsDeleted          int        `json:"isDeleted"`
 	DeletedBy          *int       `json:"deletedBy,omitempty"`
 	DeletedOn          *time.Time `json:"deletedOn,omitempty"`
+	DefaultPrice       int        `json:"defaultPrice" gorm:"column:product_price"`
+	DiscountPrice      *int       `json:"discountPrice,omitempty" gorm:"column:discount_price"`
+	SpecialPrice       *int       `json:"specialPrice,omitempty" gorm:"column:special_price"`
 }
 
 type EcommerceProducts struct {
@@ -270,6 +272,17 @@ type ProductFilter struct {
 	CategoryName  *string  `json:"categoryName,omitempty"`
 	CategoryID    *int     `json:"categoryId,omitempty"`
 	StarRatings   *float64 `json:"starRatings,omitempty"`
+}
+
+type ProductPricing struct {
+	ID        int       `json:"id"`
+	PriceID   int       `json:"priceId"`
+	Sku       string    `json:"sku"`
+	Priority  int       `json:"priority"`
+	Price     int       `json:"price"`
+	StartDtae time.Time `json:"startDtae"`
+	EndDate   time.Time `json:"endDate"`
+	Type      string    `json:"type"`
 }
 
 type ProductSort struct {
