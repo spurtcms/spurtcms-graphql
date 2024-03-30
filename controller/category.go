@@ -88,7 +88,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 			var categoryIds string
 
-			if checkEntriesPresence != nil && *checkEntriesPresence > 0 {
+			if checkEntriesPresence != nil && *checkEntriesPresence > 0 && *hierarchyLevel > 0 {
 
 				Query := db.Table("tbl_channel_entries").Select("tbl_channel_entries.categories_id").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1").Where(`` + strconv.Itoa(category.ID) + `= any(string_to_array(tbl_channel_entries.categories_id,',')::integer[])`)
 
@@ -111,34 +111,46 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 					return model.CategoriesList{}, err
 				}
 
-				log.Println("categoryIds", categoryIds)
-			}
+				if categoryIds != "" {
 
-			var modified_path string
+					log.Println("categoryIds", categoryIds)
 
-			if category.ImagePath != "" {
+					var modified_path string
 
-				modified_path = PathUrl + strings.TrimPrefix(category.ImagePath, "/")
-			}
+					if category.ImagePath != "" {
 
-			category.ImagePath = modified_path
+						modified_path = PathUrl + strings.TrimPrefix(category.ImagePath, "/")
+					}
 
-			if checkEntriesPresence != nil{
-
-				if *checkEntriesPresence > 0 && categoryIds != "" {
+					category.ImagePath = modified_path
 
 					final_categoriesList = append(final_categoriesList, category)
-	
 				}
 
-			}else{
+			}else {
 
+				var modified_path string
+	
+				if category.ImagePath != "" {
+	
+					modified_path = PathUrl + strings.TrimPrefix(category.ImagePath, "/")
+				}
+	
+				category.ImagePath = modified_path
+	
 				final_categoriesList = append(final_categoriesList, category)
+	
 			}
-
+	
 			seenCategory[category.ID] = true
 
-		}
+		} 
+
+	}
+
+	if checkEntriesPresence != nil && *checkEntriesPresence > 0 && *hierarchyLevel > 0 {
+
+		count = int64(len(final_categoriesList))
 	}
 
 	return model.CategoriesList{Categories: final_categoriesList, Count: int(count)}, nil
