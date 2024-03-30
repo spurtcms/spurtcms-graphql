@@ -57,7 +57,7 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (model.Cha
 }
 
 // this function provides the published channel entries list under a channel and channel entry details for a particular channeel entry by using its id
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string) (model.ChannelEntriesDetails, error) {
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string,categoryChildId *int) (model.ChannelEntriesDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -73,7 +73,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	var err error
 
-	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, PathUrl, title)
+	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, PathUrl, title,categoryChildId)
 
 	if err != nil {
 

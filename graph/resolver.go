@@ -32,8 +32,8 @@ func Channellist(db *gorm.DB,ctx context.Context,limit, offset int) (model.Chann
 	return controller.Channellist(db,ctx,limit,offset)
 }
 
-func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID, categoryId *int, limit, offset int, title *string) (model.ChannelEntriesDetails, error) {
-	return controller.ChannelEntriesList(db,ctx,channelID,categoryId,limit,offset,title)
+func ChannelEntriesList(db *gorm.DB,ctx context.Context, channelID, categoryId *int, limit, offset int, title *string,categoryChildId *int) (model.ChannelEntriesDetails, error) {
+	return controller.ChannelEntriesList(db,ctx,channelID,categoryId,limit,offset,title,categoryChildId)
 }
 
 func MemberUpdate(db *gorm.DB,ctx context.Context, memberdata model.MemberDetails) (bool, error) {
@@ -56,8 +56,8 @@ func PagesAndPageGroupsUnderSpace(db *gorm.DB,ctx context.Context, spaceID int) 
 	return controller.PagesAndPageGroupsBySpaceId(db,ctx,spaceID)
 }
 
-func CategoriesList(db *gorm.DB,ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel *int) (model.CategoriesList, error) {
-	return controller.CategoriesList(db,ctx,limit,offset,categoryGroupId,hierarchyLevel)
+func CategoriesList(db *gorm.DB,ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel,checkEntriesPresence *int) (model.CategoriesList, error) {
+	return controller.CategoriesList(db,ctx,limit,offset,categoryGroupId,hierarchyLevel,checkEntriesPresence)
 }
 
 func ChannelEntryDetail(db *gorm.DB,ctx context.Context, channelID *int,categoryID *int, channelEntryID *int,slug *string) (model.ChannelEntries, error) {

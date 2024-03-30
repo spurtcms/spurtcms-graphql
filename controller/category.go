@@ -3,13 +3,19 @@ package controller
 import (
 	"context"
 	"gqlserver/graph/model"
+	"log"
 	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel *int) (model.CategoriesList, error) {
+func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel, checkEntriesPresence *int) (model.CategoriesList, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberid := c.GetInt("memberid")
 
 	var categories []model.Category
 
@@ -42,7 +48,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 		selecthierarchy_string = `,0 AS LEVEL`
 
-		outerlevel = ` and level = `+strconv.Itoa(*hierarchyLevel)
+		outerlevel = ` and level = ` + strconv.Itoa(*hierarchyLevel)
 
 	}
 
@@ -67,7 +73,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 		return model.CategoriesList{}, err
 	}
 
-	if err := db.Raw(` ` + res + ` SELECT count(*) FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0 group by id order by id desc`).Count(&count).Error; err != nil {
+	if err := db.Raw(` ` + res + ` SELECT count(*) FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0  group by id order by id desc`).Count(&count).Error; err != nil {
 
 		return model.CategoriesList{}, err
 	}
@@ -80,6 +86,34 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 		if !seenCategory[category.ID] {
 
+			var categoryIds string
+
+			if checkEntriesPresence != nil && *checkEntriesPresence > 0 {
+
+				Query := db.Table("tbl_channel_entries").Select("tbl_channel_entries.categories_id").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1").Where(`` + strconv.Itoa(category.ID) + `= any(string_to_array(tbl_channel_entries.categories_id,',')::integer[])`)
+
+				if memberid > 0 {
+
+					innerSubQuery := db.Table("tbl_channel_entries").Select("tbl_channel_entries.id").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1").Where(`` + strconv.Itoa(category.ID) + `= any(string_to_array(tbl_channel_entries.categories_id,',')::integer[])`)
+
+					subquery := db.Table("tbl_access_control_pages").Select("tbl_access_control_pages.entry_id").Joins("inner join tbl_access_control_user_group on tbl_access_control_user_group.id = tbl_access_control_pages.access_control_user_group_id").
+						Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_group.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id")
+
+					subquery = subquery.Where("tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_group.is_deleted = 0 and tbl_members.id = ?", memberid).Where("tbl_access_control_pages.entry_id in (?)", innerSubQuery)
+
+					Query = Query.Where("tbl_channel_entries.id not in (?)", subquery)
+				}
+
+				err := Query.Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1").Where(`` + strconv.Itoa(category.ID) + `= any(string_to_array(tbl_channel_entries.categories_id,',')::integer[])`).Find(&categoryIds).Error
+
+				if err != nil {
+
+					return model.CategoriesList{}, err
+				}
+
+				log.Println("categoryIds", categoryIds)
+			}
+
 			var modified_path string
 
 			if category.ImagePath != "" {
@@ -89,9 +123,21 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 			category.ImagePath = modified_path
 
-			final_categoriesList = append(final_categoriesList, category)
+			if checkEntriesPresence != nil{
+
+				if *checkEntriesPresence > 0 && categoryIds != "" {
+
+					final_categoriesList = append(final_categoriesList, category)
+	
+				}
+
+			}else{
+
+				final_categoriesList = append(final_categoriesList, category)
+			}
 
 			seenCategory[category.ID] = true
+
 		}
 	}
 

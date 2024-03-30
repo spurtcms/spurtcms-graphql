@@ -309,10 +309,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CategoriesList               func(childComplexity int, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int) int
+		CategoriesList               func(childComplexity int, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) int
 		ChannelDetail                func(childComplexity int, channelID int) int
-		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int, title *string) int
-		ChannelEntryDetail           func(childComplexity int, categoryID *int, channelID *int, channelEntryID *int, slug *string) int
+		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int) int
+		ChannelEntryDetail           func(childComplexity int, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) int
 		ChannelList                  func(childComplexity int, limit int, offset int) int
 		EcommerceProductList         func(childComplexity int, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) int
 		PagesAndPageGroupsUnderSpace func(childComplexity int, spaceID int) int
@@ -377,12 +377,12 @@ type MutationResolver interface {
 type QueryResolver interface {
 	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
 	ChannelDetail(ctx context.Context, channelID int) (model.Channel, error)
-	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string) (model.ChannelEntriesDetails, error)
-	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string) (model.ChannelEntries, error)
+	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int) (model.ChannelEntriesDetails, error)
+	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (model.ChannelEntries, error)
 	SpaceList(ctx context.Context, limit int, offset int) (model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (model.PageAndPageGroups, error)
-	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int) (model.CategoriesList, error)
+	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (model.CategoriesList, error)
 	EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (model.EcommerceProducts, error)
 }
 
@@ -1817,7 +1817,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CategoriesList(childComplexity, args["limit"].(*int), args["offset"].(*int), args["categoryGroupId"].(*int), args["hierarchyLevel"].(*int)), true
+		return e.complexity.Query.CategoriesList(childComplexity, args["limit"].(*int), args["offset"].(*int), args["categoryGroupId"].(*int), args["hierarchyLevel"].(*int), args["checkEntriesPresence"].(*int)), true
 
 	case "Query.channelDetail":
 		if e.complexity.Query.ChannelDetail == nil {
@@ -1841,7 +1841,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ChannelEntriesList(childComplexity, args["channelId"].(*int), args["categoryId"].(*int), args["limit"].(int), args["offset"].(int), args["title"].(*string)), true
+		return e.complexity.Query.ChannelEntriesList(childComplexity, args["channelId"].(*int), args["categoryId"].(*int), args["limit"].(int), args["offset"].(int), args["title"].(*string), args["categoryChildId"].(*int)), true
 
 	case "Query.channelEntryDetail":
 		if e.complexity.Query.ChannelEntryDetail == nil {
@@ -1853,7 +1853,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ChannelEntryDetail(childComplexity, args["categoryId"].(*int), args["channelId"].(*int), args["channelEntryId"].(*int), args["slug"].(*string)), true
+		return e.complexity.Query.ChannelEntryDetail(childComplexity, args["categoryId"].(*int), args["channelId"].(*int), args["channelEntryId"].(*int), args["slug"].(*string), args["categoryChildId"].(*int)), true
 
 	case "Query.channelList":
 		if e.complexity.Query.ChannelList == nil {
@@ -2470,6 +2470,15 @@ func (ec *executionContext) field_Query_categoriesList_args(ctx context.Context,
 		}
 	}
 	args["hierarchyLevel"] = arg3
+	var arg4 *int
+	if tmp, ok := rawArgs["checkEntriesPresence"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("checkEntriesPresence"))
+		arg4, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["checkEntriesPresence"] = arg4
 	return args, nil
 }
 
@@ -2536,6 +2545,15 @@ func (ec *executionContext) field_Query_channelEntriesList_args(ctx context.Cont
 		}
 	}
 	args["title"] = arg4
+	var arg5 *int
+	if tmp, ok := rawArgs["categoryChildId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryChildId"))
+		arg5, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryChildId"] = arg5
 	return args, nil
 }
 
@@ -2578,6 +2596,15 @@ func (ec *executionContext) field_Query_channelEntryDetail_args(ctx context.Cont
 		}
 	}
 	args["slug"] = arg3
+	var arg4 *int
+	if tmp, ok := rawArgs["categoryChildId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryChildId"))
+		arg4, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryChildId"] = arg4
 	return args, nil
 }
 
@@ -11888,7 +11915,7 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["categoryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["title"].(*string))
+			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["categoryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["title"].(*string), fc.Args["categoryChildId"].(*int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -11969,7 +11996,7 @@ func (ec *executionContext) _Query_channelEntryDetail(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ChannelEntryDetail(rctx, fc.Args["categoryId"].(*int), fc.Args["channelId"].(*int), fc.Args["channelEntryId"].(*int), fc.Args["slug"].(*string))
+			return ec.resolvers.Query().ChannelEntryDetail(rctx, fc.Args["categoryId"].(*int), fc.Args["channelId"].(*int), fc.Args["channelEntryId"].(*int), fc.Args["slug"].(*string), fc.Args["categoryChildId"].(*int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -12363,7 +12390,7 @@ func (ec *executionContext) _Query_categoriesList(ctx context.Context, field gra
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().CategoriesList(rctx, fc.Args["limit"].(*int), fc.Args["offset"].(*int), fc.Args["categoryGroupId"].(*int), fc.Args["hierarchyLevel"].(*int))
+			return ec.resolvers.Query().CategoriesList(rctx, fc.Args["limit"].(*int), fc.Args["offset"].(*int), fc.Args["categoryGroupId"].(*int), fc.Args["hierarchyLevel"].(*int), fc.Args["checkEntriesPresence"].(*int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
