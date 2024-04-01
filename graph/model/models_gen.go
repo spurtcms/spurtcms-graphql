@@ -86,10 +86,11 @@ type ChannelEntries struct {
 	AuthorDetails    *Author           `json:"authorDetails"  gorm:"-"`
 	MemberProfile    []MemberProfile   `json:"memberProfile,omitempty" gorm:"-"`
 	ClaimStatus      bool              `json:"claimStatus" gorm:"-"`
+	Fields           []Field           `json:"fields,omitempty" gorm:"-"`
 }
 
 type ChannelEntriesDetails struct {
-	ChannelEntriesList []ChannelEntries `json:"channelEntriesList"`
+	ChannelEntriesList []ChannelEntries `json:"channelEntriesList"` 
 	Count              int              `json:"count"`
 }
 

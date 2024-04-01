@@ -114,6 +114,7 @@ type ComplexityRoot struct {
 		CreatedOn        func(childComplexity int) int
 		Description      func(childComplexity int) int
 		FeaturedEntry    func(childComplexity int) int
+		Fields           func(childComplexity int) int
 		ID               func(childComplexity int) int
 		IsActive         func(childComplexity int) int
 		Keyword          func(childComplexity int) int
@@ -311,7 +312,7 @@ type ComplexityRoot struct {
 	Query struct {
 		CategoriesList               func(childComplexity int, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) int
 		ChannelDetail                func(childComplexity int, channelID int) int
-		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int) int
+		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) int
 		ChannelEntryDetail           func(childComplexity int, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) int
 		ChannelList                  func(childComplexity int, limit int, offset int) int
 		EcommerceProductList         func(childComplexity int, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) int
@@ -377,7 +378,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
 	ChannelDetail(ctx context.Context, channelID int) (model.Channel, error)
-	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int) (model.ChannelEntriesDetails, error)
+	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (model.ChannelEntriesDetails, error)
 	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (model.ChannelEntries, error)
 	SpaceList(ctx context.Context, limit int, offset int) (model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (model.Space, error)
@@ -726,6 +727,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChannelEntries.FeaturedEntry(childComplexity), true
+
+	case "ChannelEntries.fields":
+		if e.complexity.ChannelEntries.Fields == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.Fields(childComplexity), true
 
 	case "ChannelEntries.id":
 		if e.complexity.ChannelEntries.ID == nil {
@@ -1841,7 +1849,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ChannelEntriesList(childComplexity, args["channelId"].(*int), args["categoryId"].(*int), args["limit"].(int), args["offset"].(int), args["title"].(*string), args["categoryChildId"].(*int)), true
+		return e.complexity.Query.ChannelEntriesList(childComplexity, args["channelId"].(*int), args["categoryId"].(*int), args["limit"].(int), args["offset"].(int), args["title"].(*string), args["categoryChildId"].(*int), args["categorySlug"].(*string), args["categoryChildSlug"].(*string)), true
 
 	case "Query.channelEntryDetail":
 		if e.complexity.Query.ChannelEntryDetail == nil {
@@ -2554,6 +2562,24 @@ func (ec *executionContext) field_Query_channelEntriesList_args(ctx context.Cont
 		}
 	}
 	args["categoryChildId"] = arg5
+	var arg6 *string
+	if tmp, ok := rawArgs["categorySlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categorySlug"))
+		arg6, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categorySlug"] = arg6
+	var arg7 *string
+	if tmp, ok := rawArgs["categoryChildSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryChildSlug"))
+		arg7, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryChildSlug"] = arg7
 	return args, nil
 }
 
@@ -5590,6 +5616,87 @@ func (ec *executionContext) fieldContext_ChannelEntries_claimStatus(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelEntries_fields(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_fields(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Fields, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.Field)
+	fc.Result = res
+	return ec.marshalOField2ᚕgqlserverᚋgraphᚋmodelᚐFieldᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_fields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "fieldId":
+				return ec.fieldContext_Field_fieldId(ctx, field)
+			case "fieldName":
+				return ec.fieldContext_Field_fieldName(ctx, field)
+			case "fieldTypeId":
+				return ec.fieldContext_Field_fieldTypeId(ctx, field)
+			case "mandatoryField":
+				return ec.fieldContext_Field_mandatoryField(ctx, field)
+			case "optionExist":
+				return ec.fieldContext_Field_optionExist(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_Field_createdOn(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Field_createdBy(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_Field_modifiedOn(ctx, field)
+			case "modifiedBY":
+				return ec.fieldContext_Field_modifiedBY(ctx, field)
+			case "fieldDesc":
+				return ec.fieldContext_Field_fieldDesc(ctx, field)
+			case "orderIndex":
+				return ec.fieldContext_Field_orderIndex(ctx, field)
+			case "imagePath":
+				return ec.fieldContext_Field_imagePath(ctx, field)
+			case "datetimeFormat":
+				return ec.fieldContext_Field_datetimeFormat(ctx, field)
+			case "timeFormat":
+				return ec.fieldContext_Field_timeFormat(ctx, field)
+			case "sectionParentId":
+				return ec.fieldContext_Field_sectionParentId(ctx, field)
+			case "characterAllowed":
+				return ec.fieldContext_Field_characterAllowed(ctx, field)
+			case "fieldTypeName":
+				return ec.fieldContext_Field_fieldTypeName(ctx, field)
+			case "fieldValue":
+				return ec.fieldContext_Field_fieldValue(ctx, field)
+			case "fieldOptions":
+				return ec.fieldContext_Field_fieldOptions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Field", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelEntriesDetails_channelEntriesList(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntriesDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChannelEntriesDetails_channelEntriesList(ctx, field)
 	if err != nil {
@@ -5681,6 +5788,8 @@ func (ec *executionContext) fieldContext_ChannelEntriesDetails_channelEntriesLis
 				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
+			case "fields":
+				return ec.fieldContext_ChannelEntries_fields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
 		},
@@ -11915,7 +12024,7 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["categoryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["title"].(*string), fc.Args["categoryChildId"].(*int))
+			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["categoryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["title"].(*string), fc.Args["categoryChildId"].(*int), fc.Args["categorySlug"].(*string), fc.Args["categoryChildSlug"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -12092,6 +12201,8 @@ func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Co
 				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
+			case "fields":
+				return ec.fieldContext_ChannelEntries_fields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
 		},
@@ -16721,6 +16832,8 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "fields":
+			out.Values[i] = ec._ChannelEntries_fields(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

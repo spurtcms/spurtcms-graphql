@@ -50,8 +50,8 @@ func (r *queryResolver) ChannelDetail(ctx context.Context, channelID int) (model
 }
 
 // ChannelEntriesList is the resolver for the channelEntriesList field.
-func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int) (model.ChannelEntriesDetails, error) {
-	return ChannelEntriesList(r.DB, ctx, channelID, categoryID, limit, offset, title, categoryChildID)
+func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (model.ChannelEntriesDetails, error) {
+	return ChannelEntriesList(r.DB, ctx, channelID, categoryID, limit, offset, title, categoryChildID, categorySlug, categoryChildSlug)
 }
 
 // ChannelEntryDetail is the resolver for the channelEntryDetail field.
@@ -76,7 +76,7 @@ func (r *queryResolver) PagesAndPageGroupsUnderSpace(ctx context.Context, spaceI
 
 // CategoriesList is the resolver for the categoriesList field.
 func (r *queryResolver) CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (model.CategoriesList, error) {
-	return CategoriesList(r.DB, ctx, limit, offset, categoryGroupID, hierarchyLevel,checkEntriesPresence)
+	return CategoriesList(r.DB, ctx, limit, offset, categoryGroupID, hierarchyLevel, checkEntriesPresence)
 }
 
 // EcommerceProductList is the resolver for the ecommerceProductList field.
