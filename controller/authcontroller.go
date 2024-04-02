@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	// "github.com/spurtcms/pkgcontent/channels"
 	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 )
@@ -100,14 +101,26 @@ func VerifyMemberOtp(db *gorm.DB,ctx context.Context,email string,otp int)(strin
 
 	memberDetails,token,err := Mem.VerifyLoginOtp(email,otp,currentTime)
 
-	log.Println("memberdetails",memberDetails)
-
-	db.Table("tbl_members").Joins("inner join ")
-
 	if err!=nil{
 
 		return "",err
 	}
+
+	log.Println("memberdetails",memberDetails)
+
+	var channelEntryDetails model.ChannelEntries
+
+	if err := db.Debug().Table("tbl_channel_entries").Select("tbl_channel_entries.*").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Joins("inner join tbl_channel_entry_fields on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").Joins("inner join tbl_members on tbl_members.id = any(string_to_array(tbl_channel_entry_fields.field_value,',')::integer[])").
+	Joins("inner join tbl_member_profiles on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ?",MemberFieldTypeId,memberDetails.Id).First(&channelEntryDetails).Error;err!=nil{
+
+		return "",err
+	}
+
+	log.Println("chkking",channelEntryDetails)
+
+	// channelAuth := channels.Channel{Authority: GetAuthorization(token,db)}
+
+	// channelEntry,err :=  channelAuth.GetGraphqlChannelEntriesDetails(&channelEntryDetails.ID,&channelEntryDetails.ChannelID,nil,PathUrl,SectionTypeId,MemberFieldTypeId,nil)
 
 	return  token,nil
 	
