@@ -1,9 +1,16 @@
 package controller
 
 import (
+	"bytes"
 	"context"
-	"gqlserver/graph/model"
+	"encoding/json"
+	"errors"
+	"spurtcms-graphql/graph/model"
+	// "log"
 	"os"
+	"time"
+
+	"html/template"
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
@@ -25,18 +32,17 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (model.Cha
 		return model.ChannelDetails{}, err
 	}
 
-	var conv_channelList []model.TblChannel
+	var conv_channelList []model.Channel
 
 	for _, channel := range channelList {
 
-		conv_channel := model.TblChannel{
+		conv_channel := model.Channel{
 			ID:                 channel.Id,
 			ChannelName:        channel.ChannelName,
 			ChannelDescription: channel.ChannelDescription,
 			SlugName:           channel.SlugName,
 			FieldGroupID:       channel.FieldGroupId,
 			IsActive:           channel.IsActive,
-			IsDeleted:          channel.IsDeleted,
 			CreatedOn:          channel.CreatedOn,
 			ModifiedOn:         &channel.ModifiedOn,
 			CreatedBy:          channel.CreatedBy,
@@ -51,46 +57,42 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (model.Cha
 }
 
 // this function provides the published channel entries list under a channel and channel entry details for a particular channeel entry by using its id
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, channelEntryID, categoryId, limit, offset *int) (model.ChannelEntryDetails, error) {
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string,categoryChildId *int,categorySlug,categoryChildSlug *string) (model.ChannelEntriesDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	token, _ := c.Get("token")
 
+	memberid := c.GetInt("memberid")
+
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
-	var pathUrl string
+	var channelEntries []channel.TblChannelEntries
 
-	if os.Getenv("DOMAIN_URL") != "" {
+	var count int64
 
-		pathUrl = os.Getenv("DOMAIN_URL")
+	var err error
 
-	} else {
+	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, PathUrl, title,categoryChildId,categorySlug,categoryChildSlug)
 
-		pathUrl = os.Getenv("LOCAL_URL")
+	if err != nil {
+
+		return model.ChannelEntriesDetails{}, err
 	}
 
-	
-	var channelEntryDetails model.ChannelEntryDetails
+	var conv_channelEntries []model.ChannelEntries
 
-	if channelEntryID != nil || (channelID != nil && channelEntryID != nil) && limit == nil && offset == nil {
+	for _, entry := range channelEntries {
 
-		channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(channelEntryID, channelID, categoryId, pathUrl)
+		var conv_categories [][]model.Category
 
-		if err != nil {
+		for _, categories := range entry.Categories {
 
-			return model.ChannelEntryDetails{}, err
-		}
-
-		var conv_categories [][]model.TblCategory
-
-		for _, categories := range channelEntry.Categories {
-
-			var conv_categoryz []model.TblCategory
+			var conv_categoryz []model.Category
 
 			for _, category := range categories {
 
-				conv_category := model.TblCategory{
+				conv_category := model.Category{
 					ID:           category.Id,
 					CategoryName: category.CategoryName,
 					CategorySlug: category.CategorySlug,
@@ -100,9 +102,6 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, channelEntr
 					CreatedBy:    category.CreatedBy,
 					ModifiedOn:   &category.ModifiedOn,
 					ModifiedBy:   &category.ModifiedBy,
-					IsDeleted:    category.IsDeleted,
-					DeletedOn:    &category.DeletedOn,
-					DeletedBy:    &category.DeletedBy,
 					ParentID:     category.ParentId,
 				}
 
@@ -114,194 +113,179 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, channelEntr
 
 		}
 
-		conv_channelEntry := model.TblChannelEntries{
-			ID:              channelEntry.Id,
-			Title:           channelEntry.Title,
-			Slug:            channelEntry.Slug,
-			Description:     channelEntry.Description,
-			UserID:          channelEntry.UserId,
-			ChannelID:       channelEntry.ChannelId,
-			Status:          channelEntry.Status,
-			IsActive:        channelEntry.IsActive,
-			IsDeleted:       channelEntry.IsDeleted,
-			DeletedBy:       &channelEntry.DeletedBy,
-			DeletedOn:       &channelEntry.DeletedOn,
-			CreatedOn:       channelEntry.CreatedOn,
-			CreatedBy:       channelEntry.CreatedBy,
-			ModifiedBy:      &channelEntry.ModifiedBy,
-			ModifiedOn:      &channelEntry.ModifiedOn,
-			CoverImage:      channelEntry.CoverImage,
-			ThumbnailImage:  channelEntry.ThumbnailImage,
-			MetaTitle:       channelEntry.MetaTitle,
-			MetaDescription: channelEntry.MetaDescription,
-			Keyword:         channelEntry.Keyword,
-			CategoriesID:    channelEntry.CategoriesId,
-			RelatedArticles: channelEntry.RelatedArticles,
-			Categories:      conv_categories,
+		authorDetails := &model.Author{
+			AuthorID:         entry.AuthorDetail.AuthorID,
+			FirstName:        entry.AuthorDetail.FirstName,
+			LastName:         entry.AuthorDetail.LastName,
+			Email:            entry.AuthorDetail.Email,
+			MobileNo:         entry.AuthorDetail.MobileNo,
+			IsActive:         entry.AuthorDetail.IsActive,
+			ProfileImagePath: entry.AuthorDetail.ProfileImagePath,
+			CreatedOn:        entry.AuthorDetail.CreatedOn,
+			CreatedBy:        entry.AuthorDetail.CreatedBy,
 		}
 
-		channelEntryDetails = model.ChannelEntryDetails{ChannelEntry: &conv_channelEntry}
+		var conv_sections []model.Section
 
-	}else if channelEntryID == nil && channelID != nil && limit != nil && offset != nil {
+		for _, section := range entry.Sections {
 
-		channelEntries,count,err := channelAuth.GetGraphqlChannelEntriesByChannelId(channelID,categoryId,limit,offset,pathUrl)
+			conv_section := model.Section{
+				SectionID:     &section.Id,
+				SectionName:   section.FieldName,
+				SectionTypeID: section.FieldTypeId,
+				CreatedOn:     section.CreatedOn,
+				CreatedBy:     section.CreatedBy,
+				ModifiedOn:    &section.ModifiedOn,
+				ModifiedBy:    &section.ModifiedBy,
+				OrderIndex:    section.OrderIndex,
+			}
 
-		if err != nil {
+			conv_sections = append(conv_sections, conv_section)
 
-			return model.ChannelEntryDetails{}, err
 		}
 
-		var conv_channelEntries []model.TblChannelEntries
+		var conv_fields []model.Field
 
-		for _,entry := range channelEntries{
+		for _, field := range entry.Fields {
 
-			var conv_categories [][]model.TblCategory
+			conv_field_value := model.FieldValue{
+				ID:         field.FieldValue.FieldId,
+				FieldValue: field.FieldValue.FieldValue,
+				CreatedOn:  field.FieldValue.CreatedOn,
+				CreatedBy:  field.FieldValue.CreatedBy,
+				ModifiedOn: &field.FieldValue.ModifiedOn,
+				ModifiedBy: &field.FieldValue.ModifiedBy,
+			}
 
-			for _, categories := range entry.Categories {
-	
-				var conv_categoryz []model.TblCategory
-	
-				for _, category := range categories {
-	
-					conv_category := model.TblCategory{
-						ID:           category.Id,
-						CategoryName: category.CategoryName,
-						CategorySlug: category.CategorySlug,
-						Description:  category.Description,
-						ImagePath:    category.ImagePath,
-						CreatedOn:    category.CreatedOn,
-						CreatedBy:    category.CreatedBy,
-						ModifiedOn:   &category.ModifiedOn,
-						ModifiedBy:   &category.ModifiedBy,
-						IsDeleted:    category.IsDeleted,
-						DeletedOn:    &category.DeletedOn,
-						DeletedBy:    &category.DeletedBy,
-						ParentID:     category.ParentId,
-					}
-	
-					conv_categoryz = append(conv_categoryz, conv_category)
-	
+			var conv_fieldOptions []model.FieldOptions
+
+			for _, field_option := range field.FieldOptions {
+
+				conv_fieldOption := model.FieldOptions{
+					ID:          field_option.Id,
+					OptionName:  field_option.OptionName,
+					OptionValue: field_option.OptionValue,
+					CreatedOn:   field_option.CreatedOn,
+					CreatedBy:   field_option.CreatedBy,
+					ModifiedOn:  &field_option.ModifiedOn,
+					ModifiedBy:  &field_option.ModifiedBy,
 				}
-	
-				conv_categories = append(conv_categories, conv_categoryz)
-	
-			}
-	
-			conv_channelEntry := model.TblChannelEntries{
-				ID:              entry.Id,
-				Title:           entry.Title,
-				Slug:            entry.Slug,
-				Description:     entry.Description,
-				UserID:          entry.UserId,
-				ChannelID:       entry.ChannelId,
-				Status:          entry.Status,
-				IsActive:        entry.IsActive,
-				IsDeleted:       entry.IsDeleted,
-				DeletedBy:       &entry.DeletedBy,
-				DeletedOn:       &entry.DeletedOn,
-				CreatedOn:       entry.CreatedOn,
-				CreatedBy:       entry.CreatedBy,
-				ModifiedBy:      &entry.ModifiedBy,
-				ModifiedOn:      &entry.ModifiedOn,
-				CoverImage:      entry.CoverImage,
-				ThumbnailImage:  entry.ThumbnailImage,
-				MetaTitle:       entry.MetaTitle,
-				MetaDescription: entry.MetaDescription,
-				Keyword:         entry.Keyword,
-				CategoriesID:    entry.CategoriesId,
-				RelatedArticles: entry.RelatedArticles,
-				Categories:      conv_categories,
+
+				conv_fieldOptions = append(conv_fieldOptions, conv_fieldOption)
 			}
 
-			conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
+			conv_field := model.Field{
+				FieldID:          field.Id,
+				FieldName:        field.FieldName,
+				FieldTypeID:      field.FieldTypeId,
+				MandatoryField:   field.MandatoryField,
+				OptionExist:      field.OptionExist,
+				CreatedOn:        field.CreatedOn,
+				CreatedBy:        field.CreatedBy,
+				ModifiedOn:       &field.ModifiedOn,
+				ModifiedBy:       &field.ModifiedBy,
+				FieldDesc:        field.FieldDesc,
+				OrderIndex:       field.OrderIndex,
+				ImagePath:        field.ImagePath,
+				DatetimeFormat:   &field.DatetimeFormat,
+				TimeFormat:       &field.TimeFormat,
+				SectionParentID:  &field.SectionParentId,
+				CharacterAllowed: &field.CharacterAllowed,
+				FieldTypeName:    field.FieldTypeName,
+				FieldValue:       &conv_field_value,
+				FieldOptions:     conv_fieldOptions,
+			}
+
+			conv_fields = append(conv_fields, conv_field)
+
 		}
 
-		channelEntryDetails = model.ChannelEntryDetails{ChannelEntryList: &model.ChannelEntries{ChannelEntryList: conv_channelEntries,Count: int(count)}}
+		additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
+		var conv_memberProfiles []model.MemberProfile
 
-	}else if channelID == nil && channelEntryID == nil && limit != nil && offset != nil {
+		claimStatus := false
 
-		channelEntries,count,err := channelAuth.GetGraphqlAllChannelEntriesList(categoryId,limit,offset,pathUrl)
+		for _, memberProfile := range entry.MemberProfiles {
 
-		if err != nil {
+			if memberid == memberProfile.MemberId && memberProfile.ClaimStatus == 1 {
 
-			return model.ChannelEntryDetails{}, err
-		}
-
-		var conv_channelEntries []model.TblChannelEntries
-
-		for _,entry := range channelEntries{
-
-			var conv_categories [][]model.TblCategory
-
-			for _, categories := range entry.Categories {
-	
-				var conv_categoryz []model.TblCategory
-	
-				for _, category := range categories {
-	
-					conv_category := model.TblCategory{
-						ID:           category.Id,
-						CategoryName: category.CategoryName,
-						CategorySlug: category.CategorySlug,
-						Description:  category.Description,
-						ImagePath:    category.ImagePath,
-						CreatedOn:    category.CreatedOn,
-						CreatedBy:    category.CreatedBy,
-						ModifiedOn:   &category.ModifiedOn,
-						ModifiedBy:   &category.ModifiedBy,
-						IsDeleted:    category.IsDeleted,
-						DeletedOn:    &category.DeletedOn,
-						DeletedBy:    &category.DeletedBy,
-						ParentID:     category.ParentId,
-					}
-	
-					conv_categoryz = append(conv_categoryz, conv_category)
-	
-				}
-	
-				conv_categories = append(conv_categories, conv_categoryz)
+				claimStatus = true
 	
 			}
-	
-			conv_channelEntry := model.TblChannelEntries{
-				ID:              entry.Id,
-				Title:           entry.Title,
-				Slug:            entry.Slug,
-				Description:     entry.Description,
-				UserID:          entry.UserId,
-				ChannelID:       entry.ChannelId,
-				Status:          entry.Status,
-				IsActive:        entry.IsActive,
-				IsDeleted:       entry.IsDeleted,
-				DeletedBy:       &entry.DeletedBy,
-				DeletedOn:       &entry.DeletedOn,
-				CreatedOn:       entry.CreatedOn,
-				CreatedBy:       entry.CreatedBy,
-				ModifiedBy:      &entry.ModifiedBy,
-				ModifiedOn:      &entry.ModifiedOn,
-				CoverImage:      entry.CoverImage,
-				ThumbnailImage:  entry.ThumbnailImage,
-				MetaTitle:       entry.MetaTitle,
-				MetaDescription: entry.MetaDescription,
-				Keyword:         entry.Keyword,
-				CategoriesID:    entry.CategoriesId,
-				RelatedArticles: entry.RelatedArticles,
-				Categories:      conv_categories,
+
+			conv_MemberProfile := model.MemberProfile{
+				ID:              &memberProfile.Id,
+				MemberID:        &memberProfile.MemberId,
+				ProfileName:     &memberProfile.ProfileName,
+				ProfileSlug:     &memberProfile.ProfileSlug,
+				ProfilePage:     &memberProfile.ProfilePage,
+				MemberDetails:   memberProfile.MemberDetails,
+				CompanyName:     &memberProfile.CompanyName,
+				CompanyLocation: &memberProfile.CompanyLocation,
+				CompanyLogo:     &memberProfile.CompanyLogo,
+				About:           &memberProfile.About,
+				SeoTitle:        &memberProfile.SeoTitle,
+				SeoDescription:  &memberProfile.SeoDescription,
+				SeoKeyword:      &memberProfile.SeoKeyword,
+				CreatedBy:       &memberProfile.CreatedBy,
+				CreatedOn:       &memberProfile.CreatedOn,
+				ModifiedOn:      &memberProfile.ModifiedOn,
+				ModifiedBy:      &memberProfile.ModifiedBy,
+				Linkedin:        &memberProfile.Linkedin,
+				Twitter:         &memberProfile.Twitter,
+				Website:         &memberProfile.Website,
+				ClaimStatus:     &memberProfile.ClaimStatus,
 			}
 
-			conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
+			conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
+
 		}
 
-		channelEntryDetails = model.ChannelEntryDetails{ChannelEntryList: &model.ChannelEntries{ChannelEntryList: conv_channelEntries,Count: int(count)}}
+		conv_channelEntry := model.ChannelEntries{
+			ID:               entry.Id,
+			Title:            entry.Title,
+			Slug:             entry.Slug,
+			Description:      entry.Description,
+			UserID:           entry.UserId,
+			ChannelID:        entry.ChannelId,
+			Status:           entry.Status,
+			IsActive:         entry.IsActive,
+			CreatedOn:        entry.CreatedOn,
+			CreatedBy:        entry.CreatedBy,
+			ModifiedBy:       &entry.ModifiedBy,
+			ModifiedOn:       &entry.ModifiedOn,
+			CoverImage:       entry.CoverImage,
+			ThumbnailImage:   entry.ThumbnailImage,
+			MetaTitle:        entry.MetaTitle,
+			MetaDescription:  entry.MetaDescription,
+			Keyword:          entry.Keyword,
+			CategoriesID:     entry.CategoriesId,
+			RelatedArticles:  entry.RelatedArticles,
+			Categories:       conv_categories,
+			AdditionalFields: additionalFields,
+			MemberProfile:    conv_memberProfiles,
+			AuthorDetails:    authorDetails,
+			FeaturedEntry:    entry.Feature,
+			ViewCount:        entry.ViewCount,
+			ClaimStatus:      claimStatus,
+			Fields: conv_fields,
+		}
+
+
+		conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
+
+
 
 	}
+
+	channelEntryDetails := model.ChannelEntriesDetails{ChannelEntriesList: conv_channelEntries, Count: int(count)}
 
 	return channelEntryDetails, nil
 
 }
 
-func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (model.TblChannel, error) {
+func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (model.Channel, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -311,14 +295,13 @@ func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (model.TblCh
 
 	channel, err := channelAuth.GetGraphqlChannelDetails(channelID)
 
-	conv_channel := model.TblChannel{
+	conv_channel := model.Channel{
 		ID:                 channel.Id,
 		ChannelName:        channel.ChannelName,
 		ChannelDescription: channel.ChannelDescription,
 		SlugName:           channel.SlugName,
 		FieldGroupID:       channel.FieldGroupId,
 		IsActive:           channel.IsActive,
-		IsDeleted:          channel.IsDeleted,
 		CreatedOn:          channel.CreatedOn,
 		ModifiedOn:         &channel.ModifiedOn,
 		CreatedBy:          channel.CreatedBy,
@@ -327,8 +310,337 @@ func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (model.TblCh
 
 	if err != nil {
 
-		return model.TblChannel{}, err
+		return model.Channel{}, err
 	}
 
 	return conv_channel, nil
+}
+
+func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channelId, categoryId *int, slug *string) (model.ChannelEntries, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	token, _ := c.Get("token")
+
+	memberid := c.GetInt("memberid")
+
+	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
+
+	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(channelEntryId, channelId, categoryId, PathUrl, SectionTypeId, MemberFieldTypeId, slug)
+
+	if err != nil {
+
+		return model.ChannelEntries{}, err
+	}
+
+	var conv_categories [][]model.Category
+
+	for _, categories := range channelEntry.Categories {
+
+		var conv_categoryz []model.Category
+
+		for _, category := range categories {
+
+			conv_category := model.Category{
+				ID:           category.Id,
+				CategoryName: category.CategoryName,
+				CategorySlug: category.CategorySlug,
+				Description:  category.Description,
+				ImagePath:    category.ImagePath,
+				CreatedOn:    category.CreatedOn,
+				CreatedBy:    category.CreatedBy,
+				ModifiedOn:   &category.ModifiedOn,
+				ModifiedBy:   &category.ModifiedBy,
+				ParentID:     category.ParentId,
+			}
+
+			conv_categoryz = append(conv_categoryz, conv_category)
+
+		}
+
+		conv_categories = append(conv_categories, conv_categoryz)
+
+	}
+	authorDetails := &model.Author{
+		AuthorID:         channelEntry.AuthorDetail.AuthorID,
+		FirstName:        channelEntry.AuthorDetail.FirstName,
+		LastName:         channelEntry.AuthorDetail.LastName,
+		Email:            channelEntry.AuthorDetail.Email,
+		MobileNo:         channelEntry.AuthorDetail.MobileNo,
+		IsActive:         channelEntry.AuthorDetail.IsActive,
+		ProfileImagePath: channelEntry.AuthorDetail.ProfileImagePath,
+		CreatedOn:        channelEntry.AuthorDetail.CreatedOn,
+		CreatedBy:        channelEntry.AuthorDetail.CreatedBy,
+	}
+
+	var conv_sections []model.Section
+
+	for _, section := range channelEntry.Sections {
+
+		conv_section := model.Section{
+			SectionID:     &section.Id,
+			SectionName:   section.FieldName,
+			SectionTypeID: section.FieldTypeId,
+			CreatedOn:     section.CreatedOn,
+			CreatedBy:     section.CreatedBy,
+			ModifiedOn:    &section.ModifiedOn,
+			ModifiedBy:    &section.ModifiedBy,
+			OrderIndex:    section.OrderIndex,
+		}
+
+		conv_sections = append(conv_sections, conv_section)
+	}
+
+	var conv_fields []model.Field
+
+	for _, field := range channelEntry.Fields {
+
+		conv_field_value := model.FieldValue{
+			ID:         field.FieldValue.FieldId,
+			FieldValue: field.FieldValue.FieldValue,
+			CreatedOn:  field.FieldValue.CreatedOn,
+			CreatedBy:  field.FieldValue.CreatedBy,
+			ModifiedOn: &field.FieldValue.ModifiedOn,
+			ModifiedBy: &field.FieldValue.ModifiedBy,
+		}
+
+		var conv_fieldOptions []model.FieldOptions
+
+		for _, field_option := range field.FieldOptions {
+
+			conv_fieldOption := model.FieldOptions{
+				ID:          field_option.Id,
+				OptionName:  field_option.OptionName,
+				OptionValue: field_option.OptionValue,
+				CreatedOn:   field_option.CreatedOn,
+				CreatedBy:   field_option.CreatedBy,
+				ModifiedOn:  &field_option.ModifiedOn,
+				ModifiedBy:  &field_option.ModifiedBy,
+			}
+
+			conv_fieldOptions = append(conv_fieldOptions, conv_fieldOption)
+		}
+
+		conv_field := model.Field{
+			FieldID:          field.Id,
+			FieldName:        field.FieldName,
+			FieldTypeID:      field.FieldTypeId,
+			MandatoryField:   field.MandatoryField,
+			OptionExist:      field.OptionExist,
+			CreatedOn:        field.CreatedOn,
+			CreatedBy:        field.CreatedBy,
+			ModifiedOn:       &field.ModifiedOn,
+			ModifiedBy:       &field.ModifiedBy,
+			FieldDesc:        field.FieldDesc,
+			OrderIndex:       field.OrderIndex,
+			ImagePath:        field.ImagePath,
+			DatetimeFormat:   &field.DatetimeFormat,
+			TimeFormat:       &field.TimeFormat,
+			SectionParentID:  &field.SectionParentId,
+			CharacterAllowed: &field.CharacterAllowed,
+			FieldTypeName:    field.FieldTypeName,
+			FieldValue:       &conv_field_value,
+			FieldOptions:     conv_fieldOptions,
+		}
+
+		conv_fields = append(conv_fields, conv_field)
+	}
+
+	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
+
+	var conv_memberProfiles []model.MemberProfile
+
+	claimStatus := false
+
+	for _, memberProfile := range channelEntry.MemberProfiles {
+
+		if memberid == memberProfile.MemberId && memberProfile.ClaimStatus == 1 {
+
+			claimStatus = true
+
+		}	
+
+		conv_MemberProfile := model.MemberProfile{
+			ID:              &memberProfile.Id,
+			MemberID:        &memberProfile.MemberId,
+			ProfileName:     &memberProfile.ProfileName,
+			ProfileSlug:     &memberProfile.ProfileSlug,
+			ProfilePage:     &memberProfile.ProfilePage,
+			MemberDetails:   memberProfile.MemberDetails,
+			CompanyName:     &memberProfile.CompanyName,
+			CompanyLocation: &memberProfile.CompanyLocation,
+			CompanyLogo:     &memberProfile.CompanyLogo,
+			About:           &memberProfile.About,
+			SeoTitle:        &memberProfile.SeoTitle,
+			SeoDescription:  &memberProfile.SeoDescription,
+			SeoKeyword:      &memberProfile.SeoKeyword,
+			CreatedBy:       &memberProfile.CreatedBy,
+			CreatedOn:       &memberProfile.CreatedOn,
+			ModifiedOn:      &memberProfile.ModifiedOn,
+			ModifiedBy:      &memberProfile.ModifiedBy,
+			Linkedin:        &memberProfile.Linkedin,
+			Twitter:         &memberProfile.Twitter,
+			Website:         &memberProfile.Website,
+			ClaimStatus:     &memberProfile.ClaimStatus,
+		}
+
+		conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
+	}
+
+	conv_channelEntry := model.ChannelEntries{
+		ID:               channelEntry.Id,
+		Title:            channelEntry.Title,
+		Slug:             channelEntry.Slug,
+		Description:      channelEntry.Description,
+		UserID:           channelEntry.UserId,
+		ChannelID:        channelEntry.ChannelId,
+		Status:           channelEntry.Status,
+		IsActive:         channelEntry.IsActive,
+		CreatedOn:        channelEntry.CreatedOn,
+		CreatedBy:        channelEntry.CreatedBy,
+		ModifiedBy:       &channelEntry.ModifiedBy,
+		ModifiedOn:       &channelEntry.ModifiedOn,
+		CoverImage:       channelEntry.CoverImage,
+		ThumbnailImage:   channelEntry.ThumbnailImage,
+		MetaTitle:        channelEntry.MetaTitle,
+		MetaDescription:  channelEntry.MetaDescription,
+		Keyword:          channelEntry.Keyword,
+		CategoriesID:     channelEntry.CategoriesId,
+		RelatedArticles:  channelEntry.RelatedArticles,
+		Categories:       conv_categories,
+		AdditionalFields: additionalFields,
+		MemberProfile:    conv_memberProfiles,
+		AuthorDetails:    authorDetails,
+		FeaturedEntry:    channelEntry.Feature,
+		ViewCount:        channelEntry.ViewCount,
+		ClaimStatus:      claimStatus,
+	}
+
+	return conv_channelEntry, nil
+
+}
+
+func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, entryId int) (bool, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	token := c.GetString("token")
+
+	if token == SpecialToken {
+
+		return false, errors.New("login required")
+	}
+
+	verify_chan := make(chan bool)
+
+	var channelEntry model.ChannelEntries
+
+	if err := db.Table("tbl_channel_entries").Where("is_deleted = 0 and id = ?", entryId).First(&channelEntry).Error; err != nil {
+
+		return false, err
+	}
+
+	var AuthorDetails model.Author
+
+	if err := db.Table("tbl_users").Where("is_deleted = 0 and id = ?", channelEntry.CreatedBy).First(&AuthorDetails).Error; err != nil {
+
+		return false, err
+	}
+
+	data := map[string]interface{}{"claimData": profileData, "authorDetails": AuthorDetails, "entry": channelEntry, "additionalData": AdditionalData}
+
+	tmpl, _ := template.ParseFiles("view/email/claim-template.html")
+
+	var template_buff bytes.Buffer
+
+	err := tmpl.Execute(&template_buff, data)
+
+	if err != nil {
+
+		return false, err
+	}
+
+	mail_data := MailConfig{Email: AuthorDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "OwnDesk - Member Profile Claim Request"}
+
+	html_content := template_buff.String()
+
+	go SendMail(mail_data, html_content, verify_chan)
+
+	if <-verify_chan {
+
+		return true, nil
+
+	} else {
+
+		return false, nil
+	}
+}
+
+func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId int, updateExactMemberProfileOnly bool) (bool, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	token := c.GetString("token")
+
+	if token == SpecialToken {
+
+		return false, errors.New("login required")
+	}
+
+	memberid := c.GetInt("memberid")
+
+	channelAuth := channel.Channel{Authority: GetAuthorization(token, db)}
+
+	entryDetails, err := channelAuth.GetGraphqlChannelEntriesDetails(&entryId, nil, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil)
+
+	if err != nil {
+
+		return false, err
+	}
+
+	var claimedMembers []int
+
+	for _, memberProfile := range entryDetails.MemberProfiles {
+
+		if updateExactMemberProfileOnly {
+
+			if memberProfile.MemberId == memberid {
+
+				claimedMembers = append(claimedMembers, memberProfile.MemberId)
+
+			}
+
+		} else {
+
+			claimedMembers = append(claimedMembers, memberProfile.MemberId)
+
+		}
+
+	}
+
+	var jsonData map[string]interface{}
+
+	err = json.Unmarshal([]byte(profiledata.MemberProfile), &jsonData)
+
+	if err != nil {
+
+		return false, err
+	}
+
+	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().In(TimeZone).Format("2006-01-02 15:04:05"))
+
+	memberProfileDetails := model.MemberProfile{
+		MemberDetails: profiledata.MemberProfile,
+		Linkedin:      profiledata.Linkedin,
+		Twitter:       profiledata.Twitter,
+		Website:       profiledata.Website,
+		ModifiedOn:    &currentTime,
+	}
+
+	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id in (?)", claimedMembers).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn}).Error; err != nil {
+
+		return false, err
+	}
+
+	return true, nil
 }

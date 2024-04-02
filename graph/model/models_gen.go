@@ -6,29 +6,172 @@ import (
 	"time"
 )
 
+type AdditionalFields struct {
+	Sections []Section `json:"sections,omitempty"`
+	Fields   []Field   `json:"fields,omitempty"`
+}
+
+type Author struct {
+	AuthorID         int       `json:"AuthorId" gorm:"column:id"`
+	FirstName        string    `json:"FirstName"`
+	LastName         string    `json:"LastName"`
+	Email            string    `json:"Email"`
+	MobileNo         *string   `json:"MobileNo,omitempty"`
+	IsActive         *int      `json:"IsActive,omitempty"`
+	ProfileImagePath *string   `json:"ProfileImagePath,omitempty"`
+	CreatedOn        time.Time `json:"CreatedOn"`
+	CreatedBy        int       `json:"CreatedBy"`
+}
+
+type CategoriesList struct {
+	Categories []Category `json:"categories"`
+	Count      int        `json:"count"`
+}
+
+type Category struct {
+	ID           int        `json:"id"`
+	CategoryName string     `json:"categoryName"`
+	CategorySlug string     `json:"categorySlug"`
+	Description  string     `json:"description"`
+	ImagePath    string     `json:"imagePath"`
+	CreatedOn    time.Time  `json:"createdOn"`
+	CreatedBy    int        `json:"createdBy"`
+	ModifiedOn   *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy   *int       `json:"modifiedBy,omitempty"`
+	ParentID     int        `json:"parentId"`
+}
+
+type Channel struct {
+	ID                 int        `json:"id"`
+	ChannelName        string     `json:"channelName"`
+	ChannelDescription string     `json:"channelDescription"`
+	SlugName           string     `json:"slugName"`
+	FieldGroupID       int        `json:"fieldGroupId"`
+	IsActive           int        `json:"isActive"`
+	CreatedOn          time.Time  `json:"createdOn"`
+	CreatedBy          int        `json:"createdBy"`
+	ModifiedOn         *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy         *int       `json:"modifiedBy,omitempty"`
+}
+
 type ChannelDetails struct {
-	Channellist []TblChannel `json:"channellist"`
-	Count       int          `json:"count"`
+	Channellist []Channel `json:"channellist"`
+	Count       int       `json:"count"`
 }
 
 type ChannelEntries struct {
-	ChannelEntryList []TblChannelEntries `json:"channelEntryList"`
-	Count            int                 `json:"count"`
+	ID               int               `json:"id"`
+	Title            string            `json:"title"`
+	Slug             string            `json:"slug"`
+	Description      string            `json:"description"`
+	UserID           int               `json:"userId"`
+	ChannelID        int               `json:"channelId"`
+	Status           int               `json:"status"`
+	IsActive         int               `json:"isActive"`
+	CreatedOn        time.Time         `json:"createdOn"`
+	CreatedBy        int               `json:"createdBy"`
+	ModifiedBy       *int              `json:"modifiedBy,omitempty"`
+	ModifiedOn       *time.Time        `json:"modifiedOn,omitempty"`
+	CoverImage       string            `json:"coverImage"`
+	ThumbnailImage   string            `json:"thumbnailImage"`
+	MetaTitle        string            `json:"metaTitle"`
+	MetaDescription  string            `json:"metaDescription"`
+	Keyword          string            `json:"keyword"`
+	CategoriesID     string            `json:"categoriesId"`
+	RelatedArticles  string            `json:"relatedArticles"`
+	FeaturedEntry    int               `json:"featuredEntry"`
+	ViewCount        int               `json:"viewCount"`
+	Categories       [][]Category      `json:"categories"  gorm:"-"`
+	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"  gorm:"-"`
+	AuthorDetails    *Author           `json:"authorDetails"  gorm:"-"`
+	MemberProfile    []MemberProfile   `json:"memberProfile,omitempty" gorm:"-"`
+	ClaimStatus      bool              `json:"claimStatus" gorm:"-"`
+	Fields           []Field           `json:"fields,omitempty" gorm:"-"`
 }
 
-type ChannelEntryDetails struct {
-	ChannelEntryList *ChannelEntries    `json:"channelEntryList,omitempty"`
-	ChannelEntry     *TblChannelEntries `json:"channelEntry,omitempty"`
+type ChannelEntriesDetails struct {
+	ChannelEntriesList []ChannelEntries `json:"channelEntriesList"` 
+	Count              int              `json:"count"`
 }
 
-type LoginCredentials struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type ClaimData struct {
+	ProfileName   string `json:"profileName"`
+	WorkMail      string `json:"workMail"`
+	CompanyNumber string `json:"companyNumber"`
+	PersonName    string `json:"personName"`
+}
+
+type EcommerceProduct struct {
+	ID                 int        `json:"id"`
+	CategoriesID       int        `json:"categoriesId"`
+	ProductName        string     `json:"productName"`
+	ProductDescription string     `json:"productDescription"`
+	ProductImagePath   string     `json:"productImagePath"`
+	ProductVideoPath   string     `json:"productVideoPath"`
+	Sku                string     `json:"sku"`
+	Tax                int        `json:"tax"`
+	Totalcost          int        `json:"totalcost"`
+	IsActive           int        `json:"isActive"`
+	CreatedOn          time.Time  `json:"createdOn"`
+	CreatedBy          int        `json:"createdBy"`
+	ModifiedOn         *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy         *int       `json:"modifiedBy,omitempty"`
+	IsDeleted          int        `json:"isDeleted"`
+	DeletedBy          *int       `json:"deletedBy,omitempty"`
+	DeletedOn          *time.Time `json:"deletedOn,omitempty"`
+	DefaultPrice       int        `json:"defaultPrice" gorm:"column:product_price"`
+	DiscountPrice      *int       `json:"discountPrice,omitempty" gorm:"column:discount_price"`
+	SpecialPrice       *int       `json:"specialPrice,omitempty" gorm:"column:special_price"`
+}
+
+type EcommerceProducts struct {
+	ProductList []EcommerceProduct `json:"productList"`
+	Count       int                `json:"count"`
+}
+
+type Field struct {
+	FieldID          int            `json:"fieldId"`
+	FieldName        string         `json:"fieldName"`
+	FieldTypeID      int            `json:"fieldTypeId"`
+	MandatoryField   int            `json:"mandatoryField"`
+	OptionExist      int            `json:"optionExist"`
+	CreatedOn        time.Time      `json:"createdOn"`
+	CreatedBy        int            `json:"createdBy"`
+	ModifiedOn       *time.Time     `json:"modifiedOn,omitempty"`
+	ModifiedBy       *int           `json:"modifiedBY,omitempty"`
+	FieldDesc        string         `json:"fieldDesc"`
+	OrderIndex       int            `json:"orderIndex"`
+	ImagePath        string         `json:"imagePath"`
+	DatetimeFormat   *string        `json:"datetimeFormat,omitempty"`
+	TimeFormat       *string        `json:"timeFormat,omitempty"`
+	SectionParentID  *int           `json:"sectionParentId,omitempty"`
+	CharacterAllowed *int           `json:"characterAllowed,omitempty"`
+	FieldTypeName    string         `json:"fieldTypeName"`
+	FieldValue       *FieldValue    `json:"fieldValue,omitempty"`
+	FieldOptions     []FieldOptions `json:"fieldOptions,omitempty"`
+}
+
+type FieldOptions struct {
+	ID          int        `json:"id"`
+	OptionName  string     `json:"optionName"`
+	OptionValue string     `json:"optionValue"`
+	CreatedOn   time.Time  `json:"createdOn"`
+	CreatedBy   int        `json:"createdBy"`
+	ModifiedOn  *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy  *int       `json:"modifiedBY,omitempty"`
+}
+
+type FieldValue struct {
+	ID         int        `json:"id"`
+	FieldValue string     `json:"fieldValue"`
+	CreatedOn  time.Time  `json:"createdOn"`
+	CreatedBy  int        `json:"createdBy"`
+	ModifiedOn *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy *int       `json:"modifiedBY,omitempty"`
 }
 
 type Member struct {
 	ID               int           `json:"id"`
-	UUID             string        `json:"uuid"`
 	FirstName        string        `json:"firstName"`
 	LastName         string        `json:"lastName"`
 	Email            string        `json:"email"`
@@ -36,21 +179,12 @@ type Member struct {
 	IsActive         int           `json:"isActive"`
 	ProfileImage     string        `json:"profileImage"`
 	ProfileImagePath string        `json:"profileImagePath"`
-	LastLogin        int           `json:"lastLogin"`
-	IsDeleted        int           `json:"isDeleted"`
-	DeletedOn        *time.Time    `json:"deletedOn,omitempty"`
-	DeletedBy        *int          `json:"deletedBy,omitempty"`
 	CreatedOn        time.Time     `json:"createdOn"`
-	CreatedDate      *string       `json:"createdDate,omitempty"`
 	CreatedBy        int           `json:"createdBy"`
 	ModifiedOn       *time.Time    `json:"modifiedOn,omitempty"`
 	ModifiedBy       *int          `json:"modifiedBy,omitempty"`
 	MemberGroupID    int           `json:"memberGroupId"`
 	Group            []MemberGroup `json:"group,omitempty"`
-	Password         string        `json:"password"`
-	Username         string        `json:"username"`
-	Otp              *int          `json:"otp,omitempty"`
-	OtpExpiry        *time.Time    `json:"otpExpiry,omitempty"`
 }
 
 type MemberDetails struct {
@@ -72,66 +206,139 @@ type MemberGroup struct {
 	Slug        string     `json:"slug"`
 	Description string     `json:"description"`
 	IsActive    int        `json:"isActive"`
-	IsDeleted   int        `json:"isDeleted"`
 	CreatedOn   time.Time  `json:"createdOn"`
 	CreatedBy   int        `json:"createdBy"`
 	ModifiedOn  *time.Time `json:"modifiedOn,omitempty"`
 	ModifiedBy  *int       `json:"modifiedBy,omitempty"`
-	DateString  *string    `json:"dateString,omitempty"`
 }
 
-type TblCategory struct {
-	ID           int        `json:"id"`
-	CategoryName string     `json:"categoryName"`
-	CategorySlug string     `json:"categorySlug"`
-	Description  string     `json:"description"`
-	ImagePath    string     `json:"imagePath"`
-	CreatedOn    time.Time  `json:"createdOn"`
-	CreatedBy    int        `json:"createdBy"`
-	ModifiedOn   *time.Time `json:"modifiedOn,omitempty"`
-	ModifiedBy   *int       `json:"modifiedBy,omitempty"`
-	IsDeleted    int        `json:"isDeleted"`
-	DeletedOn    *time.Time `json:"deletedOn,omitempty"`
-	DeletedBy    *int       `json:"deletedBy,omitempty"`
-	ParentID     int        `json:"parentId"`
+type MemberProfile struct {
+	ID              *int        `json:"id,omitempty"`
+	MemberID        *int        `json:"memberId,omitempty"`
+	ProfileName     *string     `json:"profileName,omitempty"`
+	ProfileSlug     *string     `json:"profileSlug,omitempty"`
+	ProfilePage     *string     `json:"profilePage,omitempty"`
+	MemberDetails   interface{} `json:"memberDetails,omitempty" gorm:"column:member_details;type:jsonb"`
+	CompanyName     *string     `json:"companyName,omitempty"`
+	CompanyLocation *string     `json:"companyLocation,omitempty"`
+	CompanyLogo     *string     `json:"companyLogo,omitempty"`
+	About           *string     `json:"about,omitempty"`
+	SeoTitle        *string     `json:"seoTitle,omitempty"`
+	SeoDescription  *string     `json:"seoDescription,omitempty"`
+	SeoKeyword      *string     `json:"seoKeyword,omitempty"`
+	Linkedin        *string     `json:"linkedin,omitempty"`
+	Twitter         *string     `json:"twitter,omitempty"`
+	Website         *string     `json:"website,omitempty"`
+	CreatedBy       *int        `json:"createdBy,omitempty"`
+	CreatedOn       *time.Time  `json:"createdOn,omitempty"`
+	ModifiedOn      *time.Time  `json:"modifiedOn,omitempty"`
+	ModifiedBy      *int        `json:"modifiedBy,omitempty"`
+	ClaimStatus     *int        `json:"claimStatus,omitempty"`
 }
 
-type TblChannel struct {
-	ID                 int        `json:"id"`
-	ChannelName        string     `json:"channelName"`
-	ChannelDescription string     `json:"channelDescription"`
-	SlugName           string     `json:"slugName"`
-	FieldGroupID       int        `json:"fieldGroupId"`
-	IsActive           int        `json:"isActive"`
-	IsDeleted          int        `json:"isDeleted"`
-	CreatedOn          time.Time  `json:"createdOn"`
-	CreatedBy          int        `json:"createdBy"`
-	ModifiedOn         *time.Time `json:"modifiedOn,omitempty"`
-	ModifiedBy         *int       `json:"modifiedBy,omitempty"`
+type Page struct {
+	ID          int        `json:"id"`
+	PageName    string     `json:"pageName"`
+	Content     string     `json:"content"`
+	PagegroupID int        `json:"pagegroupId"`
+	OrderIndex  int        `json:"orderIndex"`
+	ParentID    int        `json:"parentId"`
+	Status      string     `json:"status"`
+	CreatedOn   time.Time  `json:"createdOn"`
+	CreatedBy   int        `json:"created_by"`
+	ModifiedOn  *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy  *int       `json:"modifiedBy,omitempty"`
 }
 
-type TblChannelEntries struct {
-	ID              int             `json:"id"`
-	Title           string          `json:"title"`
-	Slug            string          `json:"slug"`
-	Description     string          `json:"description"`
-	UserID          int             `json:"userId"`
-	ChannelID       int             `json:"channelId"`
-	Status          int             `json:"status"`
-	IsActive        int             `json:"isActive"`
-	IsDeleted       int             `json:"isDeleted"`
-	DeletedBy       *int            `json:"deletedBy,omitempty"`
-	DeletedOn       *time.Time      `json:"deletedOn,omitempty"`
-	CreatedOn       time.Time       `json:"createdOn"`
-	CreatedBy       int             `json:"createdBy"`
-	ModifiedBy      *int            `json:"modifiedBy,omitempty"`
-	ModifiedOn      *time.Time      `json:"modifiedOn,omitempty"`
-	CoverImage      string          `json:"coverImage"`
-	ThumbnailImage  string          `json:"thumbnailImage"`
-	MetaTitle       string          `json:"metaTitle"`
-	MetaDescription string          `json:"metaDescription"`
-	Keyword         string          `json:"keyword"`
-	CategoriesID    string          `json:"categoriesId"`
-	RelatedArticles string          `json:"relatedArticles"`
-	Categories      [][]TblCategory `json:"categories" gorm:"-"`
+type PageAndPageGroups struct {
+	Pages      []Page      `json:"pages"`
+	Subpages   []SubPage   `json:"subpages"`
+	Pagegroups []PageGroup `json:"pagegroups"`
+}
+
+type PageGroup struct {
+	ID            int        `json:"id"`
+	PagegroupName string     `json:"pagegroupName"`
+	OrderIndex    int        `json:"orderIndex"`
+	CreatedOn     time.Time  `json:"createdOn"`
+	CreatedBy     int        `json:"created_by"`
+	ModifiedOn    *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy    *int       `json:"modifiedBy,omitempty"`
+}
+
+type ProductFilter struct {
+	ReleaseDate   *string  `json:"releaseDate,omitempty"`
+	StartingPrice *int     `json:"startingPrice,omitempty"`
+	EndingPrice   *int     `json:"endingPrice,omitempty"`
+	CategoryName  *string  `json:"categoryName,omitempty"`
+	CategoryID    *int     `json:"categoryId,omitempty"`
+	StarRatings   *float64 `json:"starRatings,omitempty"`
+}
+
+type ProductPricing struct {
+	ID        int       `json:"id"`
+	PriceID   int       `json:"priceId"`
+	Sku       string    `json:"sku"`
+	Priority  int       `json:"priority"`
+	Price     int       `json:"price"`
+	StartDtae time.Time `json:"startDtae"`
+	EndDate   time.Time `json:"endDate"`
+	Type      string    `json:"type"`
+}
+
+type ProductSort struct {
+	Price *int `json:"price,omitempty"`
+	Date  *int `json:"date,omitempty"`
+}
+
+type ProfileData struct {
+	Website       *string `json:"website,omitempty"`
+	Twitter       *string `json:"twitter,omitempty"`
+	Linkedin      *string `json:"linkedin,omitempty"`
+	MemberProfile string  `json:"memberProfile"`
+}
+
+type Section struct {
+	SectionID     *int       `json:"sectionId,omitempty"`
+	SectionName   string     `json:"sectionName"`
+	SectionTypeID int        `json:"sectionTypeId"`
+	CreatedOn     time.Time  `json:"createdOn"`
+	CreatedBy     int        `json:"createdBy"`
+	ModifiedOn    *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy    *int       `json:"modifiedBY,omitempty"`
+	OrderIndex    int        `json:"orderIndex"`
+}
+
+type Space struct {
+	ID               int        `json:"id"`
+	SpaceName        string     `json:"spaceName"`
+	SpaceSlug        string     `json:"spaceSlug"`
+	SpaceDescription string     `json:"spaceDescription"`
+	ImagePath        string     `json:"imagePath"`
+	LanguageID       int        `json:"languageId"`
+	CreatedOn        time.Time  `json:"createdOn"`
+	CreatedBy        int        `json:"createdBy"`
+	ModifiedOn       *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy       *int       `json:"modifiedBy,omitempty"`
+	CategoryID       int        `json:"categoryId"`
+	Categories       []Category `json:"categories"`
+}
+
+type SpaceDetails struct {
+	Spacelist []Space `json:"spacelist"`
+	Count     int     `json:"count"`
+}
+
+type SubPage struct {
+	ID          int        `json:"id"`
+	SubpageName string     `json:"subpageName"`
+	Conent      string     `json:"conent"`
+	ParentID    int        `json:"parentId"`
+	PageGroupID int        `json:"pageGroupId"`
+	OrderIndex  int        `json:"orderIndex"`
+	Status      string     `json:"status"`
+	CreatedOn   time.Time  `json:"createdOn"`
+	CreatedBy   int        `json:"created_by"`
+	ModifiedOn  *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy  *int       `json:"modifiedBy,omitempty"`
 }

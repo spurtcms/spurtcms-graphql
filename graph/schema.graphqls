@@ -8,9 +8,14 @@ scalar Time
 
 scalar Map
 
+scalar Any
+
+scalar JSON
+
+scalar LargeInt
+
 type Member{
     id:               Int! 
-    uuid:             String!
     firstName:        String!
     lastName:         String!
     email:            String!
@@ -18,21 +23,12 @@ type Member{
     isActive:         Int!
     profileImage:     String!
     profileImagePath: String!
-    lastLogin:        Int!
-    isDeleted:        Int!
-    deletedOn:        Time 
-    deletedBy:        Int      
     createdOn:        Time! 
-    createdDate:      String    
     createdBy:        Int!
     modifiedOn:       Time 
     modifiedBy:       Int       
     memberGroupId:    Int!
     group:            [MemberGroup!] 
-    password:         String!
-    username:         String!    
-    otp:              Int       
-    otpExpiry:        Time 
 }
 
 type MemberGroup{
@@ -41,22 +37,19 @@ type MemberGroup{
 	slug:         String!
 	description:  String!
 	isActive:     Int!
-	isDeleted:    Int!
 	createdOn:    Time! 
 	createdBy:    Int!
 	modifiedOn:   Time 
-	modifiedBy:   Int      
-	dateString:   String   
+	modifiedBy:   Int 
 }
 
-type TblChannel{
+type Channel{
 	id:                  Int!
 	channelName:         String!
 	channelDescription:  String!
 	slugName:            String!
 	fieldGroupId:        Int!
 	isActive:            Int!
-	isDeleted:           Int!
 	createdOn:           Time!
 	createdBy:           Int!
 	modifiedOn:          Time          
@@ -64,21 +57,16 @@ type TblChannel{
 }
 
 type ChannelDetails{
-    channellist: [TblChannel!]!
+    channellist: [Channel!]!
     count:       Int!
 }
 
-type ChannelEntryDetails{
-    channelEntryList: ChannelEntries
-    channelEntry: TblChannelEntries
+type ChannelEntriesDetails{
+    channelEntriesList: [ChannelEntries!]!
+    count:              Int!
 }
 
 type ChannelEntries{
-    channelEntryList: [TblChannelEntries!]!
-    count:            Int!
-}
-
-type TblChannelEntries{
 	id:                   Int!
 	title:                String! 
 	slug:                 String! 
@@ -87,9 +75,6 @@ type TblChannelEntries{
 	channelId:            Int!
 	status:               Int!
 	isActive:             Int!
-	isDeleted:            Int! 
-	deletedBy:            Int       
-	deletedOn:            Time 
 	createdOn:            Time!
 	createdBy:            Int!
 	modifiedBy:           Int     
@@ -101,10 +86,53 @@ type TblChannelEntries{
 	keyword:              String!
 	categoriesId:         String!
 	relatedArticles:      String!
-	categories:           [[TblCategory!]!]!
+	featuredEntry:        Int!
+	viewCount:            Int!
+	categories:           [[Category!]!]!
+	additionalFields:     AdditionalFields
+	authorDetails:        Author!
+	memberProfile:        [MemberProfile!]
+	claimStatus:          Boolean!
+	fields:               [Field!]
 }
 
-type TblCategory{
+type Author{
+	AuthorId:             Int! 
+	FirstName:            String!
+	LastName:             String!
+	Email:                String!
+	MobileNo:             String
+	IsActive:             Int
+	ProfileImagePath:     String
+	CreatedOn:            Time!
+	CreatedBy:            Int!      
+}
+
+type MemberProfile{
+	id:                Int
+	memberId:          Int
+	profileName:       String
+	profileSlug:       String
+	profilePage:       String
+	memberDetails:     Any
+	companyName:       String
+	companyLocation:   String
+	companyLogo:       String
+	about:             String
+	seoTitle:          String
+	seoDescription:    String
+	seoKeyword:        String
+	linkedin:          String
+	twitter:           String
+	website:           String
+	createdBy:         Int
+	createdOn:         Time
+	modifiedOn:        Time 
+	modifiedBy:        Int 
+	claimStatus:       Int      
+}
+
+type Category{
 	id:                 Int!
 	categoryName:       String!
 	categorySlug:       String!
@@ -114,27 +142,193 @@ type TblCategory{
 	createdBy:          Int!
 	modifiedOn:         Time 
 	modifiedBy:         Int       
-	isDeleted:          Int!
-	deletedOn:          Time 
-	deletedBy:          Int     
 	parentId:           Int!
+}
+
+type SpaceDetails{
+	spacelist:      [Space!]!
+	count:          Int!
+}
+
+type Space{
+	id:                   Int!
+	spaceName:            String!
+	spaceSlug:            String!
+	spaceDescription:     String!
+	imagePath:            String!
+	languageId:           Int!
+	createdOn:            Time!
+	createdBy:            Int!
+	modifiedOn:           Time        
+	modifiedBy:           Int 
+	categoryId:           Int!                                                                                                
+	categories:           [Category!]!                                                                               
+}
+
+type PageAndPageGroups{
+	pages:         [Page!]!
+	subpages:      [SubPage!]!
+	pagegroups:    [PageGroup!]!
+}
+
+type Page{
+    id:               Int!
+	pageName:         String!
+	content:          String!
+	pagegroupId:      Int!
+	orderIndex:       Int!
+	parentId:         Int!
+	status:           String!
+	createdOn:        Time!
+	created_by:       Int!
+	modifiedOn:       Time
+	modifiedBy:       Int
+}
+
+type SubPage{
+    id:             Int!
+    subpageName:    String!
+    conent:         String!
+    parentId:       Int!
+    pageGroupId:    Int!
+    orderIndex:     Int!
+    status:         String!
+    createdOn:      Time!
+    created_by:     Int!
+    modifiedOn:     Time
+    modifiedBy:     Int
+}
+
+type PageGroup{
+    id:             Int!
+    pagegroupName:  String!
+    orderIndex:     Int!
+	createdOn:      Time!
+    created_by:     Int!
+    modifiedOn:     Time
+    modifiedBy:     Int
+}
+
+type CategoriesList{
+	categories:   [Category!]!
+	count:        Int! 
+}
+
+type AdditionalFields{
+	sections:   [Section!]
+	fields:     [Field!]
+}
+
+type Section{
+	sectionId:         Int
+	sectionName:       String!
+	sectionTypeId:     Int!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+	orderIndex:        Int!
+}
+
+type Field{
+	fieldId:           Int!
+	fieldName:         String!
+	fieldTypeId:       Int!
+	mandatoryField:    Int!
+	optionExist:       Int!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+	fieldDesc:         String!
+	orderIndex:        Int!
+	imagePath:         String!
+	datetimeFormat:    String
+	timeFormat:        String
+	sectionParentId:   Int
+	characterAllowed:  Int
+	fieldTypeName:     String!
+	fieldValue:        FieldValue
+	fieldOptions:      [FieldOptions!]
+}
+
+type FieldValue{
+	id:                Int!
+	fieldValue:        String!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+}
+
+type FieldOptions{
+	id:                Int!
+	optionName:        String!
+	optionValue:       String!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+}
+
+type EcommerceProducts{
+	productList:  [EcommerceProduct!]!
+	count:        Int!
+}
+
+type EcommerceProduct{
+	id:                        Int!
+	categoriesId:              Int!
+	productName:               String!
+	productDescription:        String!
+	productImagePath:          String!
+	productVideoPath:          String!
+	sku:                       String!
+	tax:                       Int!
+	totalcost:                 Int!
+	isActive:                  Int!
+	createdOn:                 Time!
+	createdBy:                 Int!
+	modifiedOn:                Time
+	modifiedBy:                Int
+	isDeleted:                 Int!
+	deletedBy:                 Int
+	deletedOn:                 Time
+	defaultPrice:              Int! 
+	discountPrice:             Int
+	specialPrice:              Int
+} 
+
+type ProductPricing{
+	id:          Int!
+	priceId:     Int!
+	sku:         String!
+	priority:    Int!
+	price:       Int!
+	startDtae:   Time!
+	endDate:     Time!
+	type:        String!
 }
 
 type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
-	channelDetail(channelId: Int!): TblChannel! @auth
-    channelEntriesList(channelId: Int,channelEntryId: Int,categoryId: Int,limit: Int,offset: Int): ChannelEntryDetails! @auth
+	channelDetail(channelId: Int!): Channel! @auth
+    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String): ChannelEntriesDetails! @auth
+	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int): ChannelEntries! @auth
+	spaceList(limit: Int!,offset: Int!): SpaceDetails! @auth
+	spaceDetails(spaceId: Int!): Space! @auth
+	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
+	categoriesList(limit: Int,offset: Int,categoryGroupId: Int,hierarchyLevel: Int, checkEntriesPresence: Int): CategoriesList! @auth
+	ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
 }
 
 type Mutation{
-    memberLogin(input: LoginCredentials!): String!
+    memberLogin(email: String!): Boolean!
+	verifyMemberOtp(email: String!, otp: Int!): String!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
-}
-
-input LoginCredentials{
-    email: String!
-    password: String!
+	memberProfileUpdate(profiledata: ProfileData!,entryId: Int!,updateExactMemberProfileOnly: Boolean!):Boolean! @auth
+	memberclaimnow(input: ClaimData!,entryId: Int!): Boolean! @auth
 }
 
 input MemberDetails{
@@ -148,6 +342,34 @@ input MemberDetails{
     profileImagePath: String
     username:         String
     groupId:          Int 
+}
+
+input ProfileData{
+	website:         String
+	twitter:         String
+	linkedin:        String
+	memberProfile:   JSON!
+}
+
+input ClaimData{
+	profileName:     String!
+	workMail:        String!
+    companyNumber:   LargeInt!
+	personName:      String!
+}
+
+input ProductFilter{
+	releaseDate:           String
+	startingPrice:         Int
+	endingPrice:           Int
+	categoryName:          String
+	categoryId:            Int
+	starRatings:           Float
+}
+
+input ProductSort{
+	price:        Int
+	date:         Int
 }
 
 

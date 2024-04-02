@@ -1,0 +1,17 @@
+introspection:
+  schemaFile: ./graph/schema.graphqls
+
+output:
+   path: ./default
+
+info:
+  title: Spurtcms/GraphQL API
+  description: This is a GraphQL API documentation for consuming the spurtcms data contents.
+
+servers:
+  - url: https://graphql.spurtcms.com/query
+    description: Development Server
+
+spectaql:
+    logoFile: ./spectaql/logo.png
+

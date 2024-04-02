@@ -4,11 +4,13 @@ import (
 	"encoding/base64"
 	"log"
 	"math/rand"
+	"net/smtp"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/spurtcms/pkgcore/auth"
 	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
@@ -20,13 +22,73 @@ type key string
 
 const ContextKey key = "ginContext"
 
+type MailConfig struct{
+	Email            string
+	MailUsername     string
+	MailPassword     string
+	Subject          string
+	AdditionalData   map[string]interface{}
+}
+
 var(
 	Mem member.MemberAuth
 	Auth *auth.Authorization
-	IST, _ = time.LoadLocation("Asia/Kolkata")
-	ProfileImagePath = "Uploads/ProfileImages/"
-	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
+	TimeZone *time.Location
+	ProfileImagePath,SpecialToken string
+	SectionTypeId = 12
+    MemberFieldTypeId = 14
+	PathUrl string
+	EmailImageUrlPrefix string
+	AdditionalData map[string]interface{}
 )
+
+func init(){
+	
+	err := godotenv.Load()
+
+	if err != nil {
+
+		log.Fatalf("Error loading .env file")
+	}
+
+	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
+
+	TimeZone, _ = time.LoadLocation(os.Getenv("TIME_ZONE"))
+
+	ProfileImagePath = "Uploads/ProfileImages/"
+
+	if os.Getenv("DOMAIN_URL") != "" {
+
+		PathUrl = os.Getenv("DOMAIN_URL")
+
+	} else {
+
+		PathUrl = os.Getenv("LOCAL_URL")
+	}
+
+	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
+
+	EmailImagePath := struct{
+		Owndesk    string
+		Twitter    string
+		Facebook   string
+		LinkedIn   string
+		Youtube    string
+		Instagram  string
+	}{
+		Owndesk  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/own-desk-logo.png","/"),
+		Twitter  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons3.png","/"),
+		Facebook :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons1.png","/"),
+		LinkedIn :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons2.png","/"),
+		Youtube  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons4.png","/"),
+		Instagram:  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons5.png","/"),
+	}
+
+	AdditionalData = map[string]interface{}{"emailImagePath": EmailImagePath}
+
+	log.Println("newbie",EmailImagePath)
+
+}
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
 
@@ -38,7 +100,7 @@ func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
 
 func GetAuthorizationWithoutToken(db *gorm.DB)(*auth.Authorization){
 
-	auth := spurtcore.NewInstance(&auth.Option{DB: db, Token: "", Secret: ""})
+	auth := spurtcore.NewInstance(&auth.Option{DB: db, Token: "", Secret: os.Getenv("JWT_SECRET")})
 
 	return &auth
 }
@@ -95,5 +157,41 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 	return imageName,storageDestination,nil
 }
 
+func SendMail(config MailConfig,html_content string,channel chan bool) {
 
+	// Sender data.
+	from := config.MailUsername
+	password := config.MailPassword
 
+	// Receiver email address.
+	to := []string{
+		config.Email,
+	}
+
+	// smtp server configuration.
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+
+	// Authentication.
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	subject := "Subject:"+config.Subject+" \n"
+
+	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+
+	msg := []byte(subject + mime + html_content)
+
+	// Sending email.
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
+
+	if err != nil {
+
+		log.Println(err)
+
+		channel <- false
+
+		return
+	}
+
+	channel <- true
+}

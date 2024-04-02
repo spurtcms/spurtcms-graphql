@@ -2,9 +2,9 @@ package ginhandler
 
 import (
 	"context"
-	"gqlserver/controller"
-	"gqlserver/graph"
-	"gqlserver/middleware"
+	"spurtcms-graphql/controller"
+	"spurtcms-graphql/graph"
+	"spurtcms-graphql/middleware"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"

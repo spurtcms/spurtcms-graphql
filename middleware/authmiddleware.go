@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"gqlserver/controller"
+	"spurtcms-graphql/controller"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql"
