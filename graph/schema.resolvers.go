@@ -6,7 +6,7 @@ package graph
 
 import (
 	"context"
-	"gqlserver/graph/model"
+	"spurtcms-graphql/graph/model"
 )
 
 // MemberLogin is the resolver for the memberLogin field.

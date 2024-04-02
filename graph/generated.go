@@ -8,7 +8,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"gqlserver/graph/model"
+	"spurtcms-graphql/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"

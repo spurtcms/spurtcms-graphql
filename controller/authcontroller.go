@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"gqlserver/graph/model"
 	"html/template"
+	"log"
 	"math/rand"
 	"os"
+	"spurtcms-graphql/graph/model"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -97,7 +98,11 @@ func VerifyMemberOtp(db *gorm.DB,ctx context.Context,email string,otp int)(strin
 
 	currentTime := time.Now().In(TimeZone).Unix()
 
-	token,err := Mem.VerifyLoginOtp(email,otp,currentTime)
+	memberDetails,token,err := Mem.VerifyLoginOtp(email,otp,currentTime)
+
+	log.Println("memberdetails",memberDetails)
+
+	db.Table("tbl_members").Joins("inner join ")
 
 	if err!=nil{
 

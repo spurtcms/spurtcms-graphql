@@ -2,9 +2,9 @@ package graph
 
 import (
 	"context"
-	"gqlserver/controller"
-	"gqlserver/dbconfig"
-	"gqlserver/graph/model"
+	"spurtcms-graphql/controller"
+	"spurtcms-graphql/dbconfig"
+	"spurtcms-graphql/graph/model"
 
 	"gorm.io/gorm"
 )

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"gqlserver/controller"
-	ginhandler "gqlserver/ginHandler"
-	"gqlserver/middleware"
+	"spurtcms-graphql/controller"
+	ginhandler "spurtcms-graphql/ginHandler"
+	"spurtcms-graphql/middleware"
 	"os"
 	"path/filepath"
 	"strings"

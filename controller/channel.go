@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"gqlserver/graph/model"
+	"spurtcms-graphql/graph/model"
 	// "log"
 	"os"
 	"time"

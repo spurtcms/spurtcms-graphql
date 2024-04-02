@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-	"gqlserver/graph/model"
+	"spurtcms-graphql/graph/model"
 	"time"
 
 	// "log"
