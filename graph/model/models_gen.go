@@ -87,10 +87,17 @@ type ChannelEntries struct {
 	MemberProfile    []MemberProfile   `json:"memberProfile,omitempty" gorm:"-"`
 	ClaimStatus      bool              `json:"claimStatus" gorm:"-"`
 	Fields           []Field           `json:"fields,omitempty" gorm:"-"`
+	Author           *string           `json:"author,omitempty"`
+	SortOrder        *int              `json:"sortOrder,omitempty"`
+	CreateDate       *string           `json:"createDate,omitempty"`
+	PublishedTime    *string           `json:"publishedTime,omitempty"`
+	ReadingTime      *int              `json:"readingTime,omitempty"`
+	Tags             *string           `json:"tags,omitempty"`
+	Excerpt          *string           `json:"excerpt,omitempty"`
 }
 
 type ChannelEntriesDetails struct {
-	ChannelEntriesList []ChannelEntries `json:"channelEntriesList"` 
+	ChannelEntriesList []ChannelEntries `json:"channelEntriesList"`
 	Count              int              `json:"count"`
 }
 
@@ -168,6 +175,11 @@ type FieldValue struct {
 	CreatedBy  int        `json:"createdBy"`
 	ModifiedOn *time.Time `json:"modifiedOn,omitempty"`
 	ModifiedBy *int       `json:"modifiedBY,omitempty"`
+}
+
+type LoginDetails struct {
+	ClaimEntryDetails *ChannelEntries `json:"claimEntryDetails"`
+	Token             string          `json:"token"`
 }
 
 type Member struct {

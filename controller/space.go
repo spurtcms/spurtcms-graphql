@@ -2,15 +2,15 @@ package controller
 
 import (
 	"context"
-	"spurtcms-graphql/graph/model"
 	"os"
+	"spurtcms-graphql/graph/model"
 
 	"github.com/gin-gonic/gin"
 	spaces "github.com/spurtcms/pkgcontent/spaces"
 	"gorm.io/gorm"
 )
 
-func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int) (model.SpaceDetails, error) {
+func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoryId *int) (model.SpaceDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -101,11 +101,11 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, e
 
 	spaceAuth := spaces.Space{Authority: GetAuthorization(token.(string), db)}
 
-	space,err := spaceAuth.GetGraphqlSpaceDetails(spaceId, pathUrl)
+	space, err := spaceAuth.GetGraphqlSpaceDetails(spaceId, pathUrl)
 
-	if err!= nil{
+	if err != nil {
 
-		return model.Space{},err
+		return model.Space{}, err
 	}
 
 	var conv_categories []model.Category
@@ -143,7 +143,7 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, e
 		Categories:       conv_categories,
 	}
 
-	return conv_space,nil
+	return conv_space, nil
 }
 
 func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) (model.PageAndPageGroups, error) {
@@ -154,11 +154,11 @@ func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) 
 
 	spaceAuth := spaces.Space{Authority: GetAuthorization(token.(string), db)}
 
-	pagez, subpagez, pagegroupz,err := spaceAuth.GetPagesAndPagegroupsUnderSpace(spaceId)
-	
-	if err!=nil{
+	pagez, subpagez, pagegroupz, err := spaceAuth.GetPagesAndPagegroupsUnderSpace(spaceId)
 
-		return model.PageAndPageGroups{},err
+	if err != nil {
+
+		return model.PageAndPageGroups{}, err
 	}
 
 	var conv_pages []model.Page
@@ -167,61 +167,59 @@ func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) 
 
 	var conv_pagegroups []model.PageGroup
 
-	for _,page := range pagez{
+	for _, page := range pagez {
 
 		conv_page := model.Page{
-			ID: page.Id,
-			PageName: page.PageTitle,
-			Content: page.PageDescription,
+			ID:          page.Id,
+			PageName:    page.PageTitle,
+			Content:     page.PageDescription,
 			PagegroupID: page.PageGroupId,
-			OrderIndex: page.OrderIndex,
-			ParentID: page.ParentId,
-			Status: page.Status,
-			CreatedOn: page.CreatedOn,
-			CreatedBy: page.CreatedBy,
-			ModifiedOn: &page.ModifiedOn,
-			ModifiedBy: &page.ModifiedBy,
+			OrderIndex:  page.OrderIndex,
+			ParentID:    page.ParentId,
+			Status:      page.Status,
+			CreatedOn:   page.CreatedOn,
+			CreatedBy:   page.CreatedBy,
+			ModifiedOn:  &page.ModifiedOn,
+			ModifiedBy:  &page.ModifiedBy,
 		}
 
 		conv_pages = append(conv_pages, conv_page)
 	}
 
-	
-	for _,subpage := range subpagez{
+	for _, subpage := range subpagez {
 
 		conv_subpage := model.SubPage{
-			ID: subpage.Id,
+			ID:          subpage.Id,
 			SubpageName: subpage.PageTitle,
-			Conent: subpage.PageDescription,
-			ParentID: subpage.ParentId,
+			Conent:      subpage.PageDescription,
+			ParentID:    subpage.ParentId,
 			PageGroupID: subpage.PageGroupId,
-			OrderIndex: subpage.PageSuborder,
-			Status: subpage.Status,
-			CreatedOn: subpage.CreatedOn,
-			CreatedBy: subpage.CreatedBy,
-			ModifiedOn: &subpage.ModifiedOn,
-			ModifiedBy: &subpage.ModifiedBy,
+			OrderIndex:  subpage.PageSuborder,
+			Status:      subpage.Status,
+			CreatedOn:   subpage.CreatedOn,
+			CreatedBy:   subpage.CreatedBy,
+			ModifiedOn:  &subpage.ModifiedOn,
+			ModifiedBy:  &subpage.ModifiedBy,
 		}
 
 		conv_subpages = append(conv_subpages, conv_subpage)
 	}
 
-	for _,pagegroup := range pagegroupz{
+	for _, pagegroup := range pagegroupz {
 
 		conv_pagegroup := model.PageGroup{
-			ID: pagegroup.Id,
+			ID:            pagegroup.Id,
 			PagegroupName: pagegroup.GroupName,
-			OrderIndex: pagegroup.OrderIndex,
-			CreatedOn: pagegroup.CreatedOn,
-			CreatedBy: pagegroup.CreatedBy,
-			ModifiedOn: &pagegroup.ModifiedOn,
-			ModifiedBy: &pagegroup.ModifiedBy,
+			OrderIndex:    pagegroup.OrderIndex,
+			CreatedOn:     pagegroup.CreatedOn,
+			CreatedBy:     pagegroup.CreatedBy,
+			ModifiedOn:    &pagegroup.ModifiedOn,
+			ModifiedBy:    &pagegroup.ModifiedBy,
 		}
 
 		conv_pagegroups = append(conv_pagegroups, conv_pagegroup)
 	}
 
-
-	return model.PageAndPageGroups{Pages: conv_pages, Subpages: conv_subpages, Pagegroups:conv_pagegroups}, nil
+	return model.PageAndPageGroups{Pages: conv_pages, Subpages: conv_subpages, Pagegroups: conv_pagegroups}, nil
 
 }

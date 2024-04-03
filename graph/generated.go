@@ -104,15 +104,18 @@ type ComplexityRoot struct {
 
 	ChannelEntries struct {
 		AdditionalFields func(childComplexity int) int
+		Author           func(childComplexity int) int
 		AuthorDetails    func(childComplexity int) int
 		Categories       func(childComplexity int) int
 		CategoriesID     func(childComplexity int) int
 		ChannelID        func(childComplexity int) int
 		ClaimStatus      func(childComplexity int) int
 		CoverImage       func(childComplexity int) int
+		CreateDate       func(childComplexity int) int
 		CreatedBy        func(childComplexity int) int
 		CreatedOn        func(childComplexity int) int
 		Description      func(childComplexity int) int
+		Excerpt          func(childComplexity int) int
 		FeaturedEntry    func(childComplexity int) int
 		Fields           func(childComplexity int) int
 		ID               func(childComplexity int) int
@@ -123,9 +126,13 @@ type ComplexityRoot struct {
 		MetaTitle        func(childComplexity int) int
 		ModifiedBy       func(childComplexity int) int
 		ModifiedOn       func(childComplexity int) int
+		PublishedTime    func(childComplexity int) int
+		ReadingTime      func(childComplexity int) int
 		RelatedArticles  func(childComplexity int) int
 		Slug             func(childComplexity int) int
+		SortOrder        func(childComplexity int) int
 		Status           func(childComplexity int) int
+		Tags             func(childComplexity int) int
 		ThumbnailImage   func(childComplexity int) int
 		Title            func(childComplexity int) int
 		UserID           func(childComplexity int) int
@@ -206,6 +213,11 @@ type ComplexityRoot struct {
 		ModifiedOn func(childComplexity int) int
 	}
 
+	LoginDetails struct {
+		ClaimEntryDetails func(childComplexity int) int
+		Token             func(childComplexity int) int
+	}
+
 	Member struct {
 		CreatedBy        func(childComplexity int) int
 		CreatedOn        func(childComplexity int) int
@@ -260,12 +272,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		MemberLogin         func(childComplexity int, email string) int
-		MemberProfileUpdate func(childComplexity int, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) int
-		MemberRegister      func(childComplexity int, input model.MemberDetails) int
-		MemberUpdate        func(childComplexity int, memberdata model.MemberDetails) int
-		Memberclaimnow      func(childComplexity int, input model.ClaimData, entryID int) int
-		VerifyMemberOtp     func(childComplexity int, email string, otp int) int
+		MemberLogin             func(childComplexity int, email string) int
+		MemberProfileUpdate     func(childComplexity int, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) int
+		MemberRegister          func(childComplexity int, input model.MemberDetails) int
+		MemberUpdate            func(childComplexity int, memberdata model.MemberDetails) int
+		Memberclaimnow          func(childComplexity int, input model.ClaimData, entryID int) int
+		ProfileNameVerification func(childComplexity int, profileName string) int
+		VerifyMemberOtp         func(childComplexity int, email string, otp int) int
 	}
 
 	Page struct {
@@ -318,7 +331,7 @@ type ComplexityRoot struct {
 		EcommerceProductList         func(childComplexity int, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) int
 		PagesAndPageGroupsUnderSpace func(childComplexity int, spaceID int) int
 		SpaceDetails                 func(childComplexity int, spaceID int) int
-		SpaceList                    func(childComplexity int, limit int, offset int) int
+		SpaceList                    func(childComplexity int, limit int, offset int, categoryID *int) int
 	}
 
 	Section struct {
@@ -369,18 +382,19 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	MemberLogin(ctx context.Context, email string) (bool, error)
-	VerifyMemberOtp(ctx context.Context, email string, otp int) (string, error)
+	VerifyMemberOtp(ctx context.Context, email string, otp int) (model.LoginDetails, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
 	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) (bool, error)
 	Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int) (bool, error)
+	ProfileNameVerification(ctx context.Context, profileName string) (bool, error)
 }
 type QueryResolver interface {
 	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
 	ChannelDetail(ctx context.Context, channelID int) (model.Channel, error)
 	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (model.ChannelEntriesDetails, error)
 	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (model.ChannelEntries, error)
-	SpaceList(ctx context.Context, limit int, offset int) (model.SpaceDetails, error)
+	SpaceList(ctx context.Context, limit int, offset int, categoryID *int) (model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (model.PageAndPageGroups, error)
 	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (model.CategoriesList, error)
@@ -658,6 +672,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelEntries.AdditionalFields(childComplexity), true
 
+	case "ChannelEntries.author":
+		if e.complexity.ChannelEntries.Author == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.Author(childComplexity), true
+
 	case "ChannelEntries.authorDetails":
 		if e.complexity.ChannelEntries.AuthorDetails == nil {
 			break
@@ -700,6 +721,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelEntries.CoverImage(childComplexity), true
 
+	case "ChannelEntries.createDate":
+		if e.complexity.ChannelEntries.CreateDate == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.CreateDate(childComplexity), true
+
 	case "ChannelEntries.createdBy":
 		if e.complexity.ChannelEntries.CreatedBy == nil {
 			break
@@ -720,6 +748,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChannelEntries.Description(childComplexity), true
+
+	case "ChannelEntries.excerpt":
+		if e.complexity.ChannelEntries.Excerpt == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.Excerpt(childComplexity), true
 
 	case "ChannelEntries.featuredEntry":
 		if e.complexity.ChannelEntries.FeaturedEntry == nil {
@@ -791,6 +826,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelEntries.ModifiedOn(childComplexity), true
 
+	case "ChannelEntries.publishedTime":
+		if e.complexity.ChannelEntries.PublishedTime == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.PublishedTime(childComplexity), true
+
+	case "ChannelEntries.readingTime":
+		if e.complexity.ChannelEntries.ReadingTime == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.ReadingTime(childComplexity), true
+
 	case "ChannelEntries.relatedArticles":
 		if e.complexity.ChannelEntries.RelatedArticles == nil {
 			break
@@ -805,12 +854,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelEntries.Slug(childComplexity), true
 
+	case "ChannelEntries.sortOrder":
+		if e.complexity.ChannelEntries.SortOrder == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.SortOrder(childComplexity), true
+
 	case "ChannelEntries.status":
 		if e.complexity.ChannelEntries.Status == nil {
 			break
 		}
 
 		return e.complexity.ChannelEntries.Status(childComplexity), true
+
+	case "ChannelEntries.tags":
+		if e.complexity.ChannelEntries.Tags == nil {
+			break
+		}
+
+		return e.complexity.ChannelEntries.Tags(childComplexity), true
 
 	case "ChannelEntries.thumbnailImage":
 		if e.complexity.ChannelEntries.ThumbnailImage == nil {
@@ -1232,6 +1295,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FieldValue.ModifiedOn(childComplexity), true
 
+	case "LoginDetails.claimEntryDetails":
+		if e.complexity.LoginDetails.ClaimEntryDetails == nil {
+			break
+		}
+
+		return e.complexity.LoginDetails.ClaimEntryDetails(childComplexity), true
+
+	case "LoginDetails.token":
+		if e.complexity.LoginDetails.Token == nil {
+			break
+		}
+
+		return e.complexity.LoginDetails.Token(childComplexity), true
+
 	case "Member.createdBy":
 		if e.complexity.Member.CreatedBy == nil {
 			break
@@ -1600,6 +1677,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Memberclaimnow(childComplexity, args["input"].(model.ClaimData), args["entryId"].(int)), true
 
+	case "Mutation.profileNameVerification":
+		if e.complexity.Mutation.ProfileNameVerification == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_profileNameVerification_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ProfileNameVerification(childComplexity, args["profileName"].(string)), true
+
 	case "Mutation.verifyMemberOtp":
 		if e.complexity.Mutation.VerifyMemberOtp == nil {
 			break
@@ -1921,7 +2010,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.SpaceList(childComplexity, args["limit"].(int), args["offset"].(int)), true
+		return e.complexity.Query.SpaceList(childComplexity, args["limit"].(int), args["offset"].(int), args["categoryId"].(*int)), true
 
 	case "Section.createdBy":
 		if e.complexity.Section.CreatedBy == nil {
@@ -2304,7 +2393,7 @@ func (ec *executionContext) field_Mutation_memberProfileUpdate_args(ctx context.
 	var arg0 model.ProfileData
 	if tmp, ok := rawArgs["profiledata"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profiledata"))
-		arg0, err = ec.unmarshalNProfileData2gqlserverᚋgraphᚋmodelᚐProfileData(ctx, tmp)
+		arg0, err = ec.unmarshalNProfileData2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐProfileData(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2337,7 +2426,7 @@ func (ec *executionContext) field_Mutation_memberRegister_args(ctx context.Conte
 	var arg0 model.MemberDetails
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNMemberDetails2gqlserverᚋgraphᚋmodelᚐMemberDetails(ctx, tmp)
+		arg0, err = ec.unmarshalNMemberDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberDetails(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2352,7 +2441,7 @@ func (ec *executionContext) field_Mutation_memberUpdate_args(ctx context.Context
 	var arg0 model.MemberDetails
 	if tmp, ok := rawArgs["memberdata"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memberdata"))
-		arg0, err = ec.unmarshalNMemberDetails2gqlserverᚋgraphᚋmodelᚐMemberDetails(ctx, tmp)
+		arg0, err = ec.unmarshalNMemberDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberDetails(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2367,7 +2456,7 @@ func (ec *executionContext) field_Mutation_memberclaimnow_args(ctx context.Conte
 	var arg0 model.ClaimData
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNClaimData2gqlserverᚋgraphᚋmodelᚐClaimData(ctx, tmp)
+		arg0, err = ec.unmarshalNClaimData2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐClaimData(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2382,6 +2471,21 @@ func (ec *executionContext) field_Mutation_memberclaimnow_args(ctx context.Conte
 		}
 	}
 	args["entryId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_profileNameVerification_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["profileName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["profileName"] = arg0
 	return args, nil
 }
 
@@ -2682,7 +2786,7 @@ func (ec *executionContext) field_Query_ecommerceProductList_args(ctx context.Co
 	var arg2 *model.ProductFilter
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg2, err = ec.unmarshalOProductFilter2ᚖgqlserverᚋgraphᚋmodelᚐProductFilter(ctx, tmp)
+		arg2, err = ec.unmarshalOProductFilter2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2691,7 +2795,7 @@ func (ec *executionContext) field_Query_ecommerceProductList_args(ctx context.Co
 	var arg3 *model.ProductSort
 	if tmp, ok := rawArgs["sort"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
-		arg3, err = ec.unmarshalOProductSort2ᚖgqlserverᚋgraphᚋmodelᚐProductSort(ctx, tmp)
+		arg3, err = ec.unmarshalOProductSort2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductSort(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2736,6 +2840,15 @@ func (ec *executionContext) field_Query_spaceList_args(ctx context.Context, rawA
 		}
 	}
 	args["offset"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["categoryId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryId"] = arg2
 	return args, nil
 }
 
@@ -2802,7 +2915,7 @@ func (ec *executionContext) _AdditionalFields_sections(ctx context.Context, fiel
 	}
 	res := resTmp.([]model.Section)
 	fc.Result = res
-	return ec.marshalOSection2ᚕgqlserverᚋgraphᚋmodelᚐSectionᚄ(ctx, field.Selections, res)
+	return ec.marshalOSection2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSectionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_AdditionalFields_sections(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2861,7 +2974,7 @@ func (ec *executionContext) _AdditionalFields_fields(ctx context.Context, field 
 	}
 	res := resTmp.([]model.Field)
 	fc.Result = res
-	return ec.marshalOField2ᚕgqlserverᚋgraphᚋmodelᚐFieldᚄ(ctx, field.Selections, res)
+	return ec.marshalOField2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_AdditionalFields_fields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3332,7 +3445,7 @@ func (ec *executionContext) _CategoriesList_categories(ctx context.Context, fiel
 	}
 	res := resTmp.([]model.Category)
 	fc.Result = res
-	return ec.marshalNCategory2ᚕgqlserverᚋgraphᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
+	return ec.marshalNCategory2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CategoriesList_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4310,7 +4423,7 @@ func (ec *executionContext) _ChannelDetails_channellist(ctx context.Context, fie
 	}
 	res := resTmp.([]model.Channel)
 	fc.Result = res
-	return ec.marshalNChannel2ᚕgqlserverᚋgraphᚋmodelᚐChannelᚄ(ctx, field.Selections, res)
+	return ec.marshalNChannel2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelDetails_channellist(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5338,7 +5451,7 @@ func (ec *executionContext) _ChannelEntries_categories(ctx context.Context, fiel
 	}
 	res := resTmp.([][]model.Category)
 	fc.Result = res
-	return ec.marshalNCategory2ᚕᚕgqlserverᚋgraphᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
+	return ec.marshalNCategory2ᚕᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5401,7 +5514,7 @@ func (ec *executionContext) _ChannelEntries_additionalFields(ctx context.Context
 	}
 	res := resTmp.(*model.AdditionalFields)
 	fc.Result = res
-	return ec.marshalOAdditionalFields2ᚖgqlserverᚋgraphᚋmodelᚐAdditionalFields(ctx, field.Selections, res)
+	return ec.marshalOAdditionalFields2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAdditionalFields(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_additionalFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5451,7 +5564,7 @@ func (ec *executionContext) _ChannelEntries_authorDetails(ctx context.Context, f
 	}
 	res := resTmp.(*model.Author)
 	fc.Result = res
-	return ec.marshalNAuthor2ᚖgqlserverᚋgraphᚋmodelᚐAuthor(ctx, field.Selections, res)
+	return ec.marshalNAuthor2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_authorDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5512,7 +5625,7 @@ func (ec *executionContext) _ChannelEntries_memberProfile(ctx context.Context, f
 	}
 	res := resTmp.([]model.MemberProfile)
 	fc.Result = res
-	return ec.marshalOMemberProfile2ᚕgqlserverᚋgraphᚋmodelᚐMemberProfileᚄ(ctx, field.Selections, res)
+	return ec.marshalOMemberProfile2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfileᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5641,7 +5754,7 @@ func (ec *executionContext) _ChannelEntries_fields(ctx context.Context, field gr
 	}
 	res := resTmp.([]model.Field)
 	fc.Result = res
-	return ec.marshalOField2ᚕgqlserverᚋgraphᚋmodelᚐFieldᚄ(ctx, field.Selections, res)
+	return ec.marshalOField2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_fields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5697,6 +5810,293 @@ func (ec *executionContext) fieldContext_ChannelEntries_fields(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelEntries_author(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_author(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Author, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_author(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelEntries_sortOrder(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_sortOrder(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SortOrder, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_sortOrder(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelEntries_createDate(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_createDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreateDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_createDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelEntries_publishedTime(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_publishedTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PublishedTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_publishedTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelEntries_readingTime(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_readingTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReadingTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_readingTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelEntries_tags(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_tags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tags, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_tags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelEntries_excerpt(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_excerpt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Excerpt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_excerpt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelEntriesDetails_channelEntriesList(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntriesDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChannelEntriesDetails_channelEntriesList(ctx, field)
 	if err != nil {
@@ -5725,7 +6125,7 @@ func (ec *executionContext) _ChannelEntriesDetails_channelEntriesList(ctx contex
 	}
 	res := resTmp.([]model.ChannelEntries)
 	fc.Result = res
-	return ec.marshalNChannelEntries2ᚕgqlserverᚋgraphᚋmodelᚐChannelEntriesᚄ(ctx, field.Selections, res)
+	return ec.marshalNChannelEntries2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntriesᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntriesDetails_channelEntriesList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5790,6 +6190,20 @@ func (ec *executionContext) fieldContext_ChannelEntriesDetails_channelEntriesLis
 				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
 			case "fields":
 				return ec.fieldContext_ChannelEntries_fields(ctx, field)
+			case "author":
+				return ec.fieldContext_ChannelEntries_author(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_ChannelEntries_sortOrder(ctx, field)
+			case "createDate":
+				return ec.fieldContext_ChannelEntries_createDate(ctx, field)
+			case "publishedTime":
+				return ec.fieldContext_ChannelEntries_publishedTime(ctx, field)
+			case "readingTime":
+				return ec.fieldContext_ChannelEntries_readingTime(ctx, field)
+			case "tags":
+				return ec.fieldContext_ChannelEntries_tags(ctx, field)
+			case "excerpt":
+				return ec.fieldContext_ChannelEntries_excerpt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
 		},
@@ -6731,7 +7145,7 @@ func (ec *executionContext) _EcommerceProducts_productList(ctx context.Context, 
 	}
 	res := resTmp.([]model.EcommerceProduct)
 	fc.Result = res
-	return ec.marshalNEcommerceProduct2ᚕgqlserverᚋgraphᚋmodelᚐEcommerceProductᚄ(ctx, field.Selections, res)
+	return ec.marshalNEcommerceProduct2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProductᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EcommerceProducts_productList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7588,7 +8002,7 @@ func (ec *executionContext) _Field_fieldValue(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.FieldValue)
 	fc.Result = res
-	return ec.marshalOFieldValue2ᚖgqlserverᚋgraphᚋmodelᚐFieldValue(ctx, field.Selections, res)
+	return ec.marshalOFieldValue2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldValue(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Field_fieldValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7643,7 +8057,7 @@ func (ec *executionContext) _Field_fieldOptions(ctx context.Context, field graph
 	}
 	res := resTmp.([]model.FieldOptions)
 	fc.Result = res
-	return ec.marshalOFieldOptions2ᚕgqlserverᚋgraphᚋmodelᚐFieldOptionsᚄ(ctx, field.Selections, res)
+	return ec.marshalOFieldOptions2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldOptionsᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Field_fieldOptions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8230,6 +8644,164 @@ func (ec *executionContext) fieldContext_FieldValue_modifiedBY(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LoginDetails_claimEntryDetails(ctx context.Context, field graphql.CollectedField, obj *model.LoginDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LoginDetails_claimEntryDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClaimEntryDetails, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChannelEntries)
+	fc.Result = res
+	return ec.marshalNChannelEntries2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LoginDetails_claimEntryDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LoginDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ChannelEntries_id(ctx, field)
+			case "title":
+				return ec.fieldContext_ChannelEntries_title(ctx, field)
+			case "slug":
+				return ec.fieldContext_ChannelEntries_slug(ctx, field)
+			case "description":
+				return ec.fieldContext_ChannelEntries_description(ctx, field)
+			case "userId":
+				return ec.fieldContext_ChannelEntries_userId(ctx, field)
+			case "channelId":
+				return ec.fieldContext_ChannelEntries_channelId(ctx, field)
+			case "status":
+				return ec.fieldContext_ChannelEntries_status(ctx, field)
+			case "isActive":
+				return ec.fieldContext_ChannelEntries_isActive(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_ChannelEntries_createdOn(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_ChannelEntries_createdBy(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_ChannelEntries_modifiedBy(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_ChannelEntries_modifiedOn(ctx, field)
+			case "coverImage":
+				return ec.fieldContext_ChannelEntries_coverImage(ctx, field)
+			case "thumbnailImage":
+				return ec.fieldContext_ChannelEntries_thumbnailImage(ctx, field)
+			case "metaTitle":
+				return ec.fieldContext_ChannelEntries_metaTitle(ctx, field)
+			case "metaDescription":
+				return ec.fieldContext_ChannelEntries_metaDescription(ctx, field)
+			case "keyword":
+				return ec.fieldContext_ChannelEntries_keyword(ctx, field)
+			case "categoriesId":
+				return ec.fieldContext_ChannelEntries_categoriesId(ctx, field)
+			case "relatedArticles":
+				return ec.fieldContext_ChannelEntries_relatedArticles(ctx, field)
+			case "featuredEntry":
+				return ec.fieldContext_ChannelEntries_featuredEntry(ctx, field)
+			case "viewCount":
+				return ec.fieldContext_ChannelEntries_viewCount(ctx, field)
+			case "categories":
+				return ec.fieldContext_ChannelEntries_categories(ctx, field)
+			case "additionalFields":
+				return ec.fieldContext_ChannelEntries_additionalFields(ctx, field)
+			case "authorDetails":
+				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
+			case "memberProfile":
+				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
+			case "claimStatus":
+				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
+			case "fields":
+				return ec.fieldContext_ChannelEntries_fields(ctx, field)
+			case "author":
+				return ec.fieldContext_ChannelEntries_author(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_ChannelEntries_sortOrder(ctx, field)
+			case "createDate":
+				return ec.fieldContext_ChannelEntries_createDate(ctx, field)
+			case "publishedTime":
+				return ec.fieldContext_ChannelEntries_publishedTime(ctx, field)
+			case "readingTime":
+				return ec.fieldContext_ChannelEntries_readingTime(ctx, field)
+			case "tags":
+				return ec.fieldContext_ChannelEntries_tags(ctx, field)
+			case "excerpt":
+				return ec.fieldContext_ChannelEntries_excerpt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LoginDetails_token(ctx context.Context, field graphql.CollectedField, obj *model.LoginDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LoginDetails_token(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LoginDetails_token(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LoginDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8826,7 +9398,7 @@ func (ec *executionContext) _Member_group(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.([]model.MemberGroup)
 	fc.Result = res
-	return ec.marshalOMemberGroup2ᚕgqlserverᚋgraphᚋmodelᚐMemberGroupᚄ(ctx, field.Selections, res)
+	return ec.marshalOMemberGroup2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberGroupᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Member_group(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10194,9 +10766,9 @@ func (ec *executionContext) _Mutation_verifyMemberOtp(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.LoginDetails)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNLoginDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐLoginDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_verifyMemberOtp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10206,7 +10778,13 @@ func (ec *executionContext) fieldContext_Mutation_verifyMemberOtp(ctx context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "claimEntryDetails":
+				return ec.fieldContext_LoginDetails_claimEntryDetails(ctx, field)
+			case "token":
+				return ec.fieldContext_LoginDetails_token(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LoginDetails", field.Name)
 		},
 	}
 	defer func() {
@@ -10497,6 +11075,81 @@ func (ec *executionContext) fieldContext_Mutation_memberclaimnow(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_memberclaimnow_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_profileNameVerification(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_profileNameVerification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ProfileNameVerification(rctx, fc.Args["profileName"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_profileNameVerification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_profileNameVerification_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11009,7 +11662,7 @@ func (ec *executionContext) _PageAndPageGroups_pages(ctx context.Context, field 
 	}
 	res := resTmp.([]model.Page)
 	fc.Result = res
-	return ec.marshalNPage2ᚕgqlserverᚋgraphᚋmodelᚐPageᚄ(ctx, field.Selections, res)
+	return ec.marshalNPage2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PageAndPageGroups_pages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11077,7 +11730,7 @@ func (ec *executionContext) _PageAndPageGroups_subpages(ctx context.Context, fie
 	}
 	res := resTmp.([]model.SubPage)
 	fc.Result = res
-	return ec.marshalNSubPage2ᚕgqlserverᚋgraphᚋmodelᚐSubPageᚄ(ctx, field.Selections, res)
+	return ec.marshalNSubPage2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSubPageᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PageAndPageGroups_subpages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11145,7 +11798,7 @@ func (ec *executionContext) _PageAndPageGroups_pagegroups(ctx context.Context, f
 	}
 	res := resTmp.([]model.PageGroup)
 	fc.Result = res
-	return ec.marshalNPageGroup2ᚕgqlserverᚋgraphᚋmodelᚐPageGroupᚄ(ctx, field.Selections, res)
+	return ec.marshalNPageGroup2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageGroupᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PageAndPageGroups_pagegroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11865,7 +12518,7 @@ func (ec *executionContext) _Query_channelList(ctx context.Context, field graphq
 		if data, ok := tmp.(model.ChannelDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be gqlserver/graph/model.ChannelDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.ChannelDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11879,7 +12532,7 @@ func (ec *executionContext) _Query_channelList(ctx context.Context, field graphq
 	}
 	res := resTmp.(model.ChannelDetails)
 	fc.Result = res
-	return ec.marshalNChannelDetails2gqlserverᚋgraphᚋmodelᚐChannelDetails(ctx, field.Selections, res)
+	return ec.marshalNChannelDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_channelList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11946,7 +12599,7 @@ func (ec *executionContext) _Query_channelDetail(ctx context.Context, field grap
 		if data, ok := tmp.(model.Channel); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be gqlserver/graph/model.Channel`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.Channel`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11960,7 +12613,7 @@ func (ec *executionContext) _Query_channelDetail(ctx context.Context, field grap
 	}
 	res := resTmp.(model.Channel)
 	fc.Result = res
-	return ec.marshalNChannel2gqlserverᚋgraphᚋmodelᚐChannel(ctx, field.Selections, res)
+	return ec.marshalNChannel2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_channelDetail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12043,7 +12696,7 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 		if data, ok := tmp.(model.ChannelEntriesDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be gqlserver/graph/model.ChannelEntriesDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.ChannelEntriesDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12057,7 +12710,7 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 	}
 	res := resTmp.(model.ChannelEntriesDetails)
 	fc.Result = res
-	return ec.marshalNChannelEntriesDetails2gqlserverᚋgraphᚋmodelᚐChannelEntriesDetails(ctx, field.Selections, res)
+	return ec.marshalNChannelEntriesDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntriesDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_channelEntriesList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12124,7 +12777,7 @@ func (ec *executionContext) _Query_channelEntryDetail(ctx context.Context, field
 		if data, ok := tmp.(model.ChannelEntries); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be gqlserver/graph/model.ChannelEntries`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.ChannelEntries`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12138,7 +12791,7 @@ func (ec *executionContext) _Query_channelEntryDetail(ctx context.Context, field
 	}
 	res := resTmp.(model.ChannelEntries)
 	fc.Result = res
-	return ec.marshalNChannelEntries2gqlserverᚋgraphᚋmodelᚐChannelEntries(ctx, field.Selections, res)
+	return ec.marshalNChannelEntries2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12203,6 +12856,20 @@ func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Co
 				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
 			case "fields":
 				return ec.fieldContext_ChannelEntries_fields(ctx, field)
+			case "author":
+				return ec.fieldContext_ChannelEntries_author(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_ChannelEntries_sortOrder(ctx, field)
+			case "createDate":
+				return ec.fieldContext_ChannelEntries_createDate(ctx, field)
+			case "publishedTime":
+				return ec.fieldContext_ChannelEntries_publishedTime(ctx, field)
+			case "readingTime":
+				return ec.fieldContext_ChannelEntries_readingTime(ctx, field)
+			case "tags":
+				return ec.fieldContext_ChannelEntries_tags(ctx, field)
+			case "excerpt":
+				return ec.fieldContext_ChannelEntries_excerpt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
 		},
@@ -12236,7 +12903,7 @@ func (ec *executionContext) _Query_spaceList(ctx context.Context, field graphql.
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().SpaceList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int))
+			return ec.resolvers.Query().SpaceList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["categoryId"].(*int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -12255,7 +12922,7 @@ func (ec *executionContext) _Query_spaceList(ctx context.Context, field graphql.
 		if data, ok := tmp.(model.SpaceDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be gqlserver/graph/model.SpaceDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.SpaceDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12269,7 +12936,7 @@ func (ec *executionContext) _Query_spaceList(ctx context.Context, field graphql.
 	}
 	res := resTmp.(model.SpaceDetails)
 	fc.Result = res
-	return ec.marshalNSpaceDetails2gqlserverᚋgraphᚋmodelᚐSpaceDetails(ctx, field.Selections, res)
+	return ec.marshalNSpaceDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpaceDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_spaceList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12336,7 +13003,7 @@ func (ec *executionContext) _Query_spaceDetails(ctx context.Context, field graph
 		if data, ok := tmp.(model.Space); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be gqlserver/graph/model.Space`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.Space`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12350,7 +13017,7 @@ func (ec *executionContext) _Query_spaceDetails(ctx context.Context, field graph
 	}
 	res := resTmp.(model.Space)
 	fc.Result = res
-	return ec.marshalNSpace2gqlserverᚋgraphᚋmodelᚐSpace(ctx, field.Selections, res)
+	return ec.marshalNSpace2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpace(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_spaceDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12437,7 +13104,7 @@ func (ec *executionContext) _Query_PagesAndPageGroupsUnderSpace(ctx context.Cont
 		if data, ok := tmp.(model.PageAndPageGroups); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be gqlserver/graph/model.PageAndPageGroups`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.PageAndPageGroups`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12451,7 +13118,7 @@ func (ec *executionContext) _Query_PagesAndPageGroupsUnderSpace(ctx context.Cont
 	}
 	res := resTmp.(model.PageAndPageGroups)
 	fc.Result = res
-	return ec.marshalNPageAndPageGroups2gqlserverᚋgraphᚋmodelᚐPageAndPageGroups(ctx, field.Selections, res)
+	return ec.marshalNPageAndPageGroups2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageAndPageGroups(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_PagesAndPageGroupsUnderSpace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12520,7 +13187,7 @@ func (ec *executionContext) _Query_categoriesList(ctx context.Context, field gra
 		if data, ok := tmp.(model.CategoriesList); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be gqlserver/graph/model.CategoriesList`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.CategoriesList`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12534,7 +13201,7 @@ func (ec *executionContext) _Query_categoriesList(ctx context.Context, field gra
 	}
 	res := resTmp.(model.CategoriesList)
 	fc.Result = res
-	return ec.marshalNCategoriesList2gqlserverᚋgraphᚋmodelᚐCategoriesList(ctx, field.Selections, res)
+	return ec.marshalNCategoriesList2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoriesList(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_categoriesList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12595,7 +13262,7 @@ func (ec *executionContext) _Query_ecommerceProductList(ctx context.Context, fie
 	}
 	res := resTmp.(model.EcommerceProducts)
 	fc.Result = res
-	return ec.marshalNEcommerceProducts2gqlserverᚋgraphᚋmodelᚐEcommerceProducts(ctx, field.Selections, res)
+	return ec.marshalNEcommerceProducts2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProducts(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_ecommerceProductList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13606,7 +14273,7 @@ func (ec *executionContext) _Space_categories(ctx context.Context, field graphql
 	}
 	res := resTmp.([]model.Category)
 	fc.Result = res
-	return ec.marshalNCategory2ᚕgqlserverᚋgraphᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
+	return ec.marshalNCategory2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Space_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13672,7 +14339,7 @@ func (ec *executionContext) _SpaceDetails_spacelist(ctx context.Context, field g
 	}
 	res := resTmp.([]model.Space)
 	fc.Result = res
-	return ec.marshalNSpace2ᚕgqlserverᚋgraphᚋmodelᚐSpaceᚄ(ctx, field.Selections, res)
+	return ec.marshalNSpace2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpaceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SpaceDetails_spacelist(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -16834,6 +17501,20 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			}
 		case "fields":
 			out.Values[i] = ec._ChannelEntries_fields(ctx, field, obj)
+		case "author":
+			out.Values[i] = ec._ChannelEntries_author(ctx, field, obj)
+		case "sortOrder":
+			out.Values[i] = ec._ChannelEntries_sortOrder(ctx, field, obj)
+		case "createDate":
+			out.Values[i] = ec._ChannelEntries_createDate(ctx, field, obj)
+		case "publishedTime":
+			out.Values[i] = ec._ChannelEntries_publishedTime(ctx, field, obj)
+		case "readingTime":
+			out.Values[i] = ec._ChannelEntries_readingTime(ctx, field, obj)
+		case "tags":
+			out.Values[i] = ec._ChannelEntries_tags(ctx, field, obj)
+		case "excerpt":
+			out.Values[i] = ec._ChannelEntries_excerpt(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17287,6 +17968,50 @@ func (ec *executionContext) _FieldValue(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
+var loginDetailsImplementors = []string{"LoginDetails"}
+
+func (ec *executionContext) _LoginDetails(ctx context.Context, sel ast.SelectionSet, obj *model.LoginDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, loginDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LoginDetails")
+		case "claimEntryDetails":
+			out.Values[i] = ec._LoginDetails_claimEntryDetails(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "token":
+			out.Values[i] = ec._LoginDetails_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var memberImplementors = []string{"Member"}
 
 func (ec *executionContext) _Member(ctx context.Context, sel ast.SelectionSet, obj *model.Member) graphql.Marshaler {
@@ -17588,6 +18313,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "memberclaimnow":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_memberclaimnow(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "profileNameVerification":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_profileNameVerification(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -18738,7 +19470,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAuthor2ᚖgqlserverᚋgraphᚋmodelᚐAuthor(ctx context.Context, sel ast.SelectionSet, v *model.Author) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthor2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx context.Context, sel ast.SelectionSet, v *model.Author) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18763,15 +19495,15 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCategoriesList2gqlserverᚋgraphᚋmodelᚐCategoriesList(ctx context.Context, sel ast.SelectionSet, v model.CategoriesList) graphql.Marshaler {
+func (ec *executionContext) marshalNCategoriesList2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoriesList(ctx context.Context, sel ast.SelectionSet, v model.CategoriesList) graphql.Marshaler {
 	return ec._CategoriesList(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCategory2gqlserverᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNCategory2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
 	return ec._Category(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCategory2ᚕgqlserverᚋgraphᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNCategory2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Category) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18795,7 +19527,7 @@ func (ec *executionContext) marshalNCategory2ᚕgqlserverᚋgraphᚋmodelᚐCate
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCategory2gqlserverᚋgraphᚋmodelᚐCategory(ctx, sel, v[i])
+			ret[i] = ec.marshalNCategory2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategory(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18815,7 +19547,7 @@ func (ec *executionContext) marshalNCategory2ᚕgqlserverᚋgraphᚋmodelᚐCate
 	return ret
 }
 
-func (ec *executionContext) marshalNCategory2ᚕᚕgqlserverᚋgraphᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v [][]model.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNCategory2ᚕᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v [][]model.Category) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18839,7 +19571,7 @@ func (ec *executionContext) marshalNCategory2ᚕᚕgqlserverᚋgraphᚋmodelᚐC
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCategory2ᚕgqlserverᚋgraphᚋmodelᚐCategoryᚄ(ctx, sel, v[i])
+			ret[i] = ec.marshalNCategory2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18859,11 +19591,11 @@ func (ec *executionContext) marshalNCategory2ᚕᚕgqlserverᚋgraphᚋmodelᚐC
 	return ret
 }
 
-func (ec *executionContext) marshalNChannel2gqlserverᚋgraphᚋmodelᚐChannel(ctx context.Context, sel ast.SelectionSet, v model.Channel) graphql.Marshaler {
+func (ec *executionContext) marshalNChannel2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannel(ctx context.Context, sel ast.SelectionSet, v model.Channel) graphql.Marshaler {
 	return ec._Channel(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNChannel2ᚕgqlserverᚋgraphᚋmodelᚐChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Channel) graphql.Marshaler {
+func (ec *executionContext) marshalNChannel2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Channel) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18887,7 +19619,7 @@ func (ec *executionContext) marshalNChannel2ᚕgqlserverᚋgraphᚋmodelᚐChann
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNChannel2gqlserverᚋgraphᚋmodelᚐChannel(ctx, sel, v[i])
+			ret[i] = ec.marshalNChannel2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannel(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18907,15 +19639,15 @@ func (ec *executionContext) marshalNChannel2ᚕgqlserverᚋgraphᚋmodelᚐChann
 	return ret
 }
 
-func (ec *executionContext) marshalNChannelDetails2gqlserverᚋgraphᚋmodelᚐChannelDetails(ctx context.Context, sel ast.SelectionSet, v model.ChannelDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelDetails(ctx context.Context, sel ast.SelectionSet, v model.ChannelDetails) graphql.Marshaler {
 	return ec._ChannelDetails(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNChannelEntries2gqlserverᚋgraphᚋmodelᚐChannelEntries(ctx context.Context, sel ast.SelectionSet, v model.ChannelEntries) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelEntries2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx context.Context, sel ast.SelectionSet, v model.ChannelEntries) graphql.Marshaler {
 	return ec._ChannelEntries(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNChannelEntries2ᚕgqlserverᚋgraphᚋmodelᚐChannelEntriesᚄ(ctx context.Context, sel ast.SelectionSet, v []model.ChannelEntries) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelEntries2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntriesᚄ(ctx context.Context, sel ast.SelectionSet, v []model.ChannelEntries) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18939,7 +19671,7 @@ func (ec *executionContext) marshalNChannelEntries2ᚕgqlserverᚋgraphᚋmodel�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNChannelEntries2gqlserverᚋgraphᚋmodelᚐChannelEntries(ctx, sel, v[i])
+			ret[i] = ec.marshalNChannelEntries2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -18959,20 +19691,30 @@ func (ec *executionContext) marshalNChannelEntries2ᚕgqlserverᚋgraphᚋmodel�
 	return ret
 }
 
-func (ec *executionContext) marshalNChannelEntriesDetails2gqlserverᚋgraphᚋmodelᚐChannelEntriesDetails(ctx context.Context, sel ast.SelectionSet, v model.ChannelEntriesDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelEntries2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx context.Context, sel ast.SelectionSet, v *model.ChannelEntries) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelEntries(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNChannelEntriesDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntriesDetails(ctx context.Context, sel ast.SelectionSet, v model.ChannelEntriesDetails) graphql.Marshaler {
 	return ec._ChannelEntriesDetails(ctx, sel, &v)
 }
 
-func (ec *executionContext) unmarshalNClaimData2gqlserverᚋgraphᚋmodelᚐClaimData(ctx context.Context, v interface{}) (model.ClaimData, error) {
+func (ec *executionContext) unmarshalNClaimData2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐClaimData(ctx context.Context, v interface{}) (model.ClaimData, error) {
 	res, err := ec.unmarshalInputClaimData(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNEcommerceProduct2gqlserverᚋgraphᚋmodelᚐEcommerceProduct(ctx context.Context, sel ast.SelectionSet, v model.EcommerceProduct) graphql.Marshaler {
+func (ec *executionContext) marshalNEcommerceProduct2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProduct(ctx context.Context, sel ast.SelectionSet, v model.EcommerceProduct) graphql.Marshaler {
 	return ec._EcommerceProduct(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNEcommerceProduct2ᚕgqlserverᚋgraphᚋmodelᚐEcommerceProductᚄ(ctx context.Context, sel ast.SelectionSet, v []model.EcommerceProduct) graphql.Marshaler {
+func (ec *executionContext) marshalNEcommerceProduct2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProductᚄ(ctx context.Context, sel ast.SelectionSet, v []model.EcommerceProduct) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18996,7 +19738,7 @@ func (ec *executionContext) marshalNEcommerceProduct2ᚕgqlserverᚋgraphᚋmode
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEcommerceProduct2gqlserverᚋgraphᚋmodelᚐEcommerceProduct(ctx, sel, v[i])
+			ret[i] = ec.marshalNEcommerceProduct2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProduct(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19016,15 +19758,15 @@ func (ec *executionContext) marshalNEcommerceProduct2ᚕgqlserverᚋgraphᚋmode
 	return ret
 }
 
-func (ec *executionContext) marshalNEcommerceProducts2gqlserverᚋgraphᚋmodelᚐEcommerceProducts(ctx context.Context, sel ast.SelectionSet, v model.EcommerceProducts) graphql.Marshaler {
+func (ec *executionContext) marshalNEcommerceProducts2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProducts(ctx context.Context, sel ast.SelectionSet, v model.EcommerceProducts) graphql.Marshaler {
 	return ec._EcommerceProducts(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNField2gqlserverᚋgraphᚋmodelᚐField(ctx context.Context, sel ast.SelectionSet, v model.Field) graphql.Marshaler {
+func (ec *executionContext) marshalNField2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐField(ctx context.Context, sel ast.SelectionSet, v model.Field) graphql.Marshaler {
 	return ec._Field(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNFieldOptions2gqlserverᚋgraphᚋmodelᚐFieldOptions(ctx context.Context, sel ast.SelectionSet, v model.FieldOptions) graphql.Marshaler {
+func (ec *executionContext) marshalNFieldOptions2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldOptions(ctx context.Context, sel ast.SelectionSet, v model.FieldOptions) graphql.Marshaler {
 	return ec._FieldOptions(ctx, sel, &v)
 }
 
@@ -19073,24 +19815,28 @@ func (ec *executionContext) marshalNLargeInt2string(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalNMemberDetails2gqlserverᚋgraphᚋmodelᚐMemberDetails(ctx context.Context, v interface{}) (model.MemberDetails, error) {
+func (ec *executionContext) marshalNLoginDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐLoginDetails(ctx context.Context, sel ast.SelectionSet, v model.LoginDetails) graphql.Marshaler {
+	return ec._LoginDetails(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNMemberDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberDetails(ctx context.Context, v interface{}) (model.MemberDetails, error) {
 	res, err := ec.unmarshalInputMemberDetails(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMemberGroup2gqlserverᚋgraphᚋmodelᚐMemberGroup(ctx context.Context, sel ast.SelectionSet, v model.MemberGroup) graphql.Marshaler {
+func (ec *executionContext) marshalNMemberGroup2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberGroup(ctx context.Context, sel ast.SelectionSet, v model.MemberGroup) graphql.Marshaler {
 	return ec._MemberGroup(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMemberProfile2gqlserverᚋgraphᚋmodelᚐMemberProfile(ctx context.Context, sel ast.SelectionSet, v model.MemberProfile) graphql.Marshaler {
+func (ec *executionContext) marshalNMemberProfile2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx context.Context, sel ast.SelectionSet, v model.MemberProfile) graphql.Marshaler {
 	return ec._MemberProfile(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPage2gqlserverᚋgraphᚋmodelᚐPage(ctx context.Context, sel ast.SelectionSet, v model.Page) graphql.Marshaler {
+func (ec *executionContext) marshalNPage2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPage(ctx context.Context, sel ast.SelectionSet, v model.Page) graphql.Marshaler {
 	return ec._Page(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPage2ᚕgqlserverᚋgraphᚋmodelᚐPageᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Page) graphql.Marshaler {
+func (ec *executionContext) marshalNPage2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Page) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -19114,7 +19860,7 @@ func (ec *executionContext) marshalNPage2ᚕgqlserverᚋgraphᚋmodelᚐPageᚄ(
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPage2gqlserverᚋgraphᚋmodelᚐPage(ctx, sel, v[i])
+			ret[i] = ec.marshalNPage2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPage(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19134,15 +19880,15 @@ func (ec *executionContext) marshalNPage2ᚕgqlserverᚋgraphᚋmodelᚐPageᚄ(
 	return ret
 }
 
-func (ec *executionContext) marshalNPageAndPageGroups2gqlserverᚋgraphᚋmodelᚐPageAndPageGroups(ctx context.Context, sel ast.SelectionSet, v model.PageAndPageGroups) graphql.Marshaler {
+func (ec *executionContext) marshalNPageAndPageGroups2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageAndPageGroups(ctx context.Context, sel ast.SelectionSet, v model.PageAndPageGroups) graphql.Marshaler {
 	return ec._PageAndPageGroups(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPageGroup2gqlserverᚋgraphᚋmodelᚐPageGroup(ctx context.Context, sel ast.SelectionSet, v model.PageGroup) graphql.Marshaler {
+func (ec *executionContext) marshalNPageGroup2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageGroup(ctx context.Context, sel ast.SelectionSet, v model.PageGroup) graphql.Marshaler {
 	return ec._PageGroup(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPageGroup2ᚕgqlserverᚋgraphᚋmodelᚐPageGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []model.PageGroup) graphql.Marshaler {
+func (ec *executionContext) marshalNPageGroup2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []model.PageGroup) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -19166,7 +19912,7 @@ func (ec *executionContext) marshalNPageGroup2ᚕgqlserverᚋgraphᚋmodelᚐPag
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPageGroup2gqlserverᚋgraphᚋmodelᚐPageGroup(ctx, sel, v[i])
+			ret[i] = ec.marshalNPageGroup2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageGroup(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19186,20 +19932,20 @@ func (ec *executionContext) marshalNPageGroup2ᚕgqlserverᚋgraphᚋmodelᚐPag
 	return ret
 }
 
-func (ec *executionContext) unmarshalNProfileData2gqlserverᚋgraphᚋmodelᚐProfileData(ctx context.Context, v interface{}) (model.ProfileData, error) {
+func (ec *executionContext) unmarshalNProfileData2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐProfileData(ctx context.Context, v interface{}) (model.ProfileData, error) {
 	res, err := ec.unmarshalInputProfileData(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSection2gqlserverᚋgraphᚋmodelᚐSection(ctx context.Context, sel ast.SelectionSet, v model.Section) graphql.Marshaler {
+func (ec *executionContext) marshalNSection2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSection(ctx context.Context, sel ast.SelectionSet, v model.Section) graphql.Marshaler {
 	return ec._Section(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSpace2gqlserverᚋgraphᚋmodelᚐSpace(ctx context.Context, sel ast.SelectionSet, v model.Space) graphql.Marshaler {
+func (ec *executionContext) marshalNSpace2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpace(ctx context.Context, sel ast.SelectionSet, v model.Space) graphql.Marshaler {
 	return ec._Space(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSpace2ᚕgqlserverᚋgraphᚋmodelᚐSpaceᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Space) graphql.Marshaler {
+func (ec *executionContext) marshalNSpace2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpaceᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Space) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -19223,7 +19969,7 @@ func (ec *executionContext) marshalNSpace2ᚕgqlserverᚋgraphᚋmodelᚐSpace�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSpace2gqlserverᚋgraphᚋmodelᚐSpace(ctx, sel, v[i])
+			ret[i] = ec.marshalNSpace2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpace(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19243,7 +19989,7 @@ func (ec *executionContext) marshalNSpace2ᚕgqlserverᚋgraphᚋmodelᚐSpace�
 	return ret
 }
 
-func (ec *executionContext) marshalNSpaceDetails2gqlserverᚋgraphᚋmodelᚐSpaceDetails(ctx context.Context, sel ast.SelectionSet, v model.SpaceDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNSpaceDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpaceDetails(ctx context.Context, sel ast.SelectionSet, v model.SpaceDetails) graphql.Marshaler {
 	return ec._SpaceDetails(ctx, sel, &v)
 }
 
@@ -19262,11 +20008,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNSubPage2gqlserverᚋgraphᚋmodelᚐSubPage(ctx context.Context, sel ast.SelectionSet, v model.SubPage) graphql.Marshaler {
+func (ec *executionContext) marshalNSubPage2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSubPage(ctx context.Context, sel ast.SelectionSet, v model.SubPage) graphql.Marshaler {
 	return ec._SubPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSubPage2ᚕgqlserverᚋgraphᚋmodelᚐSubPageᚄ(ctx context.Context, sel ast.SelectionSet, v []model.SubPage) graphql.Marshaler {
+func (ec *executionContext) marshalNSubPage2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSubPageᚄ(ctx context.Context, sel ast.SelectionSet, v []model.SubPage) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -19290,7 +20036,7 @@ func (ec *executionContext) marshalNSubPage2ᚕgqlserverᚋgraphᚋmodelᚐSubPa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSubPage2gqlserverᚋgraphᚋmodelᚐSubPage(ctx, sel, v[i])
+			ret[i] = ec.marshalNSubPage2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSubPage(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19578,7 +20324,7 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAdditionalFields2ᚖgqlserverᚋgraphᚋmodelᚐAdditionalFields(ctx context.Context, sel ast.SelectionSet, v *model.AdditionalFields) graphql.Marshaler {
+func (ec *executionContext) marshalOAdditionalFields2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAdditionalFields(ctx context.Context, sel ast.SelectionSet, v *model.AdditionalFields) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19627,7 +20373,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOField2ᚕgqlserverᚋgraphᚋmodelᚐFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Field) graphql.Marshaler {
+func (ec *executionContext) marshalOField2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Field) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19654,7 +20400,7 @@ func (ec *executionContext) marshalOField2ᚕgqlserverᚋgraphᚋmodelᚐField�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNField2gqlserverᚋgraphᚋmodelᚐField(ctx, sel, v[i])
+			ret[i] = ec.marshalNField2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐField(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19674,7 +20420,7 @@ func (ec *executionContext) marshalOField2ᚕgqlserverᚋgraphᚋmodelᚐField�
 	return ret
 }
 
-func (ec *executionContext) marshalOFieldOptions2ᚕgqlserverᚋgraphᚋmodelᚐFieldOptionsᚄ(ctx context.Context, sel ast.SelectionSet, v []model.FieldOptions) graphql.Marshaler {
+func (ec *executionContext) marshalOFieldOptions2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldOptionsᚄ(ctx context.Context, sel ast.SelectionSet, v []model.FieldOptions) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19701,7 +20447,7 @@ func (ec *executionContext) marshalOFieldOptions2ᚕgqlserverᚋgraphᚋmodelᚐ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNFieldOptions2gqlserverᚋgraphᚋmodelᚐFieldOptions(ctx, sel, v[i])
+			ret[i] = ec.marshalNFieldOptions2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldOptions(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19721,7 +20467,7 @@ func (ec *executionContext) marshalOFieldOptions2ᚕgqlserverᚋgraphᚋmodelᚐ
 	return ret
 }
 
-func (ec *executionContext) marshalOFieldValue2ᚖgqlserverᚋgraphᚋmodelᚐFieldValue(ctx context.Context, sel ast.SelectionSet, v *model.FieldValue) graphql.Marshaler {
+func (ec *executionContext) marshalOFieldValue2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldValue(ctx context.Context, sel ast.SelectionSet, v *model.FieldValue) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19760,7 +20506,7 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) marshalOMemberGroup2ᚕgqlserverᚋgraphᚋmodelᚐMemberGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MemberGroup) graphql.Marshaler {
+func (ec *executionContext) marshalOMemberGroup2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MemberGroup) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19787,7 +20533,7 @@ func (ec *executionContext) marshalOMemberGroup2ᚕgqlserverᚋgraphᚋmodelᚐM
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMemberGroup2gqlserverᚋgraphᚋmodelᚐMemberGroup(ctx, sel, v[i])
+			ret[i] = ec.marshalNMemberGroup2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberGroup(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19807,7 +20553,7 @@ func (ec *executionContext) marshalOMemberGroup2ᚕgqlserverᚋgraphᚋmodelᚐM
 	return ret
 }
 
-func (ec *executionContext) marshalOMemberProfile2ᚕgqlserverᚋgraphᚋmodelᚐMemberProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MemberProfile) graphql.Marshaler {
+func (ec *executionContext) marshalOMemberProfile2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MemberProfile) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19834,7 +20580,7 @@ func (ec *executionContext) marshalOMemberProfile2ᚕgqlserverᚋgraphᚋmodel�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMemberProfile2gqlserverᚋgraphᚋmodelᚐMemberProfile(ctx, sel, v[i])
+			ret[i] = ec.marshalNMemberProfile2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -19854,7 +20600,7 @@ func (ec *executionContext) marshalOMemberProfile2ᚕgqlserverᚋgraphᚋmodel�
 	return ret
 }
 
-func (ec *executionContext) unmarshalOProductFilter2ᚖgqlserverᚋgraphᚋmodelᚐProductFilter(ctx context.Context, v interface{}) (*model.ProductFilter, error) {
+func (ec *executionContext) unmarshalOProductFilter2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductFilter(ctx context.Context, v interface{}) (*model.ProductFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19862,7 +20608,7 @@ func (ec *executionContext) unmarshalOProductFilter2ᚖgqlserverᚋgraphᚋmodel
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOProductSort2ᚖgqlserverᚋgraphᚋmodelᚐProductSort(ctx context.Context, v interface{}) (*model.ProductSort, error) {
+func (ec *executionContext) unmarshalOProductSort2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductSort(ctx context.Context, v interface{}) (*model.ProductSort, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -19870,7 +20616,7 @@ func (ec *executionContext) unmarshalOProductSort2ᚖgqlserverᚋgraphᚋmodel�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSection2ᚕgqlserverᚋgraphᚋmodelᚐSectionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Section) graphql.Marshaler {
+func (ec *executionContext) marshalOSection2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSectionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Section) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19897,7 +20643,7 @@ func (ec *executionContext) marshalOSection2ᚕgqlserverᚋgraphᚋmodelᚐSecti
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSection2gqlserverᚋgraphᚋmodelᚐSection(ctx, sel, v[i])
+			ret[i] = ec.marshalNSection2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSection(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

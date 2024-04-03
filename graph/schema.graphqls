@@ -94,6 +94,13 @@ type ChannelEntries{
 	memberProfile:        [MemberProfile!]
 	claimStatus:          Boolean!
 	fields:               [Field!]
+	author:               String
+	sortOrder:            Int
+	createDate:          String
+	publishedTime:        String
+	readingTime:          Int
+	tags:                 String
+	excerpt:              String
 }
 
 type Author{
@@ -310,12 +317,17 @@ type ProductPricing{
 	type:        String!
 }
 
+type LoginDetails{
+	claimEntryDetails:  ChannelEntries!
+	token:              String! 
+}
+
 type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int!): Channel! @auth
     channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String): ChannelEntriesDetails! @auth
 	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int): ChannelEntries! @auth
-	spaceList(limit: Int!,offset: Int!): SpaceDetails! @auth
+	spaceList(limit: Int!,offset: Int!,categoryId: Int): SpaceDetails! @auth
 	spaceDetails(spaceId: Int!): Space! @auth
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
 	categoriesList(limit: Int,offset: Int,categoryGroupId: Int,hierarchyLevel: Int, checkEntriesPresence: Int): CategoriesList! @auth
@@ -324,11 +336,12 @@ type Query{
 
 type Mutation{
     memberLogin(email: String!): Boolean!
-	verifyMemberOtp(email: String!, otp: Int!): String!
+	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
 	memberProfileUpdate(profiledata: ProfileData!,entryId: Int!,updateExactMemberProfileOnly: Boolean!):Boolean! @auth
 	memberclaimnow(input: ClaimData!,entryId: Int!): Boolean! @auth
+	profileNameVerification(profileName: String!): Boolean! @auth
 }
 
 input MemberDetails{
