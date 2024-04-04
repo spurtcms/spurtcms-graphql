@@ -845,9 +845,14 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 func VerifyProfileName(db *gorm.DB,ctx context.Context, profileName string) (bool, error) {
 
+	if profileName==""{
+
+		return false,errors.New("empty values not allowed")
+	}
+
 	var count int64
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and LOWER(TRIM(tbl_member_profiles.profile_name)) ILIKE LOWER(TRIM(?))",profileName).Count(&count).Error;err!=nil{
+	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_member_profiles.profile_name = ?",profileName).Count(&count).Error;err!=nil{
 
 		return false,err
 	}
