@@ -4,180 +4,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Template one</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
         rel="stylesheet">
-
-    <style>
-        body {
-            font-family: "Open Sans", sans-serif;
-            margin: 0;
-            background-color: #FFFFFF;
-        }
-
-        body,
-        td,
-        th,
-        h4,
-        h5,
-        h6,
-        p,
-        h3,
-        h4,
-        span,
-        a {
-            margin: 0;
-            color: #222;
-        }
-
-        ul,
-        ol {
-            list-style-type: none;
-            margin: 0 0 0 0;
-        }
-
-        h1,
-        h2 {
-            margin: 0;
-            color: #000;
-
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        .pt-5 {
-            padding: 5rem 0rem 0rem;
-        }
-
-        .mb-5 {
-            margin-bottom: 5rem;
-        }
-
-        @media screen and (max-width: 43.4375rem) {
-            body {
-                padding: 0rem .625rem;
-            }
-        }
-
-        @media screen and (max-width: 31.25rem) {
-            .pt-5 {
-                padding: 2rem 0rem 0rem;
-            }
-
-            .mb-5 {
-                margin-bottom: 2rem;
-            }
-        }
-    </style>
 </head>
 
-<body>
-    <table class="copy-ticket" style="max-width: 43.5rem;background-color:#FFFFFF;margin:3rem auto;" cellpadding="0"
-        cellspacing="0">
+<body style=" font-family:'Open Sans', sans-serif; margin: 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
         <tbody>
             <tr>
-                <td style="padding:1.6875rem 0rem 1.1875rem;text-align: center;">
-                    <a href="javascript:void(0)">
-                        <img src="{{.additionalData.EmailImagePath.Owndesk}}" alt="" style="width: 6.5625rem;height: 4.125rem;">
-                    </a>
-                </td>
-            </tr>
-            <tr>
-                <td style="padding: 2.5rem 0rem 0rem;">
-                    <div style="margin-bottom: 1.25rem;">
-                        <h3
-                            style="margin-bottom: 1rem;color: #000000;font-size: 1.25rem;line-height: 1.6875rem;font-weight: bold;">
-                            Hi {{.authorDetails.FirstName}} {{.authorDetails.LastName}} !
-                        </h3>
-                        <p style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;">
-                            Use the following member Profile Details to verify the claim request<span
-                                style="font-weight: bold;"></span>
-                        </p>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div style="margin-bottom: 1.25rem;">
-                        <h4 style="color: #000000;line-height: 1.6875rem;">Profile Name: {{.claimData.ProfileName}}
-                        </h4>
-                        <h4 style="color: #000000;line-height: 1.6875rem;">Work Email: {{.claimData.WorkMail}}</h4>
-                        <h4 style="color: #000000;line-height: 1.6875rem;">Company Number: {{.claimData.CompanyNumber}}
-                        </h4>
-                        <h4 style="color: #000000;line-height: 1.6875rem;">Person Name: {{.claimData.PersonName}}</h4>
-                        <h4 style="color: #000000;line-height: 1.6875rem;">Entry Name: {{.entry.Title}}</h4>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div style="margin-bottom: 1.25rem;">
-                        <p style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;">
-                            If you didn’t initiate this action or if you think you received this email by mistake,
-                            please contact <a href="javascript:void(0)"
-                                style="color: #3880FF;text-decoration: none;">support@owndeskaccounts.com</a>
-                        </p>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td style="border-bottom: 1px solid #EEEEEE;">
-                    <div class="mb-5">
-                        <h6
-                            style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;margin-bottom: .3125rem;">
-                            Regards,
-                        </h6>
-                        <p style="margin-bottom: .3125rem;color: #000000;font-size: .875rem;font-weight: bold;">Owndesk
-                            Team</p>
-                        <a href="javascript:void(0)"
-                            style="color: #3880FF;font-size: .875rem;line-height: 1.5rem;font-weight: normal;text-decoration: none;">www.owndesk.in</a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="pt-5" style="text-align: center;">
-                    <div style="margin-bottom: 1rem;">
-                        <a href="javascript:void(0)"
-                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.Facebook}}" alt="" style="width: auto;max-width: 100%;">
-                        </a>
-                        <a href="javascript:void(0)"
-                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.LinkedIn}}" alt="" style="width: auto;max-width: 100%;">
-                        </a>
-                        <a href="javascript:void(0)"
-                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.Twitter}}" alt="" style="width: auto;max-width: 100%;">
-                        </a>
-                        <a href="javascript:void(0)"
-                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.Youtube}}" alt="" style="width: auto;max-width: 100%;">
-                        </a>
-                        <a href="javascript:void(0)"
-                            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.Instagram}}" alt="" style="width: auto;max-width: 100%;">
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td style="text-align: center;">
-                    <div>
-                        <p
-                            style="color: #000000;font-size: .875rem;font-weight: normal;line-height: 1.3125rem;margin-bottom: .3125rem;">
-                            Kaleido, 16 West Martin Street, Raleigh, NC 27601, USA.</p>
-                        <h6 style="color: #000000;font-size: .875rem;font-weight: normal;line-height: 1.3125rem;">
-                            Unsubscribe Manage preferences</h6>
-                    </div>
+                <td style="padding: 27px 16px 32px 16px;">
+                    <table style="width: 100%; max-width:696px; margin-inline: auto;" width="100%" cellpadding="0"
+                        cellspacing="0" role="presentation">
+                        <tbody>
+                            <tr>
+                                <td align="center">
+                                    <img src="{{.additionalData.EmailImagePath.Owndesk}}" alt="logo" style="width: 106px;
+                                    height: 66px;">
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <table style="border-bottom: 1px solid #EEEEEE ;" width="100%" cellpadding="0"
+                                        cellspacing="0" role="presentation">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <h1
+                                                        style="font-size: 20px; font-weight: bold;line-height: 27px;color:#000000; margin:59px 0  16px 0; ">
+                                                        Hi {{.authorDetails.FirstName}} {{.authorDetails.LastName}} !</h1>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <p
+                                                        style="font-size: 14px; line-height: 24px; color: #000000;margin:0 0  32px 0 ;">
+                                                        Use the following member Profile Details to verify the claim request</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <h3
+                                                        style="font-size: 14px; line-height: normal; color: #000000; font-weight: bold; margin:0 0 8px 0 ;">
+                                                        Profile Name: <span
+                                                            style="font-size: 14px; line-height: normal; color: #000000; font-weight: normal;">{{.claimData.ProfileName}}</span>
+                                                    </h3>
+                                                    <h3
+                                                        style="font-size: 14px; line-height: normal; color: #000000; font-weight: bold;margin:0 0 8px 0 ;">
+                                                        Work Email: <span
+                                                            style="font-size: 14px; line-height: normal; color: #000000; font-weight: normal;">{{.claimData.WorkMail}}</span>
+                                                    </h3>
+
+                                                    <h3
+                                                        style="font-size: 14px; line-height: normal; color: #000000; font-weight: bold; margin:0 0 8px 0 ;">
+                                                        Company Number: <span
+                                                            style="font-size: 14px; line-height: normal; color: #000000; font-weight: normal;">+91
+                                                            {{.claimData.CompanyNumber}}</span></h3>
+
+                                                    <h3
+                                                        style="font-size: 14px; line-height: normal; color: #000000; font-weight: bold;margin:0 ;">
+                                                        Contact Person Name: <span
+                                                            style="font-size: 14px; line-height: normal; color: #000000; font-weight: normal;">{{.claimData.PersonName}}</span></h3>
+
+
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td align="center">
+
+                                                    <a href="{{.link}}" style="background-color:#222222; border-radius:6px; padding:12px 0;color:#FFFFFF;font-size:17px;line-height:23px;text-decoration: none; display: block;width: 128px;
+                                                        margin:40px auto;">Check</a>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td align="center">
+                                    <p
+                                        style="color: #262626; font-size: 11px; line-height: normal; font-weight: normal; padding: 16px 0 0 0; margin: 0;">
+                                        ©Owndesk, 444 De Haro Street, Suite 200, San Francisco, CA 94107</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </td>
             </tr>
         </tbody>
     </table>
+
+
 </body>
 
 </html>
