@@ -327,7 +327,7 @@ type Query{
 	channelDetail(channelId: Int!): Channel! @auth
     channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String): ChannelEntriesDetails! @auth
 	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int): ChannelEntries! @auth
-	spaceList(limit: Int!,offset: Int!,categoryId: Int): SpaceDetails! @auth
+	spaceList(limit: Int!,offset: Int!,categoriesId: Int): SpaceDetails! @auth
 	spaceDetails(spaceId: Int!): Space! @auth
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
 	categoriesList(limit: Int,offset: Int,categoryGroupId: Int,hierarchyLevel: Int, checkEntriesPresence: Int): CategoriesList! @auth
@@ -342,6 +342,7 @@ type Mutation{
 	memberProfileUpdate(profiledata: ProfileData!,entryId: Int!,updateExactMemberProfileOnly: Boolean!):Boolean! @auth
 	memberclaimnow(input: ClaimData!,entryId: Int!): Boolean! @auth
 	profileNameVerification(profileName: String!): Boolean! @auth
+	templateMemberLogin(username: String!,password: String!): String! 
 }
 
 input MemberDetails{

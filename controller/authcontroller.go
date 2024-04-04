@@ -417,4 +417,18 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 }
 
+func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username string, password string) (string, error) {
+
+	Mem.Auth = GetAuthorizationWithoutToken(db)
+
+	member_details, err := Mem.CheckMemberLogin(member.MemberLogin{Username: username, Password: password}, db, os.Getenv("JWT_SECRET"))
+
+	if err != nil {
+
+		log.Println(err)
+	}
+
+	return member_details, err
+}
+
 

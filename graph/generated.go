@@ -278,6 +278,7 @@ type ComplexityRoot struct {
 		MemberUpdate            func(childComplexity int, memberdata model.MemberDetails) int
 		Memberclaimnow          func(childComplexity int, input model.ClaimData, entryID int) int
 		ProfileNameVerification func(childComplexity int, profileName string) int
+		TemplateMemberLogin     func(childComplexity int, username string, password string) int
 		VerifyMemberOtp         func(childComplexity int, email string, otp int) int
 	}
 
@@ -331,7 +332,7 @@ type ComplexityRoot struct {
 		EcommerceProductList         func(childComplexity int, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) int
 		PagesAndPageGroupsUnderSpace func(childComplexity int, spaceID int) int
 		SpaceDetails                 func(childComplexity int, spaceID int) int
-		SpaceList                    func(childComplexity int, limit int, offset int, categoryID *int) int
+		SpaceList                    func(childComplexity int, limit int, offset int, categoriesID *int) int
 	}
 
 	Section struct {
@@ -388,13 +389,14 @@ type MutationResolver interface {
 	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) (bool, error)
 	Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int) (bool, error)
 	ProfileNameVerification(ctx context.Context, profileName string) (bool, error)
+	TemplateMemberLogin(ctx context.Context, username string, password string) (string, error)
 }
 type QueryResolver interface {
 	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
 	ChannelDetail(ctx context.Context, channelID int) (model.Channel, error)
 	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (model.ChannelEntriesDetails, error)
 	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (model.ChannelEntries, error)
-	SpaceList(ctx context.Context, limit int, offset int, categoryID *int) (model.SpaceDetails, error)
+	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (model.PageAndPageGroups, error)
 	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (model.CategoriesList, error)
@@ -1689,6 +1691,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ProfileNameVerification(childComplexity, args["profileName"].(string)), true
 
+	case "Mutation.templateMemberLogin":
+		if e.complexity.Mutation.TemplateMemberLogin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_templateMemberLogin_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TemplateMemberLogin(childComplexity, args["username"].(string), args["password"].(string)), true
+
 	case "Mutation.verifyMemberOtp":
 		if e.complexity.Mutation.VerifyMemberOtp == nil {
 			break
@@ -2010,7 +2024,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.SpaceList(childComplexity, args["limit"].(int), args["offset"].(int), args["categoryId"].(*int)), true
+		return e.complexity.Query.SpaceList(childComplexity, args["limit"].(int), args["offset"].(int), args["categoriesId"].(*int)), true
 
 	case "Section.createdBy":
 		if e.complexity.Section.CreatedBy == nil {
@@ -2489,6 +2503,30 @@ func (ec *executionContext) field_Mutation_profileNameVerification_args(ctx cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_templateMemberLogin_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["username"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["username"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_verifyMemberOtp_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2841,14 +2879,14 @@ func (ec *executionContext) field_Query_spaceList_args(ctx context.Context, rawA
 	}
 	args["offset"] = arg1
 	var arg2 *int
-	if tmp, ok := rawArgs["categoryId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
+	if tmp, ok := rawArgs["categoriesId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoriesId"))
 		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["categoryId"] = arg2
+	args["categoriesId"] = arg2
 	return args, nil
 }
 
@@ -11156,6 +11194,61 @@ func (ec *executionContext) fieldContext_Mutation_profileNameVerification(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_templateMemberLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_templateMemberLogin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().TemplateMemberLogin(rctx, fc.Args["username"].(string), fc.Args["password"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_templateMemberLogin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_templateMemberLogin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Page_id(ctx context.Context, field graphql.CollectedField, obj *model.Page) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Page_id(ctx, field)
 	if err != nil {
@@ -12903,7 +12996,7 @@ func (ec *executionContext) _Query_spaceList(ctx context.Context, field graphql.
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().SpaceList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["categoryId"].(*int))
+			return ec.resolvers.Query().SpaceList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["categoriesId"].(*int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -18320,6 +18413,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "profileNameVerification":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_profileNameVerification(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "templateMemberLogin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_templateMemberLogin(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

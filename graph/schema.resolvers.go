@@ -41,7 +41,12 @@ func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.Claim
 
 // ProfileNameVerification is the resolver for the profileNameVerification field.
 func (r *mutationResolver) ProfileNameVerification(ctx context.Context, profileName string) (bool, error) {
-	return VerifyProfileName(r.DB,ctx,profileName)
+	return VerifyProfileName(r.DB, ctx, profileName)
+}
+
+// TemplateMemberLogin is the resolver for the templateMemberLogin field.
+func (r *mutationResolver) TemplateMemberLogin(ctx context.Context, username string, password string) (string, error) {
+	return TemplateMemberLogin(r.DB, ctx, username, password)
 }
 
 // Channellist is the resolver for the channellist field.
@@ -65,8 +70,8 @@ func (r *queryResolver) ChannelEntryDetail(ctx context.Context, categoryID *int,
 }
 
 // SpaceList is the resolver for the spaceList field.
-func (r *queryResolver) SpaceList(ctx context.Context, limit int, offset int, categoryID *int) (model.SpaceDetails, error) {
-	return SpaceList(r.DB, ctx, limit, offset, categoryID)
+func (r *queryResolver) SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (model.SpaceDetails, error) {
+	return SpaceList(r.DB, ctx, limit, offset, categoriesID)
 }
 
 // SpaceDetails is the resolver for the spaceDetails field.

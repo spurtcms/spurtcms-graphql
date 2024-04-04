@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoryId *int) (model.SpaceDetails, error) {
+func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoriesID *int) (model.SpaceDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -29,7 +29,7 @@ func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoryId *
 
 	spaceAuth := spaces.Space{Authority: GetAuthorization(token.(string), db)}
 
-	spacelist, count, err := spaceAuth.GetGraphqlSpacelist(limit, offset, pathUrl)
+	spacelist, count, err := spaceAuth.GetGraphqlSpacelist(limit, offset, pathUrl, categoriesID)
 
 	if err != nil {
 
