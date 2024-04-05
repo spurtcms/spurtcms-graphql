@@ -29,102 +29,100 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 	}
 
 	conv_member := model.Member{
-		ID: member_details.Id,
-		FirstName: member_details.FirstName,
-		LastName: member_details.LastName,
-		Email: member_details.Email,
-		MobileNo: member_details.MobileNo,
-		IsActive: member_details.IsActive,
+		ID:               member_details.Id,
+		FirstName:        member_details.FirstName,
+		LastName:         member_details.LastName,
+		Email:            member_details.Email,
+		MobileNo:         member_details.MobileNo,
+		IsActive:         member_details.IsActive,
 		ProfileImagePath: member_details.ProfileImagePath,
-		CreatedOn: member_details.CreatedOn,
-		CreatedBy: member_details.CreatedBy,
-		ModifiedOn: &member_details.ModifiedOn,
-		ModifiedBy: &member_details.ModifiedBy,
+		CreatedOn:        member_details.CreatedOn,
+		CreatedBy:        member_details.CreatedBy,
+		ModifiedOn:       &member_details.ModifiedOn,
+		ModifiedBy:       &member_details.ModifiedBy,
 	}
 
-    channel := make(chan bool)
+	channel := make(chan bool)
 
 	// rand.Seed(time.Now().UnixNano())
 
-    otp := rand.Intn(900000) + 100000 
+	otp := rand.Intn(900000) + 100000
 
 	current_time := time.Now().In(TimeZone)
 
-	otp_expiry_time := current_time.Add(5*time.Minute).Format("2006-01-02 15:04:05")
+	otp_expiry_time := current_time.Add(5 * time.Minute).Format("2006-01-02 15:04:05")
 
-	mail_expiry_time := current_time.Add(5*time.Minute).Format("02 Jan 2006 03:04 PM")
+	mail_expiry_time := current_time.Add(5 * time.Minute).Format("02 Jan 2006 03:04 PM")
 
-	err = Mem.StoreGraphqlMemberOtp(otp,conv_member.ID,otp_expiry_time)
+	err = Mem.StoreGraphqlMemberOtp(otp, conv_member.ID, otp_expiry_time)
 
-	if err!=nil{
+	if err != nil {
 
 		return false, err
 	}
 
-	data := map[string]interface{}{"otp": otp,"expiryTime": mail_expiry_time,"member": conv_member,"additionalData": AdditionalData}
+	data := map[string]interface{}{"otp": otp, "expiryTime": mail_expiry_time, "member": conv_member, "additionalData": AdditionalData}
 
 	tmpl, err := template.ParseFiles("view/email/login-template.html")
 
 	if err != nil {
-		
+
 		return false, err
 	}
 
 	var template_buffer bytes.Buffer
-	
-	if err := tmpl.Execute(&template_buffer,data); err != nil {
 
-		return false,err
+	if err := tmpl.Execute(&template_buffer, data); err != nil {
+
+		return false, err
 	}
 
-	mail_data := MailConfig{Email: conv_member.Email,MailUsername: os.Getenv("MAIL_USERNAME"),MailPassword: os.Getenv("MAIL_PASSWORD"),Subject: "OwnDesk - Login Otp Confirmation"}
+	mail_data := MailConfig{Email: conv_member.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "OwnDesk - Login Otp Confirmation"}
 
 	html_content := template_buffer.String()
 
-	go SendMail(mail_data,html_content,channel)
+	go SendMail(mail_data, html_content, channel)
 
-	if <-channel{
+	if <-channel {
 
-		return true,nil
+		return true, nil
 
-	}else{
+	} else {
 
-		return false,nil
+		return false, nil
 	}
 }
 
-func VerifyMemberOtp(db *gorm.DB,ctx context.Context,email string,otp int)(model.LoginDetails,error){
+func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (model.LoginDetails, error) {
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
 	currentTime := time.Now().In(TimeZone).Unix()
 
-	memberDetails,token,err := Mem.VerifyLoginOtp(email,otp,currentTime)
+	memberDetails, token, err := Mem.VerifyLoginOtp(email, otp, currentTime)
 
-	if err!=nil{
+	if err != nil {
 
-		return model.LoginDetails{},err
+		return model.LoginDetails{}, err
 	}
 
-	log.Println("memberdetails",memberDetails)
+	log.Println("memberdetails", memberDetails)
 
 	var channelEntryDetails model.ChannelEntries
 
 	if err := db.Debug().Table("tbl_channel_entries").Select("tbl_channel_entries.*").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Joins("inner join tbl_channel_entry_fields on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").Joins("inner join tbl_members on tbl_members.id = any(string_to_array(tbl_channel_entry_fields.field_value,',')::integer[])").
-	Joins("inner join tbl_member_profiles on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ?",MemberFieldTypeId,memberDetails.Id).First(&channelEntryDetails).Error;err!=nil{
+		Joins("inner join tbl_member_profiles on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ?", MemberFieldTypeId, memberDetails.Id).First(&channelEntryDetails).Error; err != nil {
 
-		return model.LoginDetails{},err
+		return model.LoginDetails{}, err
 	}
 
-	log.Println("chkking",channelEntryDetails)
+	channelAuth := channels.Channel{Authority: GetAuthorization(token, db)}
 
-	channelAuth := channels.Channel{Authority: GetAuthorization(token,db)}
+	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(&channelEntryDetails.ID, &channelEntryDetails.ChannelID, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil)
 
-	channelEntry,err :=  channelAuth.GetGraphqlChannelEntriesDetails(&channelEntryDetails.ID,&channelEntryDetails.ChannelID,nil,PathUrl,SectionTypeId,MemberFieldTypeId,nil)
+	if err != nil {
 
-	if err!=nil{
-
-		return model.LoginDetails{},err
+		return model.LoginDetails{}, err
 	}
 
 	var conv_categories [][]model.Category
@@ -242,43 +240,39 @@ func VerifyMemberOtp(db *gorm.DB,ctx context.Context,email string,otp int)(model
 
 	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
-	var conv_memberProfiles []model.MemberProfile
+	MemberProfile := model.MemberProfile{
+		ID:              &channelEntry.MemberProfile.Id,
+		MemberID:        &channelEntry.MemberProfile.MemberId,
+		ProfileName:     &channelEntry.MemberProfile.ProfileName,
+		ProfileSlug:     &channelEntry.MemberProfile.ProfileSlug,
+		ProfilePage:     &channelEntry.MemberProfile.ProfilePage,
+		MemberDetails:   channelEntry.MemberProfile.MemberDetails,
+		CompanyName:     &channelEntry.MemberProfile.CompanyName,
+		CompanyLocation: &channelEntry.MemberProfile.CompanyLocation,
+		CompanyLogo:     &channelEntry.MemberProfile.CompanyLogo,
+		About:           &channelEntry.MemberProfile.About,
+		SeoTitle:        &channelEntry.MemberProfile.SeoTitle,
+		SeoDescription:  &channelEntry.MemberProfile.SeoDescription,
+		SeoKeyword:      &channelEntry.MemberProfile.SeoKeyword,
+		CreatedBy:       &channelEntry.MemberProfile.CreatedBy,
+		CreatedOn:       &channelEntry.MemberProfile.CreatedOn,
+		ModifiedOn:      &channelEntry.MemberProfile.ModifiedOn,
+		ModifiedBy:      &channelEntry.MemberProfile.ModifiedBy,
+		Linkedin:        &channelEntry.MemberProfile.Linkedin,
+		Twitter:         &channelEntry.MemberProfile.Twitter,
+		Website:         &channelEntry.MemberProfile.Website,
+		ClaimStatus:     &channelEntry.MemberProfile.ClaimStatus,
+	}
 
-	claimStatus := false
+	var claimStatus bool
 
-	for _, memberProfile := range channelEntry.MemberProfiles {
+	if channelEntry.MemberProfile.ClaimStatus == 1 {
 
-		if memberDetails.Id == memberProfile.MemberId && memberProfile.ClaimStatus == 1 {
+		claimStatus = true
 
-			claimStatus = true
+	} else {
 
-		}
-
-		conv_MemberProfile := model.MemberProfile{
-			ID:              &memberProfile.Id,
-			MemberID:        &memberProfile.MemberId,
-			ProfileName:     &memberProfile.ProfileName,
-			ProfileSlug:     &memberProfile.ProfileSlug,
-			ProfilePage:     &memberProfile.ProfilePage,
-			MemberDetails:   memberProfile.MemberDetails,
-			CompanyName:     &memberProfile.CompanyName,
-			CompanyLocation: &memberProfile.CompanyLocation,
-			CompanyLogo:     &memberProfile.CompanyLogo,
-			About:           &memberProfile.About,
-			SeoTitle:        &memberProfile.SeoTitle,
-			SeoDescription:  &memberProfile.SeoDescription,
-			SeoKeyword:      &memberProfile.SeoKeyword,
-			CreatedBy:       &memberProfile.CreatedBy,
-			CreatedOn:       &memberProfile.CreatedOn,
-			ModifiedOn:      &memberProfile.ModifiedOn,
-			ModifiedBy:      &memberProfile.ModifiedBy,
-			Linkedin:        &memberProfile.Linkedin,
-			Twitter:         &memberProfile.Twitter,
-			Website:         &memberProfile.Website,
-			ClaimStatus:     &memberProfile.ClaimStatus,
-		}
-
-		conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
+		claimStatus = false
 	}
 
 	conv_channelEntry := model.ChannelEntries{
@@ -303,7 +297,7 @@ func VerifyMemberOtp(db *gorm.DB,ctx context.Context,email string,otp int)(model
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
 		AdditionalFields: additionalFields,
-		MemberProfile:    conv_memberProfiles,
+		MemberProfile:    &MemberProfile,
 		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
@@ -317,9 +311,8 @@ func VerifyMemberOtp(db *gorm.DB,ctx context.Context,email string,otp int)(model
 		Excerpt:          &channelEntry.Excerpt,
 	}
 
+	return model.LoginDetails{ClaimEntryDetails: &conv_channelEntry, Token: token}, nil
 
-	return model.LoginDetails{ClaimEntryDetails: &conv_channelEntry,Token: token},nil
-	
 }
 
 func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
@@ -354,7 +347,7 @@ func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
 
 	_, isMemberExists, err := Mem.CheckEmailInMember(0, input.Email)
 
-	if isMemberExists {
+	if isMemberExists || err!= nil {
 
 		return isMemberExists, errors.New("Member already exists!")
 	}
@@ -430,5 +423,3 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username string, pass
 
 	return member_details, err
 }
-
-

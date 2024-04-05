@@ -64,8 +64,8 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelID *int, catego
 	return controller.ChannelEntryDetail(db, ctx, channelEntryID, channelID, categoryID, slug)
 }
 
-func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId int, updateExactMemberProfileOnly bool) (bool, error) {
-	return controller.MemberProfileUpdate(db, ctx, profiledata, entryId, updateExactMemberProfileOnly)
+func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId int) (bool, error) {
+	return controller.MemberProfileUpdate(db, ctx, profiledata, entryId)
 }
 
 func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (model.LoginDetails,error) {

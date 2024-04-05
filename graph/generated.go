@@ -273,7 +273,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		MemberLogin             func(childComplexity int, email string) int
-		MemberProfileUpdate     func(childComplexity int, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) int
+		MemberProfileUpdate     func(childComplexity int, profiledata model.ProfileData, entryID int) int
 		MemberRegister          func(childComplexity int, input model.MemberDetails) int
 		MemberUpdate            func(childComplexity int, memberdata model.MemberDetails) int
 		Memberclaimnow          func(childComplexity int, input model.ClaimData, entryID int) int
@@ -386,7 +386,7 @@ type MutationResolver interface {
 	VerifyMemberOtp(ctx context.Context, email string, otp int) (model.LoginDetails, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
-	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) (bool, error)
+	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int) (bool, error)
 	Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int) (bool, error)
 	ProfileNameVerification(ctx context.Context, profileName string) (bool, error)
 	TemplateMemberLogin(ctx context.Context, username string, password string) (string, error)
@@ -1641,7 +1641,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MemberProfileUpdate(childComplexity, args["profiledata"].(model.ProfileData), args["entryId"].(int), args["updateExactMemberProfileOnly"].(bool)), true
+		return e.complexity.Mutation.MemberProfileUpdate(childComplexity, args["profiledata"].(model.ProfileData), args["entryId"].(int)), true
 
 	case "Mutation.memberRegister":
 		if e.complexity.Mutation.MemberRegister == nil {
@@ -2422,15 +2422,6 @@ func (ec *executionContext) field_Mutation_memberProfileUpdate_args(ctx context.
 		}
 	}
 	args["entryId"] = arg1
-	var arg2 bool
-	if tmp, ok := rawArgs["updateExactMemberProfileOnly"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateExactMemberProfileOnly"))
-		arg2, err = ec.unmarshalNBoolean2bool(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["updateExactMemberProfileOnly"] = arg2
 	return args, nil
 }
 
@@ -5659,11 +5650,14 @@ func (ec *executionContext) _ChannelEntries_memberProfile(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]model.MemberProfile)
+	res := resTmp.(*model.MemberProfile)
 	fc.Result = res
-	return ec.marshalOMemberProfile2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfileᚄ(ctx, field.Selections, res)
+	return ec.marshalNMemberProfile2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10984,7 +10978,7 @@ func (ec *executionContext) _Mutation_memberProfileUpdate(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData), fc.Args["entryId"].(int), fc.Args["updateExactMemberProfileOnly"].(bool))
+			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData), fc.Args["entryId"].(int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -17587,6 +17581,9 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			}
 		case "memberProfile":
 			out.Values[i] = ec._ChannelEntries_memberProfile(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "claimStatus":
 			out.Values[i] = ec._ChannelEntries_claimStatus(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -19928,8 +19925,14 @@ func (ec *executionContext) marshalNMemberGroup2spurtcmsᚑgraphqlᚋgraphᚋmod
 	return ec._MemberGroup(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMemberProfile2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx context.Context, sel ast.SelectionSet, v model.MemberProfile) graphql.Marshaler {
-	return ec._MemberProfile(ctx, sel, &v)
+func (ec *executionContext) marshalNMemberProfile2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx context.Context, sel ast.SelectionSet, v *model.MemberProfile) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MemberProfile(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPage2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPage(ctx context.Context, sel ast.SelectionSet, v model.Page) graphql.Marshaler {
@@ -20634,53 +20637,6 @@ func (ec *executionContext) marshalOMemberGroup2ᚕspurtcmsᚑgraphqlᚋgraphᚋ
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNMemberGroup2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalOMemberProfile2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MemberProfile) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMemberProfile2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

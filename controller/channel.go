@@ -5,11 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"spurtcms-graphql/graph/model"
 	"strconv"
 
-	// "log"
+	"log"
 	"os"
 	"time"
 
@@ -205,44 +204,39 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
-		var conv_memberProfiles []model.MemberProfile
+		MemberProfile := model.MemberProfile{
+			ID:              &entry.MemberProfile.Id,
+			MemberID:        &entry.MemberProfile.MemberId,
+			ProfileName:     &entry.MemberProfile.ProfileName,
+			ProfileSlug:     &entry.MemberProfile.ProfileSlug,
+			ProfilePage:     &entry.MemberProfile.ProfilePage,
+			MemberDetails:   entry.MemberProfile.MemberDetails,
+			CompanyName:     &entry.MemberProfile.CompanyName,
+			CompanyLocation: &entry.MemberProfile.CompanyLocation,
+			CompanyLogo:     &entry.MemberProfile.CompanyLogo,
+			About:           &entry.MemberProfile.About,
+			SeoTitle:        &entry.MemberProfile.SeoTitle,
+			SeoDescription:  &entry.MemberProfile.SeoDescription,
+			SeoKeyword:      &entry.MemberProfile.SeoKeyword,
+			CreatedBy:       &entry.MemberProfile.CreatedBy,
+			CreatedOn:       &entry.MemberProfile.CreatedOn,
+			ModifiedOn:      &entry.MemberProfile.ModifiedOn,
+			ModifiedBy:      &entry.MemberProfile.ModifiedBy,
+			Linkedin:        &entry.MemberProfile.Linkedin,
+			Twitter:         &entry.MemberProfile.Twitter,
+			Website:         &entry.MemberProfile.Website,
+			ClaimStatus:     &entry.MemberProfile.ClaimStatus,
+		}
 
-		claimStatus := false
+		var claimStatus bool
 
-		for _, memberProfile := range entry.MemberProfiles {
+		if *MemberProfile.ClaimStatus == 1 && memberid == *MemberProfile.MemberID {
 
-			if memberid == memberProfile.MemberId && memberProfile.ClaimStatus == 1 {
-
-				claimStatus = true
-
-			}
-
-			conv_MemberProfile := model.MemberProfile{
-				ID:              &memberProfile.Id,
-				MemberID:        &memberProfile.MemberId,
-				ProfileName:     &memberProfile.ProfileName,
-				ProfileSlug:     &memberProfile.ProfileSlug,
-				ProfilePage:     &memberProfile.ProfilePage,
-				MemberDetails:   memberProfile.MemberDetails,
-				CompanyName:     &memberProfile.CompanyName,
-				CompanyLocation: &memberProfile.CompanyLocation,
-				CompanyLogo:     &memberProfile.CompanyLogo,
-				About:           &memberProfile.About,
-				SeoTitle:        &memberProfile.SeoTitle,
-				SeoDescription:  &memberProfile.SeoDescription,
-				SeoKeyword:      &memberProfile.SeoKeyword,
-				CreatedBy:       &memberProfile.CreatedBy,
-				CreatedOn:       &memberProfile.CreatedOn,
-				ModifiedOn:      &memberProfile.ModifiedOn,
-				ModifiedBy:      &memberProfile.ModifiedBy,
-				Linkedin:        &memberProfile.Linkedin,
-				Twitter:         &memberProfile.Twitter,
-				Website:         &memberProfile.Website,
-				ClaimStatus:     &memberProfile.ClaimStatus,
-			}
-
-			conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
-
+			claimStatus = true
+	
+		} else {
+	
+			claimStatus = false
 		}
 
 		conv_channelEntry := model.ChannelEntries{
@@ -267,7 +261,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			RelatedArticles:  entry.RelatedArticles,
 			Categories:       conv_categories,
 			AdditionalFields: additionalFields,
-			MemberProfile:    conv_memberProfiles,
+			MemberProfile:    &MemberProfile,
 			AuthorDetails:    authorDetails,
 			FeaturedEntry:    entry.Feature,
 			ViewCount:        entry.ViewCount,
@@ -455,43 +449,39 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
-	var conv_memberProfiles []model.MemberProfile
+	MemberProfile := model.MemberProfile{
+		ID:              &channelEntry.MemberProfile.Id,
+		MemberID:        &channelEntry.MemberProfile.MemberId,
+		ProfileName:     &channelEntry.MemberProfile.ProfileName,
+		ProfileSlug:     &channelEntry.MemberProfile.ProfileSlug,
+		ProfilePage:     &channelEntry.MemberProfile.ProfilePage,
+		MemberDetails:   channelEntry.MemberProfile.MemberDetails,
+		CompanyName:     &channelEntry.MemberProfile.CompanyName,
+		CompanyLocation: &channelEntry.MemberProfile.CompanyLocation,
+		CompanyLogo:     &channelEntry.MemberProfile.CompanyLogo,
+		About:           &channelEntry.MemberProfile.About,
+		SeoTitle:        &channelEntry.MemberProfile.SeoTitle,
+		SeoDescription:  &channelEntry.MemberProfile.SeoDescription,
+		SeoKeyword:      &channelEntry.MemberProfile.SeoKeyword,
+		CreatedBy:       &channelEntry.MemberProfile.CreatedBy,
+		CreatedOn:       &channelEntry.MemberProfile.CreatedOn,
+		ModifiedOn:      &channelEntry.MemberProfile.ModifiedOn,
+		ModifiedBy:      &channelEntry.MemberProfile.ModifiedBy,
+		Linkedin:        &channelEntry.MemberProfile.Linkedin,
+		Twitter:         &channelEntry.MemberProfile.Twitter,
+		Website:         &channelEntry.MemberProfile.Website,
+		ClaimStatus:     &channelEntry.MemberProfile.ClaimStatus,
+	}
 
-	claimStatus := false
+	var claimStatus bool
 
-	for _, memberProfile := range channelEntry.MemberProfiles {
+	if *MemberProfile.ClaimStatus == 1 && memberid == *MemberProfile.MemberID {
 
-		if memberid == memberProfile.MemberId && memberProfile.ClaimStatus == 1 {
+		claimStatus = true
 
-			claimStatus = true
+	} else {
 
-		}
-
-		conv_MemberProfile := model.MemberProfile{
-			ID:              &memberProfile.Id,
-			MemberID:        &memberProfile.MemberId,
-			ProfileName:     &memberProfile.ProfileName,
-			ProfileSlug:     &memberProfile.ProfileSlug,
-			ProfilePage:     &memberProfile.ProfilePage,
-			MemberDetails:   memberProfile.MemberDetails,
-			CompanyName:     &memberProfile.CompanyName,
-			CompanyLocation: &memberProfile.CompanyLocation,
-			CompanyLogo:     &memberProfile.CompanyLogo,
-			About:           &memberProfile.About,
-			SeoTitle:        &memberProfile.SeoTitle,
-			SeoDescription:  &memberProfile.SeoDescription,
-			SeoKeyword:      &memberProfile.SeoKeyword,
-			CreatedBy:       &memberProfile.CreatedBy,
-			CreatedOn:       &memberProfile.CreatedOn,
-			ModifiedOn:      &memberProfile.ModifiedOn,
-			ModifiedBy:      &memberProfile.ModifiedBy,
-			Linkedin:        &memberProfile.Linkedin,
-			Twitter:         &memberProfile.Twitter,
-			Website:         &memberProfile.Website,
-			ClaimStatus:     &memberProfile.ClaimStatus,
-		}
-
-		conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
+		claimStatus = false
 	}
 
 	conv_channelEntry := model.ChannelEntries{
@@ -516,14 +506,14 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
 		AdditionalFields: additionalFields,
-		MemberProfile:    conv_memberProfiles,
+		MemberProfile:    &MemberProfile,
 		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
 		ClaimStatus:      claimStatus,
 		Author:           &channelEntry.Author,
 		SortOrder:        &channelEntry.SortOrder,
-		CreateDate:      &channelEntry.CreateDate,
+		CreateDate:       &channelEntry.CreateDate,
 		PublishedTime:    &channelEntry.PublishedTime,
 		ReadingTime:      &channelEntry.ReadingTime,
 		Tags:             &channelEntry.Tags,
@@ -544,13 +534,13 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	verify_chan := make(chan bool)
 
-	channelAuth := channel.Channel{Authority: GetAuthorization(token,db)}
+	channelAuth := channel.Channel{Authority: GetAuthorization(token, db)}
 
-	channelEntry,err :=  channelAuth.GetGraphqlChannelEntriesDetails(&entryId,nil,nil,PathUrl,SectionTypeId,MemberFieldTypeId,nil)
+	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(&entryId, nil, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil)
 
-	if err!=nil{
+	if err != nil {
 
-		return false,err
+		return false, err
 	}
 
 	var conv_categories [][]model.Category
@@ -668,43 +658,39 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
-	var conv_memberProfiles []model.MemberProfile
+	MemberProfile := model.MemberProfile{
+		ID:              &channelEntry.MemberProfile.Id,
+		MemberID:        &channelEntry.MemberProfile.MemberId,
+		ProfileName:     &channelEntry.MemberProfile.ProfileName,
+		ProfileSlug:     &channelEntry.MemberProfile.ProfileSlug,
+		ProfilePage:     &channelEntry.MemberProfile.ProfilePage,
+		MemberDetails:   channelEntry.MemberProfile.MemberDetails,
+		CompanyName:     &channelEntry.MemberProfile.CompanyName,
+		CompanyLocation: &channelEntry.MemberProfile.CompanyLocation,
+		CompanyLogo:     &channelEntry.MemberProfile.CompanyLogo,
+		About:           &channelEntry.MemberProfile.About,
+		SeoTitle:        &channelEntry.MemberProfile.SeoTitle,
+		SeoDescription:  &channelEntry.MemberProfile.SeoDescription,
+		SeoKeyword:      &channelEntry.MemberProfile.SeoKeyword,
+		CreatedBy:       &channelEntry.MemberProfile.CreatedBy,
+		CreatedOn:       &channelEntry.MemberProfile.CreatedOn,
+		ModifiedOn:      &channelEntry.MemberProfile.ModifiedOn,
+		ModifiedBy:      &channelEntry.MemberProfile.ModifiedBy,
+		Linkedin:        &channelEntry.MemberProfile.Linkedin,
+		Twitter:         &channelEntry.MemberProfile.Twitter,
+		Website:         &channelEntry.MemberProfile.Website,
+		ClaimStatus:     &channelEntry.MemberProfile.ClaimStatus,
+	}
 
-	claimStatus := false
+	var claimStatus bool
 
-	for _, memberProfile := range channelEntry.MemberProfiles {
+	if *MemberProfile.ClaimStatus == 1 && memberid == *MemberProfile.MemberID {
 
-		if memberid == memberProfile.MemberId && memberProfile.ClaimStatus == 1 {
+		claimStatus = true
 
-			claimStatus = true
+	} else {
 
-		}
-
-		conv_MemberProfile := model.MemberProfile{
-			ID:              &memberProfile.Id,
-			MemberID:        &memberProfile.MemberId,
-			ProfileName:     &memberProfile.ProfileName,
-			ProfileSlug:     &memberProfile.ProfileSlug,
-			ProfilePage:     &memberProfile.ProfilePage,
-			MemberDetails:   memberProfile.MemberDetails,
-			CompanyName:     &memberProfile.CompanyName,
-			CompanyLocation: &memberProfile.CompanyLocation,
-			CompanyLogo:     &memberProfile.CompanyLogo,
-			About:           &memberProfile.About,
-			SeoTitle:        &memberProfile.SeoTitle,
-			SeoDescription:  &memberProfile.SeoDescription,
-			SeoKeyword:      &memberProfile.SeoKeyword,
-			CreatedBy:       &memberProfile.CreatedBy,
-			CreatedOn:       &memberProfile.CreatedOn,
-			ModifiedOn:      &memberProfile.ModifiedOn,
-			ModifiedBy:      &memberProfile.ModifiedBy,
-			Linkedin:        &memberProfile.Linkedin,
-			Twitter:         &memberProfile.Twitter,
-			Website:         &memberProfile.Website,
-			ClaimStatus:     &memberProfile.ClaimStatus,
-		}
-
-		conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
+		claimStatus = false
 	}
 
 	conv_channelEntry := model.ChannelEntries{
@@ -729,7 +715,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
 		AdditionalFields: additionalFields,
-		MemberProfile:    conv_memberProfiles,
+		MemberProfile:    &MemberProfile,
 		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
@@ -743,10 +729,10 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		Excerpt:          &channelEntry.Excerpt,
 	}
 
-	data := map[string]interface{}{"claimData": profileData, "authorDetails": conv_channelEntry.AuthorDetails, "entry": conv_channelEntry, "additionalData": AdditionalData, "link": PathUrl + "member/updatemember?id="+strconv.Itoa(*conv_channelEntry.MemberProfile[0].MemberID)}
+	data := map[string]interface{}{"claimData": profileData, "authorDetails": conv_channelEntry.AuthorDetails, "entry": conv_channelEntry, "additionalData": AdditionalData, "link": PathUrl + "member/updatemember?id=" + strconv.Itoa(*conv_channelEntry.MemberProfile.MemberID)}
 
-	log.Println("maildata",data["link"],conv_channelEntry.ClaimStatus)
-	
+	log.Println("maildata", data["link"], conv_channelEntry.ClaimStatus, data["additionalData"])
+
 	tmpl, _ := template.ParseFiles("view/email/claim-template.html")
 
 	var template_buff bytes.Buffer
@@ -774,51 +760,29 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	}
 }
 
-func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId int, updateExactMemberProfileOnly bool) (bool, error) {
+func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId int) (bool, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	token := c.GetString("token")
 
-	if token == SpecialToken || token == "" {
+	memberid := c.GetInt("memberid")
+
+	if token == SpecialToken || token == "" || memberid == 0 {
 
 		return false, errors.New("login required")
 	}
 
-	memberid := c.GetInt("memberid")
+	var memberProfile model.MemberProfile
 
-	channelAuth := channel.Channel{Authority: GetAuthorization(token, db)}
+	if err := db.Debug().Table("tbl_channel_entry_fields").Select("tbl_member_profiles.*").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_members on tbl_members.id = tbl_channel_entry_fields.field_value::integer").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = tbl_members.id").Where("tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_fields.field_type_id = ? and tbl_channel_entry_fields.channel_entry_id = ?",MemberFieldTypeId,entryId).Find(&memberProfile).Error;err!=nil{
 
-	entryDetails, err := channelAuth.GetGraphqlChannelEntriesDetails(&entryId, nil, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil)
-
-	if err != nil {
-
-		return false, err
-	}
-
-	var claimedMembers []int
-
-	for _, memberProfile := range entryDetails.MemberProfiles {
-
-		if updateExactMemberProfileOnly {
-
-			if memberProfile.MemberId == memberid {
-
-				claimedMembers = append(claimedMembers, memberProfile.MemberId)
-
-			}
-
-		} else {
-
-			claimedMembers = append(claimedMembers, memberProfile.MemberId)
-
-		}
-
+		return false,err
 	}
 
 	var jsonData map[string]interface{}
 
-	err = json.Unmarshal([]byte(profiledata.MemberProfile), &jsonData)
+	err := json.Unmarshal([]byte(profiledata.MemberProfile), &jsonData)
 
 	if err != nil {
 
@@ -835,7 +799,12 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		ModifiedOn:    &currentTime,
 	}
 
-	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id in (?)", claimedMembers).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn}).Error; err != nil {
+	if memberid != *memberProfile.MemberID{
+
+		return false,errors.New("authorized member id mismatched in member profile")
+	}
+
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id = ?",memberProfile.MemberID).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn}).Error; err != nil {
 
 		return false, err
 	}
@@ -843,24 +812,24 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 	return true, nil
 }
 
-func VerifyProfileName(db *gorm.DB,ctx context.Context, profileName string) (bool, error) {
+func VerifyProfileName(db *gorm.DB, ctx context.Context, profileName string) (bool, error) {
 
-	if profileName==""{
+	if profileName == "" {
 
-		return false,errors.New("empty values not allowed")
+		return false, errors.New("empty values not allowed")
 	}
 
 	var count int64
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_member_profiles.profile_name = ?",profileName).Count(&count).Error;err!=nil{
+	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_member_profiles.profile_name = ?", profileName).Count(&count).Error; err != nil {
 
-		return false,err
+		return false, err
 	}
 
-	if count>0{
+	if count > 0 {
 
-		return false,errors.New("profile name already exists")
+		return false, errors.New("profile name already exists")
 	}
 
-	return true,nil
+	return true, nil
 }

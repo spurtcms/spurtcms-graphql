@@ -30,8 +30,8 @@ func (r *mutationResolver) MemberUpdate(ctx context.Context, memberdata model.Me
 }
 
 // MemberProfileUpdate is the resolver for the memberProfileUpdate field.
-func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int, updateExactMemberProfileOnly bool) (bool, error) {
-	return MemberProfileUpdate(r.DB, ctx, profiledata, entryID, updateExactMemberProfileOnly)
+func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int) (bool, error) {
+	return MemberProfileUpdate(r.DB, ctx, profiledata, entryID)
 }
 
 // Memberclaimnow is the resolver for the memberclaimnow field.

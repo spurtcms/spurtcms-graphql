@@ -84,7 +84,7 @@ type ChannelEntries struct {
 	Categories       [][]Category      `json:"categories"  gorm:"-"`
 	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"  gorm:"-"`
 	AuthorDetails    *Author           `json:"authorDetails"  gorm:"-"`
-	MemberProfile    []MemberProfile   `json:"memberProfile,omitempty" gorm:"-"`
+	MemberProfile    *MemberProfile     `json:"memberProfile,omitempty" gorm:"-"`
 	ClaimStatus      bool              `json:"claimStatus" gorm:"-"`
 	Fields           []Field           `json:"fields,omitempty" gorm:"-"`
 	Author           *string           `json:"author,omitempty"`
