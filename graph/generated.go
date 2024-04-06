@@ -329,6 +329,7 @@ type ComplexityRoot struct {
 		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) int
 		ChannelEntryDetail           func(childComplexity int, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) int
 		ChannelList                  func(childComplexity int, limit int, offset int) int
+		EcommerceProductDetails      func(childComplexity int, productID int) int
 		EcommerceProductList         func(childComplexity int, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) int
 		PagesAndPageGroupsUnderSpace func(childComplexity int, spaceID int) int
 		SpaceDetails                 func(childComplexity int, spaceID int) int
@@ -401,6 +402,7 @@ type QueryResolver interface {
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (model.PageAndPageGroups, error)
 	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (model.CategoriesList, error)
 	EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (model.EcommerceProducts, error)
+	EcommerceProductDetails(ctx context.Context, productID int) (model.EcommerceProduct, error)
 }
 
 type executableSchema struct {
@@ -1978,6 +1980,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ChannelList(childComplexity, args["limit"].(int), args["offset"].(int)), true
 
+	case "Query.ecommerceProductDetails":
+		if e.complexity.Query.EcommerceProductDetails == nil {
+			break
+		}
+
+		args, err := ec.field_Query_ecommerceProductDetails_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.EcommerceProductDetails(childComplexity, args["productId"].(int)), true
+
 	case "Query.ecommerceProductList":
 		if e.complexity.Query.EcommerceProductList == nil {
 			break
@@ -2788,6 +2802,21 @@ func (ec *executionContext) field_Query_channelList_args(ctx context.Context, ra
 		}
 	}
 	args["offset"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_ecommerceProductDetails_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["productId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productId"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["productId"] = arg0
 	return args, nil
 }
 
@@ -5591,9 +5620,9 @@ func (ec *executionContext) _ChannelEntries_authorDetails(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Author)
+	res := resTmp.(model.Author)
 	fc.Result = res
-	return ec.marshalNAuthor2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx, field.Selections, res)
+	return ec.marshalNAuthor2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_authorDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5655,9 +5684,9 @@ func (ec *executionContext) _ChannelEntries_memberProfile(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.MemberProfile)
+	res := resTmp.(model.MemberProfile)
 	fc.Result = res
-	return ec.marshalNMemberProfile2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx, field.Selections, res)
+	return ec.marshalNMemberProfile2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8707,9 +8736,9 @@ func (ec *executionContext) _LoginDetails_claimEntryDetails(ctx context.Context,
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.ChannelEntries)
+	res := resTmp.(model.ChannelEntries)
 	fc.Result = res
-	return ec.marshalNChannelEntries2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx, field.Selections, res)
+	return ec.marshalNChannelEntries2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LoginDetails_claimEntryDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13376,6 +13405,103 @@ func (ec *executionContext) fieldContext_Query_ecommerceProductList(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_ecommerceProductList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_ecommerceProductDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_ecommerceProductDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().EcommerceProductDetails(rctx, fc.Args["productId"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.EcommerceProduct)
+	fc.Result = res
+	return ec.marshalNEcommerceProduct2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_ecommerceProductDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EcommerceProduct_id(ctx, field)
+			case "categoriesId":
+				return ec.fieldContext_EcommerceProduct_categoriesId(ctx, field)
+			case "productName":
+				return ec.fieldContext_EcommerceProduct_productName(ctx, field)
+			case "productDescription":
+				return ec.fieldContext_EcommerceProduct_productDescription(ctx, field)
+			case "productImagePath":
+				return ec.fieldContext_EcommerceProduct_productImagePath(ctx, field)
+			case "productVideoPath":
+				return ec.fieldContext_EcommerceProduct_productVideoPath(ctx, field)
+			case "sku":
+				return ec.fieldContext_EcommerceProduct_sku(ctx, field)
+			case "tax":
+				return ec.fieldContext_EcommerceProduct_tax(ctx, field)
+			case "totalcost":
+				return ec.fieldContext_EcommerceProduct_totalcost(ctx, field)
+			case "isActive":
+				return ec.fieldContext_EcommerceProduct_isActive(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_EcommerceProduct_createdOn(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_EcommerceProduct_createdBy(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_EcommerceProduct_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_EcommerceProduct_modifiedBy(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_EcommerceProduct_isDeleted(ctx, field)
+			case "deletedBy":
+				return ec.fieldContext_EcommerceProduct_deletedBy(ctx, field)
+			case "deletedOn":
+				return ec.fieldContext_EcommerceProduct_deletedOn(ctx, field)
+			case "defaultPrice":
+				return ec.fieldContext_EcommerceProduct_defaultPrice(ctx, field)
+			case "discountPrice":
+				return ec.fieldContext_EcommerceProduct_discountPrice(ctx, field)
+			case "specialPrice":
+				return ec.fieldContext_EcommerceProduct_specialPrice(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EcommerceProduct", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_ecommerceProductDetails_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -18930,6 +19056,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "ecommerceProductDetails":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_ecommerceProductDetails(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -19567,14 +19715,8 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAuthor2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx context.Context, sel ast.SelectionSet, v *model.Author) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Author(ctx, sel, v)
+func (ec *executionContext) marshalNAuthor2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx context.Context, sel ast.SelectionSet, v model.Author) graphql.Marshaler {
+	return ec._Author(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
@@ -19788,16 +19930,6 @@ func (ec *executionContext) marshalNChannelEntries2ᚕspurtcmsᚑgraphqlᚋgraph
 	return ret
 }
 
-func (ec *executionContext) marshalNChannelEntries2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx context.Context, sel ast.SelectionSet, v *model.ChannelEntries) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._ChannelEntries(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNChannelEntriesDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntriesDetails(ctx context.Context, sel ast.SelectionSet, v model.ChannelEntriesDetails) graphql.Marshaler {
 	return ec._ChannelEntriesDetails(ctx, sel, &v)
 }
@@ -19925,14 +20057,8 @@ func (ec *executionContext) marshalNMemberGroup2spurtcmsᚑgraphqlᚋgraphᚋmod
 	return ec._MemberGroup(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMemberProfile2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx context.Context, sel ast.SelectionSet, v *model.MemberProfile) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MemberProfile(ctx, sel, v)
+func (ec *executionContext) marshalNMemberProfile2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx context.Context, sel ast.SelectionSet, v model.MemberProfile) graphql.Marshaler {
+	return ec._MemberProfile(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNPage2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPage(ctx context.Context, sel ast.SelectionSet, v model.Page) graphql.Marshaler {

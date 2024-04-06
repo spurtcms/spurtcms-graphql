@@ -86,6 +86,8 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	for _, entry := range channelEntries {
 
+		log.Println("newbiee",entry.MemberProfile.MemberId)
+
 		var conv_categories [][]model.Category
 
 		for _, categories := range entry.Categories {
@@ -115,7 +117,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		}
 
-		authorDetails := &model.Author{
+		authorDetails := model.Author{
 			AuthorID:         entry.AuthorDetail.AuthorID,
 			FirstName:        entry.AuthorDetail.FirstName,
 			LastName:         entry.AuthorDetail.LastName,
@@ -204,6 +206,10 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
+		// log.Println("chkkk111111111",entry.MemberProfile)
+
+		// var MemberProfile model.MemberProfile
+
 		MemberProfile := model.MemberProfile{
 			ID:              &entry.MemberProfile.Id,
 			MemberID:        &entry.MemberProfile.MemberId,
@@ -227,6 +233,8 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			Website:         &entry.MemberProfile.Website,
 			ClaimStatus:     &entry.MemberProfile.ClaimStatus,
 		}
+
+		// log.Println("newb22",*MemberProfile.MemberID)
 
 		var claimStatus bool
 
@@ -261,7 +269,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			RelatedArticles:  entry.RelatedArticles,
 			Categories:       conv_categories,
 			AdditionalFields: additionalFields,
-			MemberProfile:    &MemberProfile,
+			MemberProfile:    MemberProfile,
 			AuthorDetails:    authorDetails,
 			FeaturedEntry:    entry.Feature,
 			ViewCount:        entry.ViewCount,
@@ -276,9 +284,19 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			Excerpt:          &entry.Excerpt,
 		}
 
+		log.Println("chkkkfinal",conv_channelEntry.MemberProfile.MemberID)
+
 		conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
 
 	}
+
+	for _,entriee := range conv_channelEntries{
+
+		log.Println("final",*entriee.MemberProfile.MemberID)
+
+	}
+
+	// log.Println("final",conv_channelEntries)
 
 	channelEntryDetails := model.ChannelEntriesDetails{ChannelEntriesList: conv_channelEntries, Count: int(count)}
 
@@ -362,7 +380,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		conv_categories = append(conv_categories, conv_categoryz)
 
 	}
-	authorDetails := &model.Author{
+	authorDetails := model.Author{
 		AuthorID:         channelEntry.AuthorDetail.AuthorID,
 		FirstName:        channelEntry.AuthorDetail.FirstName,
 		LastName:         channelEntry.AuthorDetail.LastName,
@@ -506,7 +524,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
 		AdditionalFields: additionalFields,
-		MemberProfile:    &MemberProfile,
+		MemberProfile:    MemberProfile,
 		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
@@ -715,8 +733,8 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
 		AdditionalFields: additionalFields,
-		MemberProfile:    &MemberProfile,
-		AuthorDetails:    authorDetails,
+		MemberProfile:    MemberProfile,
+		AuthorDetails:    *authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
 		ClaimStatus:      claimStatus,
@@ -744,7 +762,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	mail_data := MailConfig{Email: conv_channelEntry.AuthorDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "OwnDesk - Member Profile Claim Request"}
+	mail_data := MailConfig{Email: conv_channelEntry.AuthorDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "My Claim Request for " + conv_channelEntry.Title}
 
 	html_content := template_buff.String()
 

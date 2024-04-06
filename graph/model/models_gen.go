@@ -83,8 +83,8 @@ type ChannelEntries struct {
 	ViewCount        int               `json:"viewCount"`
 	Categories       [][]Category      `json:"categories"  gorm:"-"`
 	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"  gorm:"-"`
-	AuthorDetails    *Author           `json:"authorDetails"  gorm:"-"`
-	MemberProfile    *MemberProfile     `json:"memberProfile,omitempty" gorm:"-"`
+	AuthorDetails    Author           `json:"authorDetails"  gorm:"-"`
+	MemberProfile    MemberProfile     `json:"memberProfile,omitempty" gorm:"-"`
 	ClaimStatus      bool              `json:"claimStatus" gorm:"-"`
 	Fields           []Field           `json:"fields,omitempty" gorm:"-"`
 	Author           *string           `json:"author,omitempty"`
@@ -178,8 +178,8 @@ type FieldValue struct {
 }
 
 type LoginDetails struct {
-	ClaimEntryDetails *ChannelEntries `json:"claimEntryDetails"`
-	Token             string          `json:"token"`
+	ClaimEntryDetails ChannelEntries `json:"claimEntryDetails"`
+	Token             string         `json:"token"`
 }
 
 type Member struct {

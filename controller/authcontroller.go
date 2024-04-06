@@ -89,7 +89,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	} else {
 
-		return false, nil
+		return false, errors.New("mail sent unsuccess")
 	}
 }
 
@@ -153,7 +153,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (m
 		conv_categories = append(conv_categories, conv_categoryz)
 
 	}
-	authorDetails := &model.Author{
+	authorDetails := model.Author{
 		AuthorID:         channelEntry.AuthorDetail.AuthorID,
 		FirstName:        channelEntry.AuthorDetail.FirstName,
 		LastName:         channelEntry.AuthorDetail.LastName,
@@ -297,7 +297,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (m
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
 		AdditionalFields: additionalFields,
-		MemberProfile:    &MemberProfile,
+		MemberProfile:    MemberProfile,
 		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
@@ -311,7 +311,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (m
 		Excerpt:          &channelEntry.Excerpt,
 	}
 
-	return model.LoginDetails{ClaimEntryDetails: &conv_channelEntry, Token: token}, nil
+	return model.LoginDetails{ClaimEntryDetails: conv_channelEntry, Token: token}, nil
 
 }
 

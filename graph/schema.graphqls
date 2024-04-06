@@ -332,6 +332,7 @@ type Query{
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
 	categoriesList(limit: Int,offset: Int,categoryGroupId: Int,hierarchyLevel: Int, checkEntriesPresence: Int): CategoriesList! @auth
 	ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
+	ecommerceProductDetails(productId: Int!): EcommerceProduct!
 }
 
 type Mutation{
@@ -343,7 +344,6 @@ type Mutation{
 	memberclaimnow(input: ClaimData!,entryId: Int!): Boolean! @auth
 	profileNameVerification(profileName: String!): Boolean! @auth
 	templateMemberLogin(username: String!,password: String!): String! 
-	
 }
 
 input MemberDetails{

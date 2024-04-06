@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"spurtcms-graphql/graph/model"
 )
 
@@ -92,6 +93,11 @@ func (r *queryResolver) CategoriesList(ctx context.Context, limit *int, offset *
 // EcommerceProductList is the resolver for the ecommerceProductList field.
 func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (model.EcommerceProducts, error) {
 	return EcommerceProductList(r.DB, ctx, limit, offset, filter, sort)
+}
+
+// EcommerceProductDetails is the resolver for the ecommerceProductDetails field.
+func (r *queryResolver) EcommerceProductDetails(ctx context.Context, productID int) (model.EcommerceProduct, error) {
+	panic(fmt.Errorf("not implemented: EcommerceProductDetails - ecommerceProductDetails"))
 }
 
 // Mutation returns MutationResolver implementation.
