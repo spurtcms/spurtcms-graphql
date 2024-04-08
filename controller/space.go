@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoriesID *int) (model.SpaceDetails, error) {
+func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoriesID *int) (*model.SpaceDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -33,7 +33,7 @@ func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoriesID
 
 	if err != nil {
 
-		return model.SpaceDetails{}, err
+		return &model.SpaceDetails{}, err
 	}
 
 	var final_spacelist []model.Space
@@ -79,10 +79,10 @@ func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoriesID
 
 	}
 
-	return model.SpaceDetails{Spacelist: final_spacelist, Count: int(count)}, nil
+	return &model.SpaceDetails{Spacelist: final_spacelist, Count: int(count)}, nil
 }
 
-func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, error) {
+func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (*model.Space, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -105,7 +105,7 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, e
 
 	if err != nil {
 
-		return model.Space{}, err
+		return &model.Space{}, err
 	}
 
 	var conv_categories []model.Category
@@ -143,10 +143,10 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, e
 		Categories:       conv_categories,
 	}
 
-	return conv_space, nil
+	return &conv_space, nil
 }
 
-func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) (model.PageAndPageGroups, error) {
+func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) (*model.PageAndPageGroups, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -158,7 +158,7 @@ func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) 
 
 	if err != nil {
 
-		return model.PageAndPageGroups{}, err
+		return &model.PageAndPageGroups{}, err
 	}
 
 	var conv_pages []model.Page
@@ -220,6 +220,6 @@ func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) 
 		conv_pagegroups = append(conv_pagegroups, conv_pagegroup)
 	}
 
-	return model.PageAndPageGroups{Pages: conv_pages, Subpages: conv_subpages, Pagegroups: conv_pagegroups}, nil
+	return &model.PageAndPageGroups{Pages: conv_pages, Subpages: conv_subpages, Pagegroups: conv_pagegroups}, nil
 
 }

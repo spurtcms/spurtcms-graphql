@@ -93,7 +93,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 	}
 }
 
-func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (model.LoginDetails, error) {
+func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails, error) {
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
@@ -103,7 +103,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (m
 
 	if err != nil {
 
-		return model.LoginDetails{}, err
+		return &model.LoginDetails{}, err
 	}
 
 	log.Println("memberdetails", memberDetails)
@@ -113,7 +113,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (m
 	if err := db.Debug().Table("tbl_channel_entries").Select("tbl_channel_entries.*").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Joins("inner join tbl_channel_entry_fields on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").Joins("inner join tbl_members on tbl_members.id = any(string_to_array(tbl_channel_entry_fields.field_value,',')::integer[])").
 		Joins("inner join tbl_member_profiles on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ?", MemberFieldTypeId, memberDetails.Id).First(&channelEntryDetails).Error; err != nil {
 
-		return model.LoginDetails{}, err
+		return &model.LoginDetails{}, err
 	}
 
 	channelAuth := channels.Channel{Authority: GetAuthorization(token, db)}
@@ -122,7 +122,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (m
 
 	if err != nil {
 
-		return model.LoginDetails{}, err
+		return &model.LoginDetails{}, err
 	}
 
 	var conv_categories [][]model.Category
@@ -241,11 +241,11 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (m
 	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
 	MemberProfile := model.MemberProfile{
-		ID:              &channelEntry.MemberProfile.Id,
-		MemberID:        &channelEntry.MemberProfile.MemberId,
-		ProfileName:     &channelEntry.MemberProfile.ProfileName,
-		ProfileSlug:     &channelEntry.MemberProfile.ProfileSlug,
-		ProfilePage:     &channelEntry.MemberProfile.ProfilePage,
+		ID:              channelEntry.MemberProfile.Id,
+		MemberID:        channelEntry.MemberProfile.MemberId,
+		ProfileName:     channelEntry.MemberProfile.ProfileName,
+		ProfileSlug:     channelEntry.MemberProfile.ProfileSlug,
+		ProfilePage:     channelEntry.MemberProfile.ProfilePage,
 		MemberDetails:   channelEntry.MemberProfile.MemberDetails,
 		CompanyName:     &channelEntry.MemberProfile.CompanyName,
 		CompanyLocation: &channelEntry.MemberProfile.CompanyLocation,
@@ -311,7 +311,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (m
 		Excerpt:          &channelEntry.Excerpt,
 	}
 
-	return model.LoginDetails{ClaimEntryDetails: conv_channelEntry, Token: token}, nil
+	return &model.LoginDetails{ClaimEntryDetails: conv_channelEntry, Token: token}, nil
 
 }
 
@@ -323,9 +323,9 @@ func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
 
 	var err error
 
-	if input.ProfileImage != nil {
+	if input.ProfileImage.IsSet(){
 
-		imageName, imagePath, err = StoreImageBase64ToLocal(*input.ProfileImage, ProfileImagePath, "PROFILE")
+		imageName, imagePath, err = StoreImageBase64ToLocal(*input.ProfileImage.Value(), ProfileImagePath, "PROFILE")
 
 		if err != nil {
 
@@ -375,9 +375,9 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	var err error
 
-	if memberdata.ProfileImage != nil {
+	if memberdata.ProfileImage.IsSet() {
 
-		imageName, imagePath, err = StoreImageBase64ToLocal(*memberdata.ProfileImage, ProfileImagePath, "PROFILE")
+		imageName, imagePath, err = StoreImageBase64ToLocal(*memberdata.ProfileImage.Value(), ProfileImagePath, "PROFILE")
 
 		if err != nil {
 

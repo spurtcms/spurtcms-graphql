@@ -5,21 +5,21 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"html/template"
+	"os"
 	"spurtcms-graphql/graph/model"
 	"strconv"
-
-	"log"
-	"os"
 	"time"
 
-	"html/template"
+	"log"
+	// "time"
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
 	"gorm.io/gorm"
 )
 
-func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (model.ChannelDetails, error) {
+func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.ChannelDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -31,7 +31,7 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (model.Cha
 
 	if err != nil {
 
-		return model.ChannelDetails{}, err
+		return &model.ChannelDetails{}, err
 	}
 
 	var conv_channelList []model.Channel
@@ -54,12 +54,12 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (model.Cha
 		conv_channelList = append(conv_channelList, conv_channel)
 	}
 
-	return model.ChannelDetails{Channellist: conv_channelList, Count: int(count)}, nil
+	return &model.ChannelDetails{Channellist: conv_channelList, Count: int(count)}, nil
 
 }
 
 // this function provides the published channel entries list under a channel and channel entry details for a particular channeel entry by using its id
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string) (model.ChannelEntriesDetails, error) {
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string) (*model.ChannelEntriesDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -79,22 +79,22 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	if err != nil {
 
-		return model.ChannelEntriesDetails{}, err
+		return &model.ChannelEntriesDetails{}, err
 	}
 
-	var conv_channelEntries []model.ChannelEntries
+	conv_channelEntries := make([]model.ChannelEntries, len(channelEntries))
 
-	for _, entry := range channelEntries {
+	type data interface{} 
 
-		log.Println("newbiee",entry.MemberProfile.MemberId)
+	for index, entry := range channelEntries {
 
-		var conv_categories [][]model.Category
+		conv_categories := make([][]model.Category, len(entry.Categories))
 
-		for _, categories := range entry.Categories {
+		for cat_index, categories := range entry.Categories {
 
-			var conv_categoryz []model.Category
+			conv_categoryz := make([]model.Category, len(categories))
 
-			for _, category := range categories {
+			for i, category := range categories {
 
 				conv_category := model.Category{
 					ID:           category.Id,
@@ -109,13 +109,14 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 					ParentID:     category.ParentId,
 				}
 
-				conv_categoryz = append(conv_categoryz, conv_category)
+				conv_categoryz[i] = conv_category
 
 			}
 
-			conv_categories = append(conv_categories, conv_categoryz)
-
+			conv_categories[cat_index] = conv_categoryz
 		}
+
+		conv_channelEntries[index].Categories = conv_categories
 
 		authorDetails := model.Author{
 			AuthorID:         entry.AuthorDetail.AuthorID,
@@ -129,9 +130,11 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			CreatedBy:        entry.AuthorDetail.CreatedBy,
 		}
 
-		var conv_sections []model.Section
+		conv_channelEntries[index].AuthorDetails = authorDetails
 
-		for _, section := range entry.Sections {
+		conv_sections := make([]model.Section, len(entry.Sections))
+
+		for section_index, section := range entry.Sections {
 
 			conv_section := model.Section{
 				SectionID:     &section.Id,
@@ -144,13 +147,13 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 				OrderIndex:    section.OrderIndex,
 			}
 
-			conv_sections = append(conv_sections, conv_section)
+			conv_sections[section_index] = conv_section
 
 		}
 
-		var conv_fields []model.Field
+		conv_fields := make([]model.Field, len(entry.Fields))
 
-		for _, field := range entry.Fields {
+		for field_index, field := range entry.Fields {
 
 			conv_field_value := model.FieldValue{
 				ID:         field.FieldValue.FieldId,
@@ -161,9 +164,9 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 				ModifiedBy: &field.FieldValue.ModifiedBy,
 			}
 
-			var conv_fieldOptions []model.FieldOptions
+			conv_fieldOptions := make([]model.FieldOptions, len(field.FieldOptions))
 
-			for _, field_option := range field.FieldOptions {
+			for option_index, field_option := range field.FieldOptions {
 
 				conv_fieldOption := model.FieldOptions{
 					ID:          field_option.Id,
@@ -175,7 +178,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 					ModifiedBy:  &field_option.ModifiedBy,
 				}
 
-				conv_fieldOptions = append(conv_fieldOptions, conv_fieldOption)
+				conv_fieldOptions[option_index] = conv_fieldOption
 			}
 
 			conv_field := model.Field{
@@ -200,22 +203,22 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 				FieldOptions:     conv_fieldOptions,
 			}
 
-			conv_fields = append(conv_fields, conv_field)
+			conv_fields[field_index] = conv_field
 
 		}
 
-		additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
+		conv_channelEntries[index].Fields = conv_fields
 
-		// log.Println("chkkk111111111",entry.MemberProfile)
+		additionalFields := model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
-		// var MemberProfile model.MemberProfile
+		conv_channelEntries[index].AdditionalFields = &additionalFields
 
 		MemberProfile := model.MemberProfile{
-			ID:              &entry.MemberProfile.Id,
-			MemberID:        &entry.MemberProfile.MemberId,
-			ProfileName:     &entry.MemberProfile.ProfileName,
-			ProfileSlug:     &entry.MemberProfile.ProfileSlug,
-			ProfilePage:     &entry.MemberProfile.ProfilePage,
+			ID:              entry.MemberProfile.Id,
+			MemberID:        entry.MemberProfile.MemberId,
+			ProfileName:     entry.MemberProfile.ProfileName,
+			ProfileSlug:     entry.MemberProfile.ProfileSlug,
+			ProfilePage:     entry.MemberProfile.ProfilePage,
 			MemberDetails:   entry.MemberProfile.MemberDetails,
 			CompanyName:     &entry.MemberProfile.CompanyName,
 			CompanyLocation: &entry.MemberProfile.CompanyLocation,
@@ -234,77 +237,91 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			ClaimStatus:     &entry.MemberProfile.ClaimStatus,
 		}
 
-		// log.Println("newb22",*MemberProfile.MemberID)
+		conv_channelEntries[index].MemberProfile = MemberProfile
 
 		var claimStatus bool
 
-		if *MemberProfile.ClaimStatus == 1 && memberid == *MemberProfile.MemberID {
+		if entry.MemberProfile.ClaimStatus == 1 && memberid == entry.MemberProfile.MemberId {
 
 			claimStatus = true
-	
+
 		} else {
-	
+
 			claimStatus = false
 		}
 
-		conv_channelEntry := model.ChannelEntries{
-			ID:               entry.Id,
-			Title:            entry.Title,
-			Slug:             entry.Slug,
-			Description:      entry.Description,
-			UserID:           entry.UserId,
-			ChannelID:        entry.ChannelId,
-			Status:           entry.Status,
-			IsActive:         entry.IsActive,
-			CreatedOn:        entry.CreatedOn,
-			CreatedBy:        entry.CreatedBy,
-			ModifiedBy:       &entry.ModifiedBy,
-			ModifiedOn:       &entry.ModifiedOn,
-			CoverImage:       entry.CoverImage,
-			ThumbnailImage:   entry.ThumbnailImage,
-			MetaTitle:        entry.MetaTitle,
-			MetaDescription:  entry.MetaDescription,
-			Keyword:          entry.Keyword,
-			CategoriesID:     entry.CategoriesId,
-			RelatedArticles:  entry.RelatedArticles,
-			Categories:       conv_categories,
-			AdditionalFields: additionalFields,
-			MemberProfile:    MemberProfile,
-			AuthorDetails:    authorDetails,
-			FeaturedEntry:    entry.Feature,
-			ViewCount:        entry.ViewCount,
-			ClaimStatus:      claimStatus,
-			Fields:           conv_fields,
-			Author:           &entry.Author,
-			SortOrder:        &entry.SortOrder,
-			CreateDate:       &entry.CreateDate,
-			PublishedTime:    &entry.PublishedTime,
-			ReadingTime:      &entry.ReadingTime,
-			Tags:             &entry.Tags,
-			Excerpt:          &entry.Excerpt,
-		}
+		conv_channelEntries[index].ClaimStatus = claimStatus
 
-		log.Println("chkkkfinal",conv_channelEntry.MemberProfile.MemberID)
+		conv_channelEntries[index].Author = &entry.Author
 
-		conv_channelEntries = append(conv_channelEntries, conv_channelEntry)
+		conv_channelEntries[index].CategoriesID = entry.CategoriesId
+
+		conv_channelEntries[index].ChannelID = entry.ChannelId
+
+		conv_channelEntries[index].CoverImage = entry.CoverImage
+
+		conv_channelEntries[index].CreateDate = &entry.CreateDate
+
+		conv_channelEntries[index].CreatedBy = entry.CreatedBy
+
+		conv_channelEntries[index].CreatedOn = entry.CreatedOn
+
+		conv_channelEntries[index].Description = entry.Description
+
+		conv_channelEntries[index].Excerpt = &entry.Excerpt
+
+		conv_channelEntries[index].FeaturedEntry = entry.Feature
+
+		conv_channelEntries[index].ID = entry.Id
+
+		conv_channelEntries[index].IsActive = entry.IsActive
+
+		conv_channelEntries[index].Keyword = entry.Keyword
+
+		conv_channelEntries[index].MetaDescription = entry.MetaDescription
+
+		conv_channelEntries[index].MetaTitle = entry.MetaTitle
+
+		conv_channelEntries[index].ModifiedBy = &entry.ModifiedBy
+
+		conv_channelEntries[index].ModifiedOn = &entry.ModifiedOn
+
+		conv_channelEntries[index].PublishedTime = &entry.PublishedTime
+
+		conv_channelEntries[index].ReadingTime = &entry.ReadingTime
+
+		conv_channelEntries[index].RelatedArticles = entry.RelatedArticles
+
+		conv_channelEntries[index].Slug = entry.Slug
+
+		conv_channelEntries[index].SortOrder = &entry.SortOrder
+
+		conv_channelEntries[index].Status = entry.Status
+
+		conv_channelEntries[index].Tags = &entry.Tags
+
+		conv_channelEntries[index].ThumbnailImage = entry.ThumbnailImage
+
+		conv_channelEntries[index].Title = entry.Title
+
+		conv_channelEntries[index].UserID = entry.UserId
+
+		conv_channelEntries[index].ViewCount = entry.ViewCount
 
 	}
 
-	for _,entriee := range conv_channelEntries{
+	for _,val := range conv_channelEntries{
 
-		log.Println("final",*entriee.MemberProfile.MemberID)
-
+		log.Println("final",val.ModifiedOn)
 	}
-
-	// log.Println("final",conv_channelEntries)
 
 	channelEntryDetails := model.ChannelEntriesDetails{ChannelEntriesList: conv_channelEntries, Count: int(count)}
 
-	return channelEntryDetails, nil
+	return &channelEntryDetails, nil
 
 }
 
-func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (model.Channel, error) {
+func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (*model.Channel, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -329,13 +346,13 @@ func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (model.Chann
 
 	if err != nil {
 
-		return model.Channel{}, err
+		return &model.Channel{}, err
 	}
 
-	return conv_channel, nil
+	return &conv_channel, nil
 }
 
-func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channelId, categoryId *int, slug *string) (model.ChannelEntries, error) {
+func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channelId, categoryId *int, slug *string) (*model.ChannelEntries, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -349,7 +366,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 	if err != nil {
 
-		return model.ChannelEntries{}, err
+		return &model.ChannelEntries{}, err
 	}
 
 	var conv_categories [][]model.Category
@@ -465,14 +482,14 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		conv_fields = append(conv_fields, conv_field)
 	}
 
-	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
+	additionalFields := model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
 	MemberProfile := model.MemberProfile{
-		ID:              &channelEntry.MemberProfile.Id,
-		MemberID:        &channelEntry.MemberProfile.MemberId,
-		ProfileName:     &channelEntry.MemberProfile.ProfileName,
-		ProfileSlug:     &channelEntry.MemberProfile.ProfileSlug,
-		ProfilePage:     &channelEntry.MemberProfile.ProfilePage,
+		ID:              channelEntry.MemberProfile.Id,
+		MemberID:        channelEntry.MemberProfile.MemberId,
+		ProfileName:     channelEntry.MemberProfile.ProfileName,
+		ProfileSlug:     channelEntry.MemberProfile.ProfileSlug,
+		ProfilePage:     channelEntry.MemberProfile.ProfilePage,
 		MemberDetails:   channelEntry.MemberProfile.MemberDetails,
 		CompanyName:     &channelEntry.MemberProfile.CompanyName,
 		CompanyLocation: &channelEntry.MemberProfile.CompanyLocation,
@@ -493,7 +510,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 	var claimStatus bool
 
-	if *MemberProfile.ClaimStatus == 1 && memberid == *MemberProfile.MemberID {
+	if *MemberProfile.ClaimStatus==1 && memberid == MemberProfile.MemberID {
 
 		claimStatus = true
 
@@ -523,7 +540,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		CategoriesID:     channelEntry.CategoriesId,
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
-		AdditionalFields: additionalFields,
+		AdditionalFields: &additionalFields,
 		MemberProfile:    MemberProfile,
 		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
@@ -538,7 +555,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		Excerpt:          &channelEntry.Excerpt,
 	}
 
-	return conv_channelEntry, nil
+	return &conv_channelEntry, nil
 
 }
 
@@ -589,7 +606,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		conv_categories = append(conv_categories, conv_categoryz)
 
 	}
-	authorDetails := &model.Author{
+	authorDetails := model.Author{
 		AuthorID:         channelEntry.AuthorDetail.AuthorID,
 		FirstName:        channelEntry.AuthorDetail.FirstName,
 		LastName:         channelEntry.AuthorDetail.LastName,
@@ -674,14 +691,14 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		conv_fields = append(conv_fields, conv_field)
 	}
 
-	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
+	additionalFields := model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
 	MemberProfile := model.MemberProfile{
-		ID:              &channelEntry.MemberProfile.Id,
-		MemberID:        &channelEntry.MemberProfile.MemberId,
-		ProfileName:     &channelEntry.MemberProfile.ProfileName,
-		ProfileSlug:     &channelEntry.MemberProfile.ProfileSlug,
-		ProfilePage:     &channelEntry.MemberProfile.ProfilePage,
+		ID:              channelEntry.MemberProfile.Id,
+		MemberID:        channelEntry.MemberProfile.MemberId,
+		ProfileName:     channelEntry.MemberProfile.ProfileName,
+		ProfileSlug:     channelEntry.MemberProfile.ProfileSlug,
+		ProfilePage:     channelEntry.MemberProfile.ProfilePage,
 		MemberDetails:   channelEntry.MemberProfile.MemberDetails,
 		CompanyName:     &channelEntry.MemberProfile.CompanyName,
 		CompanyLocation: &channelEntry.MemberProfile.CompanyLocation,
@@ -702,7 +719,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	var claimStatus bool
 
-	if *MemberProfile.ClaimStatus == 1 && memberid == *MemberProfile.MemberID {
+	if *MemberProfile.ClaimStatus == 1 && memberid == MemberProfile.MemberID {
 
 		claimStatus = true
 
@@ -732,9 +749,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		CategoriesID:     channelEntry.CategoriesId,
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
-		AdditionalFields: additionalFields,
+		AdditionalFields: &additionalFields,
 		MemberProfile:    MemberProfile,
-		AuthorDetails:    *authorDetails,
+		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
 		ClaimStatus:      claimStatus,
@@ -747,7 +764,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		Excerpt:          &channelEntry.Excerpt,
 	}
 
-	data := map[string]interface{}{"claimData": profileData, "authorDetails": conv_channelEntry.AuthorDetails, "entry": conv_channelEntry, "additionalData": AdditionalData, "link": PathUrl + "member/updatemember?id=" + strconv.Itoa(*conv_channelEntry.MemberProfile.MemberID)}
+	data := map[string]interface{}{"claimData": profileData, "authorDetails": conv_channelEntry.AuthorDetails, "entry": conv_channelEntry, "additionalData": AdditionalData, "link": PathUrl + "member/updatemember?id=" + strconv.Itoa(conv_channelEntry.MemberProfile.MemberID)}
 
 	log.Println("maildata", data["link"], conv_channelEntry.ClaimStatus, data["additionalData"])
 
@@ -793,9 +810,9 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	var memberProfile model.MemberProfile
 
-	if err := db.Debug().Table("tbl_channel_entry_fields").Select("tbl_member_profiles.*").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_members on tbl_members.id = tbl_channel_entry_fields.field_value::integer").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = tbl_members.id").Where("tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_fields.field_type_id = ? and tbl_channel_entry_fields.channel_entry_id = ?",MemberFieldTypeId,entryId).Find(&memberProfile).Error;err!=nil{
+	if err := db.Debug().Table("tbl_channel_entry_fields").Select("tbl_member_profiles.*").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_members on tbl_members.id = tbl_channel_entry_fields.field_value::integer").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = tbl_members.id").Where("tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_fields.field_type_id = ? and tbl_channel_entry_fields.channel_entry_id = ?", MemberFieldTypeId, entryId).Find(&memberProfile).Error; err != nil {
 
-		return false,err
+		return false, err
 	}
 
 	var jsonData map[string]interface{}
@@ -811,18 +828,18 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	memberProfileDetails := model.MemberProfile{
 		MemberDetails: profiledata.MemberProfile,
-		Linkedin:      profiledata.Linkedin,
-		Twitter:       profiledata.Twitter,
-		Website:       profiledata.Website,
+		Linkedin:      profiledata.Linkedin.Value(),
+		Twitter:       profiledata.Twitter.Value(),
+		Website:       profiledata.Website.Value(),
 		ModifiedOn:    &currentTime,
 	}
 
-	if memberid != *memberProfile.MemberID{
+	if memberid != memberProfile.MemberID {
 
-		return false,errors.New("authorized member id mismatched in member profile")
+		return false, errors.New("authorized member id mismatched in member profile")
 	}
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id = ?",memberProfile.MemberID).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn}).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id = ?", memberProfile.MemberID).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn}).Error; err != nil {
 
 		return false, err
 	}

@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (model.EcommerceProducts, error) {
+func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {
 
 	var ecom_products []model.EcommerceProduct
 
@@ -22,33 +22,33 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 
 	if filter != nil {
 
-		if filter.CategoryName != nil {
+		if filter.CategoryName.IsSet() {
 
-			listQuery = listQuery.Where("tbl_categories.category_name = ?", *filter.CategoryName)
+			listQuery = listQuery.Where("tbl_categories.category_name = ?", filter.CategoryName.Value())
 
-		} else if filter.CategoryID != nil {
+		} else if filter.CategoryID.IsSet() {
 
-			listQuery = listQuery.Where("tbl_categories.id = ?", *filter.CategoryID)
-
-		}
-
-		if filter.ReleaseDate != nil {
-
-			listQuery = listQuery.Where("tbl_ecom_products.created_on >= ?", *filter.ReleaseDate)
+			listQuery = listQuery.Where("tbl_categories.id = ?", filter.CategoryID.Value())
 
 		}
 
-		if filter.StartingPrice != nil && filter.EndingPrice == nil{
+		if filter.ReleaseDate.IsSet() {
 
-			listQuery = listQuery.Where("tbl_ecom_products.product_price >= ?", *filter.StartingPrice)
+			listQuery = listQuery.Where("tbl_ecom_products.created_on >= ?", filter.ReleaseDate.Value())
 
-		}else if filter.StartingPrice == nil && filter.EndingPrice != nil{
+		}
 
-			listQuery = listQuery.Where("tbl_ecom_products.product_price <= ?", *filter.StartingPrice)
+		if filter.StartingPrice.IsSet() && filter.EndingPrice.IsSet(){
 
-		}else if filter.StartingPrice != nil && filter.EndingPrice != nil {
+			listQuery = listQuery.Where("tbl_ecom_products.product_price >= ?", filter.StartingPrice.Value())
 
-			listQuery = listQuery.Where("tbl_ecom_products.product_price between (?) and (?)", *filter.StartingPrice, *filter.EndingPrice)
+		}else if filter.StartingPrice.IsSet() && filter.EndingPrice.IsSet(){
+
+			listQuery = listQuery.Where("tbl_ecom_products.product_price <= ?", filter.StartingPrice.Value())
+
+		}else if filter.StartingPrice.IsSet() && filter.EndingPrice.IsSet() {
+
+			listQuery = listQuery.Where("tbl_ecom_products.product_price between (?) and (?)", filter.StartingPrice, filter.EndingPrice)
 		}
 	}
 
@@ -56,9 +56,9 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 
 	if sort != nil {
 
-		if sort.Date != nil {
+		if sort.Date.IsSet() {
 			
-			if *sort.Date == 1{
+			if *sort.Date.Value()== 1{
 
 				orderBy = "tbl_ecom_products.id desc"
 
@@ -67,9 +67,9 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 				orderBy = ""
 			}
 
-		} else if sort.Price != nil {
+		} else if sort.Price.IsSet() {
 
-			if *sort.Price == 1{
+			if *sort.Price.Value() == 1{
 
 				orderBy = "tbl_ecom_products.product_price desc"
 
@@ -86,15 +86,15 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 
 	if err := countQuery.Error; err != nil {
 
-		return model.EcommerceProducts{}, err
+		return &model.EcommerceProducts{}, err
 	}
 
 	listQuery = listQuery.Order(orderBy).Limit(limit).Offset(offset).Find(&ecom_products)
 
 	if err := listQuery.Error; err != nil {
 
-		return model.EcommerceProducts{}, err
+		return &model.EcommerceProducts{}, err
 	}
 
-	return model.EcommerceProducts{ProductList: ecom_products, Count: int(count)}, nil
+	return &model.EcommerceProducts{ProductList: ecom_products, Count: int(count)}, nil
 }

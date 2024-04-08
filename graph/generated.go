@@ -49,342 +49,11 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	AdditionalFields struct {
-		Fields   func(childComplexity int) int
-		Sections func(childComplexity int) int
-	}
-
-	Author struct {
-		AuthorID         func(childComplexity int) int
-		CreatedBy        func(childComplexity int) int
-		CreatedOn        func(childComplexity int) int
-		Email            func(childComplexity int) int
-		FirstName        func(childComplexity int) int
-		IsActive         func(childComplexity int) int
-		LastName         func(childComplexity int) int
-		MobileNo         func(childComplexity int) int
-		ProfileImagePath func(childComplexity int) int
-	}
-
-	CategoriesList struct {
-		Categories func(childComplexity int) int
-		Count      func(childComplexity int) int
-	}
-
-	Category struct {
-		CategoryName func(childComplexity int) int
-		CategorySlug func(childComplexity int) int
-		CreatedBy    func(childComplexity int) int
-		CreatedOn    func(childComplexity int) int
-		Description  func(childComplexity int) int
-		ID           func(childComplexity int) int
-		ImagePath    func(childComplexity int) int
-		ModifiedBy   func(childComplexity int) int
-		ModifiedOn   func(childComplexity int) int
-		ParentID     func(childComplexity int) int
-	}
-
-	Channel struct {
-		ChannelDescription func(childComplexity int) int
-		ChannelName        func(childComplexity int) int
-		CreatedBy          func(childComplexity int) int
-		CreatedOn          func(childComplexity int) int
-		FieldGroupID       func(childComplexity int) int
-		ID                 func(childComplexity int) int
-		IsActive           func(childComplexity int) int
-		ModifiedBy         func(childComplexity int) int
-		ModifiedOn         func(childComplexity int) int
-		SlugName           func(childComplexity int) int
-	}
-
-	ChannelDetails struct {
-		Channellist func(childComplexity int) int
-		Count       func(childComplexity int) int
-	}
-
-	ChannelEntries struct {
-		AdditionalFields func(childComplexity int) int
-		Author           func(childComplexity int) int
-		AuthorDetails    func(childComplexity int) int
-		Categories       func(childComplexity int) int
-		CategoriesID     func(childComplexity int) int
-		ChannelID        func(childComplexity int) int
-		ClaimStatus      func(childComplexity int) int
-		CoverImage       func(childComplexity int) int
-		CreateDate       func(childComplexity int) int
-		CreatedBy        func(childComplexity int) int
-		CreatedOn        func(childComplexity int) int
-		Description      func(childComplexity int) int
-		Excerpt          func(childComplexity int) int
-		FeaturedEntry    func(childComplexity int) int
-		Fields           func(childComplexity int) int
-		ID               func(childComplexity int) int
-		IsActive         func(childComplexity int) int
-		Keyword          func(childComplexity int) int
-		MemberProfile    func(childComplexity int) int
-		MetaDescription  func(childComplexity int) int
-		MetaTitle        func(childComplexity int) int
-		ModifiedBy       func(childComplexity int) int
-		ModifiedOn       func(childComplexity int) int
-		PublishedTime    func(childComplexity int) int
-		ReadingTime      func(childComplexity int) int
-		RelatedArticles  func(childComplexity int) int
-		Slug             func(childComplexity int) int
-		SortOrder        func(childComplexity int) int
-		Status           func(childComplexity int) int
-		Tags             func(childComplexity int) int
-		ThumbnailImage   func(childComplexity int) int
-		Title            func(childComplexity int) int
-		UserID           func(childComplexity int) int
-		ViewCount        func(childComplexity int) int
-	}
-
-	ChannelEntriesDetails struct {
-		ChannelEntriesList func(childComplexity int) int
-		Count              func(childComplexity int) int
-	}
-
-	EcommerceProduct struct {
-		CategoriesID       func(childComplexity int) int
-		CreatedBy          func(childComplexity int) int
-		CreatedOn          func(childComplexity int) int
-		DefaultPrice       func(childComplexity int) int
-		DeletedBy          func(childComplexity int) int
-		DeletedOn          func(childComplexity int) int
-		DiscountPrice      func(childComplexity int) int
-		ID                 func(childComplexity int) int
-		IsActive           func(childComplexity int) int
-		IsDeleted          func(childComplexity int) int
-		ModifiedBy         func(childComplexity int) int
-		ModifiedOn         func(childComplexity int) int
-		ProductDescription func(childComplexity int) int
-		ProductImagePath   func(childComplexity int) int
-		ProductName        func(childComplexity int) int
-		ProductVideoPath   func(childComplexity int) int
-		Sku                func(childComplexity int) int
-		SpecialPrice       func(childComplexity int) int
-		Tax                func(childComplexity int) int
-		Totalcost          func(childComplexity int) int
-	}
-
-	EcommerceProducts struct {
-		Count       func(childComplexity int) int
-		ProductList func(childComplexity int) int
-	}
-
-	Field struct {
-		CharacterAllowed func(childComplexity int) int
-		CreatedBy        func(childComplexity int) int
-		CreatedOn        func(childComplexity int) int
-		DatetimeFormat   func(childComplexity int) int
-		FieldDesc        func(childComplexity int) int
-		FieldID          func(childComplexity int) int
-		FieldName        func(childComplexity int) int
-		FieldOptions     func(childComplexity int) int
-		FieldTypeID      func(childComplexity int) int
-		FieldTypeName    func(childComplexity int) int
-		FieldValue       func(childComplexity int) int
-		ImagePath        func(childComplexity int) int
-		MandatoryField   func(childComplexity int) int
-		ModifiedBy       func(childComplexity int) int
-		ModifiedOn       func(childComplexity int) int
-		OptionExist      func(childComplexity int) int
-		OrderIndex       func(childComplexity int) int
-		SectionParentID  func(childComplexity int) int
-		TimeFormat       func(childComplexity int) int
-	}
-
-	FieldOptions struct {
-		CreatedBy   func(childComplexity int) int
-		CreatedOn   func(childComplexity int) int
-		ID          func(childComplexity int) int
-		ModifiedBy  func(childComplexity int) int
-		ModifiedOn  func(childComplexity int) int
-		OptionName  func(childComplexity int) int
-		OptionValue func(childComplexity int) int
-	}
-
-	FieldValue struct {
-		CreatedBy  func(childComplexity int) int
-		CreatedOn  func(childComplexity int) int
-		FieldValue func(childComplexity int) int
-		ID         func(childComplexity int) int
-		ModifiedBy func(childComplexity int) int
-		ModifiedOn func(childComplexity int) int
-	}
-
-	LoginDetails struct {
-		ClaimEntryDetails func(childComplexity int) int
-		Token             func(childComplexity int) int
-	}
-
-	Member struct {
-		CreatedBy        func(childComplexity int) int
-		CreatedOn        func(childComplexity int) int
-		Email            func(childComplexity int) int
-		FirstName        func(childComplexity int) int
-		Group            func(childComplexity int) int
-		ID               func(childComplexity int) int
-		IsActive         func(childComplexity int) int
-		LastName         func(childComplexity int) int
-		MemberGroupID    func(childComplexity int) int
-		MobileNo         func(childComplexity int) int
-		ModifiedBy       func(childComplexity int) int
-		ModifiedOn       func(childComplexity int) int
-		ProfileImage     func(childComplexity int) int
-		ProfileImagePath func(childComplexity int) int
-	}
-
-	MemberGroup struct {
-		CreatedBy   func(childComplexity int) int
-		CreatedOn   func(childComplexity int) int
-		Description func(childComplexity int) int
-		ID          func(childComplexity int) int
-		IsActive    func(childComplexity int) int
-		ModifiedBy  func(childComplexity int) int
-		ModifiedOn  func(childComplexity int) int
-		Name        func(childComplexity int) int
-		Slug        func(childComplexity int) int
-	}
-
-	MemberProfile struct {
-		About           func(childComplexity int) int
-		ClaimStatus     func(childComplexity int) int
-		CompanyLocation func(childComplexity int) int
-		CompanyLogo     func(childComplexity int) int
-		CompanyName     func(childComplexity int) int
-		CreatedBy       func(childComplexity int) int
-		CreatedOn       func(childComplexity int) int
-		ID              func(childComplexity int) int
-		Linkedin        func(childComplexity int) int
-		MemberDetails   func(childComplexity int) int
-		MemberID        func(childComplexity int) int
-		ModifiedBy      func(childComplexity int) int
-		ModifiedOn      func(childComplexity int) int
-		ProfileName     func(childComplexity int) int
-		ProfilePage     func(childComplexity int) int
-		ProfileSlug     func(childComplexity int) int
-		SeoDescription  func(childComplexity int) int
-		SeoKeyword      func(childComplexity int) int
-		SeoTitle        func(childComplexity int) int
-		Twitter         func(childComplexity int) int
-		Website         func(childComplexity int) int
-	}
-
-	Mutation struct {
-		MemberLogin             func(childComplexity int, email string) int
-		MemberProfileUpdate     func(childComplexity int, profiledata model.ProfileData, entryID int) int
-		MemberRegister          func(childComplexity int, input model.MemberDetails) int
-		MemberUpdate            func(childComplexity int, memberdata model.MemberDetails) int
-		Memberclaimnow          func(childComplexity int, input model.ClaimData, entryID int) int
-		ProfileNameVerification func(childComplexity int, profileName string) int
-		TemplateMemberLogin     func(childComplexity int, username string, password string) int
-		VerifyMemberOtp         func(childComplexity int, email string, otp int) int
-	}
-
-	Page struct {
-		Content     func(childComplexity int) int
-		CreatedBy   func(childComplexity int) int
-		CreatedOn   func(childComplexity int) int
-		ID          func(childComplexity int) int
-		ModifiedBy  func(childComplexity int) int
-		ModifiedOn  func(childComplexity int) int
-		OrderIndex  func(childComplexity int) int
-		PageName    func(childComplexity int) int
-		PagegroupID func(childComplexity int) int
-		ParentID    func(childComplexity int) int
-		Status      func(childComplexity int) int
-	}
-
-	PageAndPageGroups struct {
-		Pagegroups func(childComplexity int) int
-		Pages      func(childComplexity int) int
-		Subpages   func(childComplexity int) int
-	}
-
-	PageGroup struct {
-		CreatedBy     func(childComplexity int) int
-		CreatedOn     func(childComplexity int) int
-		ID            func(childComplexity int) int
-		ModifiedBy    func(childComplexity int) int
-		ModifiedOn    func(childComplexity int) int
-		OrderIndex    func(childComplexity int) int
-		PagegroupName func(childComplexity int) int
-	}
-
-	ProductPricing struct {
-		EndDate   func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Price     func(childComplexity int) int
-		PriceID   func(childComplexity int) int
-		Priority  func(childComplexity int) int
-		Sku       func(childComplexity int) int
-		StartDtae func(childComplexity int) int
-		Type      func(childComplexity int) int
-	}
-
-	Query struct {
-		CategoriesList               func(childComplexity int, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) int
-		ChannelDetail                func(childComplexity int, channelID int) int
-		ChannelEntriesList           func(childComplexity int, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) int
-		ChannelEntryDetail           func(childComplexity int, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) int
-		ChannelList                  func(childComplexity int, limit int, offset int) int
-		EcommerceProductDetails      func(childComplexity int, productID int) int
-		EcommerceProductList         func(childComplexity int, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) int
-		PagesAndPageGroupsUnderSpace func(childComplexity int, spaceID int) int
-		SpaceDetails                 func(childComplexity int, spaceID int) int
-		SpaceList                    func(childComplexity int, limit int, offset int, categoriesID *int) int
-	}
-
-	Section struct {
-		CreatedBy     func(childComplexity int) int
-		CreatedOn     func(childComplexity int) int
-		ModifiedBy    func(childComplexity int) int
-		ModifiedOn    func(childComplexity int) int
-		OrderIndex    func(childComplexity int) int
-		SectionID     func(childComplexity int) int
-		SectionName   func(childComplexity int) int
-		SectionTypeID func(childComplexity int) int
-	}
-
-	Space struct {
-		Categories       func(childComplexity int) int
-		CategoryID       func(childComplexity int) int
-		CreatedBy        func(childComplexity int) int
-		CreatedOn        func(childComplexity int) int
-		ID               func(childComplexity int) int
-		ImagePath        func(childComplexity int) int
-		LanguageID       func(childComplexity int) int
-		ModifiedBy       func(childComplexity int) int
-		ModifiedOn       func(childComplexity int) int
-		SpaceDescription func(childComplexity int) int
-		SpaceName        func(childComplexity int) int
-		SpaceSlug        func(childComplexity int) int
-	}
-
-	SpaceDetails struct {
-		Count     func(childComplexity int) int
-		Spacelist func(childComplexity int) int
-	}
-
-	SubPage struct {
-		Conent      func(childComplexity int) int
-		CreatedBy   func(childComplexity int) int
-		CreatedOn   func(childComplexity int) int
-		ID          func(childComplexity int) int
-		ModifiedBy  func(childComplexity int) int
-		ModifiedOn  func(childComplexity int) int
-		OrderIndex  func(childComplexity int) int
-		PageGroupID func(childComplexity int) int
-		ParentID    func(childComplexity int) int
-		Status      func(childComplexity int) int
-		SubpageName func(childComplexity int) int
-	}
 }
 
 type MutationResolver interface {
 	MemberLogin(ctx context.Context, email string) (bool, error)
-	VerifyMemberOtp(ctx context.Context, email string, otp int) (model.LoginDetails, error)
+	VerifyMemberOtp(ctx context.Context, email string, otp int) (*model.LoginDetails, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
 	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int) (bool, error)
@@ -393,16 +62,16 @@ type MutationResolver interface {
 	TemplateMemberLogin(ctx context.Context, username string, password string) (string, error)
 }
 type QueryResolver interface {
-	ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error)
-	ChannelDetail(ctx context.Context, channelID int) (model.Channel, error)
-	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (model.ChannelEntriesDetails, error)
-	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (model.ChannelEntries, error)
-	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (model.SpaceDetails, error)
-	SpaceDetails(ctx context.Context, spaceID int) (model.Space, error)
-	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (model.PageAndPageGroups, error)
-	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (model.CategoriesList, error)
-	EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (model.EcommerceProducts, error)
-	EcommerceProductDetails(ctx context.Context, productID int) (model.EcommerceProduct, error)
+	ChannelList(ctx context.Context, limit int, offset int) (*model.ChannelDetails, error)
+	ChannelDetail(ctx context.Context, channelID int) (*model.Channel, error)
+	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (*model.ChannelEntriesDetails, error)
+	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (*model.ChannelEntries, error)
+	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error)
+	SpaceDetails(ctx context.Context, spaceID int) (*model.Space, error)
+	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (*model.PageAndPageGroups, error)
+	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (*model.CategoriesList, error)
+	EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error)
+	EcommerceProductDetails(ctx context.Context, productID int) (*model.EcommerceProduct, error)
 }
 
 type executableSchema struct {
@@ -422,1856 +91,7 @@ func (e *executableSchema) Schema() *ast.Schema {
 func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]interface{}) (int, bool) {
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
-	switch typeName + "." + field {
 
-	case "AdditionalFields.fields":
-		if e.complexity.AdditionalFields.Fields == nil {
-			break
-		}
-
-		return e.complexity.AdditionalFields.Fields(childComplexity), true
-
-	case "AdditionalFields.sections":
-		if e.complexity.AdditionalFields.Sections == nil {
-			break
-		}
-
-		return e.complexity.AdditionalFields.Sections(childComplexity), true
-
-	case "Author.AuthorId":
-		if e.complexity.Author.AuthorID == nil {
-			break
-		}
-
-		return e.complexity.Author.AuthorID(childComplexity), true
-
-	case "Author.CreatedBy":
-		if e.complexity.Author.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Author.CreatedBy(childComplexity), true
-
-	case "Author.CreatedOn":
-		if e.complexity.Author.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.Author.CreatedOn(childComplexity), true
-
-	case "Author.Email":
-		if e.complexity.Author.Email == nil {
-			break
-		}
-
-		return e.complexity.Author.Email(childComplexity), true
-
-	case "Author.FirstName":
-		if e.complexity.Author.FirstName == nil {
-			break
-		}
-
-		return e.complexity.Author.FirstName(childComplexity), true
-
-	case "Author.IsActive":
-		if e.complexity.Author.IsActive == nil {
-			break
-		}
-
-		return e.complexity.Author.IsActive(childComplexity), true
-
-	case "Author.LastName":
-		if e.complexity.Author.LastName == nil {
-			break
-		}
-
-		return e.complexity.Author.LastName(childComplexity), true
-
-	case "Author.MobileNo":
-		if e.complexity.Author.MobileNo == nil {
-			break
-		}
-
-		return e.complexity.Author.MobileNo(childComplexity), true
-
-	case "Author.ProfileImagePath":
-		if e.complexity.Author.ProfileImagePath == nil {
-			break
-		}
-
-		return e.complexity.Author.ProfileImagePath(childComplexity), true
-
-	case "CategoriesList.categories":
-		if e.complexity.CategoriesList.Categories == nil {
-			break
-		}
-
-		return e.complexity.CategoriesList.Categories(childComplexity), true
-
-	case "CategoriesList.count":
-		if e.complexity.CategoriesList.Count == nil {
-			break
-		}
-
-		return e.complexity.CategoriesList.Count(childComplexity), true
-
-	case "Category.categoryName":
-		if e.complexity.Category.CategoryName == nil {
-			break
-		}
-
-		return e.complexity.Category.CategoryName(childComplexity), true
-
-	case "Category.categorySlug":
-		if e.complexity.Category.CategorySlug == nil {
-			break
-		}
-
-		return e.complexity.Category.CategorySlug(childComplexity), true
-
-	case "Category.createdBy":
-		if e.complexity.Category.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Category.CreatedBy(childComplexity), true
-
-	case "Category.createdOn":
-		if e.complexity.Category.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.Category.CreatedOn(childComplexity), true
-
-	case "Category.description":
-		if e.complexity.Category.Description == nil {
-			break
-		}
-
-		return e.complexity.Category.Description(childComplexity), true
-
-	case "Category.id":
-		if e.complexity.Category.ID == nil {
-			break
-		}
-
-		return e.complexity.Category.ID(childComplexity), true
-
-	case "Category.imagePath":
-		if e.complexity.Category.ImagePath == nil {
-			break
-		}
-
-		return e.complexity.Category.ImagePath(childComplexity), true
-
-	case "Category.modifiedBy":
-		if e.complexity.Category.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.Category.ModifiedBy(childComplexity), true
-
-	case "Category.modifiedOn":
-		if e.complexity.Category.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.Category.ModifiedOn(childComplexity), true
-
-	case "Category.parentId":
-		if e.complexity.Category.ParentID == nil {
-			break
-		}
-
-		return e.complexity.Category.ParentID(childComplexity), true
-
-	case "Channel.channelDescription":
-		if e.complexity.Channel.ChannelDescription == nil {
-			break
-		}
-
-		return e.complexity.Channel.ChannelDescription(childComplexity), true
-
-	case "Channel.channelName":
-		if e.complexity.Channel.ChannelName == nil {
-			break
-		}
-
-		return e.complexity.Channel.ChannelName(childComplexity), true
-
-	case "Channel.createdBy":
-		if e.complexity.Channel.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Channel.CreatedBy(childComplexity), true
-
-	case "Channel.createdOn":
-		if e.complexity.Channel.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.Channel.CreatedOn(childComplexity), true
-
-	case "Channel.fieldGroupId":
-		if e.complexity.Channel.FieldGroupID == nil {
-			break
-		}
-
-		return e.complexity.Channel.FieldGroupID(childComplexity), true
-
-	case "Channel.id":
-		if e.complexity.Channel.ID == nil {
-			break
-		}
-
-		return e.complexity.Channel.ID(childComplexity), true
-
-	case "Channel.isActive":
-		if e.complexity.Channel.IsActive == nil {
-			break
-		}
-
-		return e.complexity.Channel.IsActive(childComplexity), true
-
-	case "Channel.modifiedBy":
-		if e.complexity.Channel.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.Channel.ModifiedBy(childComplexity), true
-
-	case "Channel.modifiedOn":
-		if e.complexity.Channel.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.Channel.ModifiedOn(childComplexity), true
-
-	case "Channel.slugName":
-		if e.complexity.Channel.SlugName == nil {
-			break
-		}
-
-		return e.complexity.Channel.SlugName(childComplexity), true
-
-	case "ChannelDetails.channellist":
-		if e.complexity.ChannelDetails.Channellist == nil {
-			break
-		}
-
-		return e.complexity.ChannelDetails.Channellist(childComplexity), true
-
-	case "ChannelDetails.count":
-		if e.complexity.ChannelDetails.Count == nil {
-			break
-		}
-
-		return e.complexity.ChannelDetails.Count(childComplexity), true
-
-	case "ChannelEntries.additionalFields":
-		if e.complexity.ChannelEntries.AdditionalFields == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.AdditionalFields(childComplexity), true
-
-	case "ChannelEntries.author":
-		if e.complexity.ChannelEntries.Author == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Author(childComplexity), true
-
-	case "ChannelEntries.authorDetails":
-		if e.complexity.ChannelEntries.AuthorDetails == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.AuthorDetails(childComplexity), true
-
-	case "ChannelEntries.categories":
-		if e.complexity.ChannelEntries.Categories == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Categories(childComplexity), true
-
-	case "ChannelEntries.categoriesId":
-		if e.complexity.ChannelEntries.CategoriesID == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.CategoriesID(childComplexity), true
-
-	case "ChannelEntries.channelId":
-		if e.complexity.ChannelEntries.ChannelID == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.ChannelID(childComplexity), true
-
-	case "ChannelEntries.claimStatus":
-		if e.complexity.ChannelEntries.ClaimStatus == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.ClaimStatus(childComplexity), true
-
-	case "ChannelEntries.coverImage":
-		if e.complexity.ChannelEntries.CoverImage == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.CoverImage(childComplexity), true
-
-	case "ChannelEntries.createDate":
-		if e.complexity.ChannelEntries.CreateDate == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.CreateDate(childComplexity), true
-
-	case "ChannelEntries.createdBy":
-		if e.complexity.ChannelEntries.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.CreatedBy(childComplexity), true
-
-	case "ChannelEntries.createdOn":
-		if e.complexity.ChannelEntries.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.CreatedOn(childComplexity), true
-
-	case "ChannelEntries.description":
-		if e.complexity.ChannelEntries.Description == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Description(childComplexity), true
-
-	case "ChannelEntries.excerpt":
-		if e.complexity.ChannelEntries.Excerpt == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Excerpt(childComplexity), true
-
-	case "ChannelEntries.featuredEntry":
-		if e.complexity.ChannelEntries.FeaturedEntry == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.FeaturedEntry(childComplexity), true
-
-	case "ChannelEntries.fields":
-		if e.complexity.ChannelEntries.Fields == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Fields(childComplexity), true
-
-	case "ChannelEntries.id":
-		if e.complexity.ChannelEntries.ID == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.ID(childComplexity), true
-
-	case "ChannelEntries.isActive":
-		if e.complexity.ChannelEntries.IsActive == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.IsActive(childComplexity), true
-
-	case "ChannelEntries.keyword":
-		if e.complexity.ChannelEntries.Keyword == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Keyword(childComplexity), true
-
-	case "ChannelEntries.memberProfile":
-		if e.complexity.ChannelEntries.MemberProfile == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.MemberProfile(childComplexity), true
-
-	case "ChannelEntries.metaDescription":
-		if e.complexity.ChannelEntries.MetaDescription == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.MetaDescription(childComplexity), true
-
-	case "ChannelEntries.metaTitle":
-		if e.complexity.ChannelEntries.MetaTitle == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.MetaTitle(childComplexity), true
-
-	case "ChannelEntries.modifiedBy":
-		if e.complexity.ChannelEntries.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.ModifiedBy(childComplexity), true
-
-	case "ChannelEntries.modifiedOn":
-		if e.complexity.ChannelEntries.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.ModifiedOn(childComplexity), true
-
-	case "ChannelEntries.publishedTime":
-		if e.complexity.ChannelEntries.PublishedTime == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.PublishedTime(childComplexity), true
-
-	case "ChannelEntries.readingTime":
-		if e.complexity.ChannelEntries.ReadingTime == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.ReadingTime(childComplexity), true
-
-	case "ChannelEntries.relatedArticles":
-		if e.complexity.ChannelEntries.RelatedArticles == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.RelatedArticles(childComplexity), true
-
-	case "ChannelEntries.slug":
-		if e.complexity.ChannelEntries.Slug == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Slug(childComplexity), true
-
-	case "ChannelEntries.sortOrder":
-		if e.complexity.ChannelEntries.SortOrder == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.SortOrder(childComplexity), true
-
-	case "ChannelEntries.status":
-		if e.complexity.ChannelEntries.Status == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Status(childComplexity), true
-
-	case "ChannelEntries.tags":
-		if e.complexity.ChannelEntries.Tags == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Tags(childComplexity), true
-
-	case "ChannelEntries.thumbnailImage":
-		if e.complexity.ChannelEntries.ThumbnailImage == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.ThumbnailImage(childComplexity), true
-
-	case "ChannelEntries.title":
-		if e.complexity.ChannelEntries.Title == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.Title(childComplexity), true
-
-	case "ChannelEntries.userId":
-		if e.complexity.ChannelEntries.UserID == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.UserID(childComplexity), true
-
-	case "ChannelEntries.viewCount":
-		if e.complexity.ChannelEntries.ViewCount == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntries.ViewCount(childComplexity), true
-
-	case "ChannelEntriesDetails.channelEntriesList":
-		if e.complexity.ChannelEntriesDetails.ChannelEntriesList == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntriesDetails.ChannelEntriesList(childComplexity), true
-
-	case "ChannelEntriesDetails.count":
-		if e.complexity.ChannelEntriesDetails.Count == nil {
-			break
-		}
-
-		return e.complexity.ChannelEntriesDetails.Count(childComplexity), true
-
-	case "EcommerceProduct.categoriesId":
-		if e.complexity.EcommerceProduct.CategoriesID == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.CategoriesID(childComplexity), true
-
-	case "EcommerceProduct.createdBy":
-		if e.complexity.EcommerceProduct.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.CreatedBy(childComplexity), true
-
-	case "EcommerceProduct.createdOn":
-		if e.complexity.EcommerceProduct.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.CreatedOn(childComplexity), true
-
-	case "EcommerceProduct.defaultPrice":
-		if e.complexity.EcommerceProduct.DefaultPrice == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.DefaultPrice(childComplexity), true
-
-	case "EcommerceProduct.deletedBy":
-		if e.complexity.EcommerceProduct.DeletedBy == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.DeletedBy(childComplexity), true
-
-	case "EcommerceProduct.deletedOn":
-		if e.complexity.EcommerceProduct.DeletedOn == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.DeletedOn(childComplexity), true
-
-	case "EcommerceProduct.discountPrice":
-		if e.complexity.EcommerceProduct.DiscountPrice == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.DiscountPrice(childComplexity), true
-
-	case "EcommerceProduct.id":
-		if e.complexity.EcommerceProduct.ID == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.ID(childComplexity), true
-
-	case "EcommerceProduct.isActive":
-		if e.complexity.EcommerceProduct.IsActive == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.IsActive(childComplexity), true
-
-	case "EcommerceProduct.isDeleted":
-		if e.complexity.EcommerceProduct.IsDeleted == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.IsDeleted(childComplexity), true
-
-	case "EcommerceProduct.modifiedBy":
-		if e.complexity.EcommerceProduct.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.ModifiedBy(childComplexity), true
-
-	case "EcommerceProduct.modifiedOn":
-		if e.complexity.EcommerceProduct.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.ModifiedOn(childComplexity), true
-
-	case "EcommerceProduct.productDescription":
-		if e.complexity.EcommerceProduct.ProductDescription == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.ProductDescription(childComplexity), true
-
-	case "EcommerceProduct.productImagePath":
-		if e.complexity.EcommerceProduct.ProductImagePath == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.ProductImagePath(childComplexity), true
-
-	case "EcommerceProduct.productName":
-		if e.complexity.EcommerceProduct.ProductName == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.ProductName(childComplexity), true
-
-	case "EcommerceProduct.productVideoPath":
-		if e.complexity.EcommerceProduct.ProductVideoPath == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.ProductVideoPath(childComplexity), true
-
-	case "EcommerceProduct.sku":
-		if e.complexity.EcommerceProduct.Sku == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.Sku(childComplexity), true
-
-	case "EcommerceProduct.specialPrice":
-		if e.complexity.EcommerceProduct.SpecialPrice == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.SpecialPrice(childComplexity), true
-
-	case "EcommerceProduct.tax":
-		if e.complexity.EcommerceProduct.Tax == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.Tax(childComplexity), true
-
-	case "EcommerceProduct.totalcost":
-		if e.complexity.EcommerceProduct.Totalcost == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProduct.Totalcost(childComplexity), true
-
-	case "EcommerceProducts.count":
-		if e.complexity.EcommerceProducts.Count == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProducts.Count(childComplexity), true
-
-	case "EcommerceProducts.productList":
-		if e.complexity.EcommerceProducts.ProductList == nil {
-			break
-		}
-
-		return e.complexity.EcommerceProducts.ProductList(childComplexity), true
-
-	case "Field.characterAllowed":
-		if e.complexity.Field.CharacterAllowed == nil {
-			break
-		}
-
-		return e.complexity.Field.CharacterAllowed(childComplexity), true
-
-	case "Field.createdBy":
-		if e.complexity.Field.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Field.CreatedBy(childComplexity), true
-
-	case "Field.createdOn":
-		if e.complexity.Field.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.Field.CreatedOn(childComplexity), true
-
-	case "Field.datetimeFormat":
-		if e.complexity.Field.DatetimeFormat == nil {
-			break
-		}
-
-		return e.complexity.Field.DatetimeFormat(childComplexity), true
-
-	case "Field.fieldDesc":
-		if e.complexity.Field.FieldDesc == nil {
-			break
-		}
-
-		return e.complexity.Field.FieldDesc(childComplexity), true
-
-	case "Field.fieldId":
-		if e.complexity.Field.FieldID == nil {
-			break
-		}
-
-		return e.complexity.Field.FieldID(childComplexity), true
-
-	case "Field.fieldName":
-		if e.complexity.Field.FieldName == nil {
-			break
-		}
-
-		return e.complexity.Field.FieldName(childComplexity), true
-
-	case "Field.fieldOptions":
-		if e.complexity.Field.FieldOptions == nil {
-			break
-		}
-
-		return e.complexity.Field.FieldOptions(childComplexity), true
-
-	case "Field.fieldTypeId":
-		if e.complexity.Field.FieldTypeID == nil {
-			break
-		}
-
-		return e.complexity.Field.FieldTypeID(childComplexity), true
-
-	case "Field.fieldTypeName":
-		if e.complexity.Field.FieldTypeName == nil {
-			break
-		}
-
-		return e.complexity.Field.FieldTypeName(childComplexity), true
-
-	case "Field.fieldValue":
-		if e.complexity.Field.FieldValue == nil {
-			break
-		}
-
-		return e.complexity.Field.FieldValue(childComplexity), true
-
-	case "Field.imagePath":
-		if e.complexity.Field.ImagePath == nil {
-			break
-		}
-
-		return e.complexity.Field.ImagePath(childComplexity), true
-
-	case "Field.mandatoryField":
-		if e.complexity.Field.MandatoryField == nil {
-			break
-		}
-
-		return e.complexity.Field.MandatoryField(childComplexity), true
-
-	case "Field.modifiedBY":
-		if e.complexity.Field.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.Field.ModifiedBy(childComplexity), true
-
-	case "Field.modifiedOn":
-		if e.complexity.Field.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.Field.ModifiedOn(childComplexity), true
-
-	case "Field.optionExist":
-		if e.complexity.Field.OptionExist == nil {
-			break
-		}
-
-		return e.complexity.Field.OptionExist(childComplexity), true
-
-	case "Field.orderIndex":
-		if e.complexity.Field.OrderIndex == nil {
-			break
-		}
-
-		return e.complexity.Field.OrderIndex(childComplexity), true
-
-	case "Field.sectionParentId":
-		if e.complexity.Field.SectionParentID == nil {
-			break
-		}
-
-		return e.complexity.Field.SectionParentID(childComplexity), true
-
-	case "Field.timeFormat":
-		if e.complexity.Field.TimeFormat == nil {
-			break
-		}
-
-		return e.complexity.Field.TimeFormat(childComplexity), true
-
-	case "FieldOptions.createdBy":
-		if e.complexity.FieldOptions.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.FieldOptions.CreatedBy(childComplexity), true
-
-	case "FieldOptions.createdOn":
-		if e.complexity.FieldOptions.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.FieldOptions.CreatedOn(childComplexity), true
-
-	case "FieldOptions.id":
-		if e.complexity.FieldOptions.ID == nil {
-			break
-		}
-
-		return e.complexity.FieldOptions.ID(childComplexity), true
-
-	case "FieldOptions.modifiedBY":
-		if e.complexity.FieldOptions.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.FieldOptions.ModifiedBy(childComplexity), true
-
-	case "FieldOptions.modifiedOn":
-		if e.complexity.FieldOptions.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.FieldOptions.ModifiedOn(childComplexity), true
-
-	case "FieldOptions.optionName":
-		if e.complexity.FieldOptions.OptionName == nil {
-			break
-		}
-
-		return e.complexity.FieldOptions.OptionName(childComplexity), true
-
-	case "FieldOptions.optionValue":
-		if e.complexity.FieldOptions.OptionValue == nil {
-			break
-		}
-
-		return e.complexity.FieldOptions.OptionValue(childComplexity), true
-
-	case "FieldValue.createdBy":
-		if e.complexity.FieldValue.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.FieldValue.CreatedBy(childComplexity), true
-
-	case "FieldValue.createdOn":
-		if e.complexity.FieldValue.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.FieldValue.CreatedOn(childComplexity), true
-
-	case "FieldValue.fieldValue":
-		if e.complexity.FieldValue.FieldValue == nil {
-			break
-		}
-
-		return e.complexity.FieldValue.FieldValue(childComplexity), true
-
-	case "FieldValue.id":
-		if e.complexity.FieldValue.ID == nil {
-			break
-		}
-
-		return e.complexity.FieldValue.ID(childComplexity), true
-
-	case "FieldValue.modifiedBY":
-		if e.complexity.FieldValue.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.FieldValue.ModifiedBy(childComplexity), true
-
-	case "FieldValue.modifiedOn":
-		if e.complexity.FieldValue.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.FieldValue.ModifiedOn(childComplexity), true
-
-	case "LoginDetails.claimEntryDetails":
-		if e.complexity.LoginDetails.ClaimEntryDetails == nil {
-			break
-		}
-
-		return e.complexity.LoginDetails.ClaimEntryDetails(childComplexity), true
-
-	case "LoginDetails.token":
-		if e.complexity.LoginDetails.Token == nil {
-			break
-		}
-
-		return e.complexity.LoginDetails.Token(childComplexity), true
-
-	case "Member.createdBy":
-		if e.complexity.Member.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Member.CreatedBy(childComplexity), true
-
-	case "Member.createdOn":
-		if e.complexity.Member.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.Member.CreatedOn(childComplexity), true
-
-	case "Member.email":
-		if e.complexity.Member.Email == nil {
-			break
-		}
-
-		return e.complexity.Member.Email(childComplexity), true
-
-	case "Member.firstName":
-		if e.complexity.Member.FirstName == nil {
-			break
-		}
-
-		return e.complexity.Member.FirstName(childComplexity), true
-
-	case "Member.group":
-		if e.complexity.Member.Group == nil {
-			break
-		}
-
-		return e.complexity.Member.Group(childComplexity), true
-
-	case "Member.id":
-		if e.complexity.Member.ID == nil {
-			break
-		}
-
-		return e.complexity.Member.ID(childComplexity), true
-
-	case "Member.isActive":
-		if e.complexity.Member.IsActive == nil {
-			break
-		}
-
-		return e.complexity.Member.IsActive(childComplexity), true
-
-	case "Member.lastName":
-		if e.complexity.Member.LastName == nil {
-			break
-		}
-
-		return e.complexity.Member.LastName(childComplexity), true
-
-	case "Member.memberGroupId":
-		if e.complexity.Member.MemberGroupID == nil {
-			break
-		}
-
-		return e.complexity.Member.MemberGroupID(childComplexity), true
-
-	case "Member.mobileNo":
-		if e.complexity.Member.MobileNo == nil {
-			break
-		}
-
-		return e.complexity.Member.MobileNo(childComplexity), true
-
-	case "Member.modifiedBy":
-		if e.complexity.Member.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.Member.ModifiedBy(childComplexity), true
-
-	case "Member.modifiedOn":
-		if e.complexity.Member.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.Member.ModifiedOn(childComplexity), true
-
-	case "Member.profileImage":
-		if e.complexity.Member.ProfileImage == nil {
-			break
-		}
-
-		return e.complexity.Member.ProfileImage(childComplexity), true
-
-	case "Member.profileImagePath":
-		if e.complexity.Member.ProfileImagePath == nil {
-			break
-		}
-
-		return e.complexity.Member.ProfileImagePath(childComplexity), true
-
-	case "MemberGroup.createdBy":
-		if e.complexity.MemberGroup.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.MemberGroup.CreatedBy(childComplexity), true
-
-	case "MemberGroup.createdOn":
-		if e.complexity.MemberGroup.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.MemberGroup.CreatedOn(childComplexity), true
-
-	case "MemberGroup.description":
-		if e.complexity.MemberGroup.Description == nil {
-			break
-		}
-
-		return e.complexity.MemberGroup.Description(childComplexity), true
-
-	case "MemberGroup.id":
-		if e.complexity.MemberGroup.ID == nil {
-			break
-		}
-
-		return e.complexity.MemberGroup.ID(childComplexity), true
-
-	case "MemberGroup.isActive":
-		if e.complexity.MemberGroup.IsActive == nil {
-			break
-		}
-
-		return e.complexity.MemberGroup.IsActive(childComplexity), true
-
-	case "MemberGroup.modifiedBy":
-		if e.complexity.MemberGroup.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.MemberGroup.ModifiedBy(childComplexity), true
-
-	case "MemberGroup.modifiedOn":
-		if e.complexity.MemberGroup.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.MemberGroup.ModifiedOn(childComplexity), true
-
-	case "MemberGroup.name":
-		if e.complexity.MemberGroup.Name == nil {
-			break
-		}
-
-		return e.complexity.MemberGroup.Name(childComplexity), true
-
-	case "MemberGroup.slug":
-		if e.complexity.MemberGroup.Slug == nil {
-			break
-		}
-
-		return e.complexity.MemberGroup.Slug(childComplexity), true
-
-	case "MemberProfile.about":
-		if e.complexity.MemberProfile.About == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.About(childComplexity), true
-
-	case "MemberProfile.claimStatus":
-		if e.complexity.MemberProfile.ClaimStatus == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.ClaimStatus(childComplexity), true
-
-	case "MemberProfile.companyLocation":
-		if e.complexity.MemberProfile.CompanyLocation == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.CompanyLocation(childComplexity), true
-
-	case "MemberProfile.companyLogo":
-		if e.complexity.MemberProfile.CompanyLogo == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.CompanyLogo(childComplexity), true
-
-	case "MemberProfile.companyName":
-		if e.complexity.MemberProfile.CompanyName == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.CompanyName(childComplexity), true
-
-	case "MemberProfile.createdBy":
-		if e.complexity.MemberProfile.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.CreatedBy(childComplexity), true
-
-	case "MemberProfile.createdOn":
-		if e.complexity.MemberProfile.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.CreatedOn(childComplexity), true
-
-	case "MemberProfile.id":
-		if e.complexity.MemberProfile.ID == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.ID(childComplexity), true
-
-	case "MemberProfile.linkedin":
-		if e.complexity.MemberProfile.Linkedin == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.Linkedin(childComplexity), true
-
-	case "MemberProfile.memberDetails":
-		if e.complexity.MemberProfile.MemberDetails == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.MemberDetails(childComplexity), true
-
-	case "MemberProfile.memberId":
-		if e.complexity.MemberProfile.MemberID == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.MemberID(childComplexity), true
-
-	case "MemberProfile.modifiedBy":
-		if e.complexity.MemberProfile.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.ModifiedBy(childComplexity), true
-
-	case "MemberProfile.modifiedOn":
-		if e.complexity.MemberProfile.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.ModifiedOn(childComplexity), true
-
-	case "MemberProfile.profileName":
-		if e.complexity.MemberProfile.ProfileName == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.ProfileName(childComplexity), true
-
-	case "MemberProfile.profilePage":
-		if e.complexity.MemberProfile.ProfilePage == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.ProfilePage(childComplexity), true
-
-	case "MemberProfile.profileSlug":
-		if e.complexity.MemberProfile.ProfileSlug == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.ProfileSlug(childComplexity), true
-
-	case "MemberProfile.seoDescription":
-		if e.complexity.MemberProfile.SeoDescription == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.SeoDescription(childComplexity), true
-
-	case "MemberProfile.seoKeyword":
-		if e.complexity.MemberProfile.SeoKeyword == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.SeoKeyword(childComplexity), true
-
-	case "MemberProfile.seoTitle":
-		if e.complexity.MemberProfile.SeoTitle == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.SeoTitle(childComplexity), true
-
-	case "MemberProfile.twitter":
-		if e.complexity.MemberProfile.Twitter == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.Twitter(childComplexity), true
-
-	case "MemberProfile.website":
-		if e.complexity.MemberProfile.Website == nil {
-			break
-		}
-
-		return e.complexity.MemberProfile.Website(childComplexity), true
-
-	case "Mutation.memberLogin":
-		if e.complexity.Mutation.MemberLogin == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_memberLogin_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.MemberLogin(childComplexity, args["email"].(string)), true
-
-	case "Mutation.memberProfileUpdate":
-		if e.complexity.Mutation.MemberProfileUpdate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_memberProfileUpdate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.MemberProfileUpdate(childComplexity, args["profiledata"].(model.ProfileData), args["entryId"].(int)), true
-
-	case "Mutation.memberRegister":
-		if e.complexity.Mutation.MemberRegister == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_memberRegister_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.MemberRegister(childComplexity, args["input"].(model.MemberDetails)), true
-
-	case "Mutation.memberUpdate":
-		if e.complexity.Mutation.MemberUpdate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_memberUpdate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.MemberUpdate(childComplexity, args["memberdata"].(model.MemberDetails)), true
-
-	case "Mutation.memberclaimnow":
-		if e.complexity.Mutation.Memberclaimnow == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_memberclaimnow_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.Memberclaimnow(childComplexity, args["input"].(model.ClaimData), args["entryId"].(int)), true
-
-	case "Mutation.profileNameVerification":
-		if e.complexity.Mutation.ProfileNameVerification == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_profileNameVerification_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ProfileNameVerification(childComplexity, args["profileName"].(string)), true
-
-	case "Mutation.templateMemberLogin":
-		if e.complexity.Mutation.TemplateMemberLogin == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_templateMemberLogin_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.TemplateMemberLogin(childComplexity, args["username"].(string), args["password"].(string)), true
-
-	case "Mutation.verifyMemberOtp":
-		if e.complexity.Mutation.VerifyMemberOtp == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_verifyMemberOtp_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.VerifyMemberOtp(childComplexity, args["email"].(string), args["otp"].(int)), true
-
-	case "Page.content":
-		if e.complexity.Page.Content == nil {
-			break
-		}
-
-		return e.complexity.Page.Content(childComplexity), true
-
-	case "Page.created_by":
-		if e.complexity.Page.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Page.CreatedBy(childComplexity), true
-
-	case "Page.createdOn":
-		if e.complexity.Page.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.Page.CreatedOn(childComplexity), true
-
-	case "Page.id":
-		if e.complexity.Page.ID == nil {
-			break
-		}
-
-		return e.complexity.Page.ID(childComplexity), true
-
-	case "Page.modifiedBy":
-		if e.complexity.Page.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.Page.ModifiedBy(childComplexity), true
-
-	case "Page.modifiedOn":
-		if e.complexity.Page.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.Page.ModifiedOn(childComplexity), true
-
-	case "Page.orderIndex":
-		if e.complexity.Page.OrderIndex == nil {
-			break
-		}
-
-		return e.complexity.Page.OrderIndex(childComplexity), true
-
-	case "Page.pageName":
-		if e.complexity.Page.PageName == nil {
-			break
-		}
-
-		return e.complexity.Page.PageName(childComplexity), true
-
-	case "Page.pagegroupId":
-		if e.complexity.Page.PagegroupID == nil {
-			break
-		}
-
-		return e.complexity.Page.PagegroupID(childComplexity), true
-
-	case "Page.parentId":
-		if e.complexity.Page.ParentID == nil {
-			break
-		}
-
-		return e.complexity.Page.ParentID(childComplexity), true
-
-	case "Page.status":
-		if e.complexity.Page.Status == nil {
-			break
-		}
-
-		return e.complexity.Page.Status(childComplexity), true
-
-	case "PageAndPageGroups.pagegroups":
-		if e.complexity.PageAndPageGroups.Pagegroups == nil {
-			break
-		}
-
-		return e.complexity.PageAndPageGroups.Pagegroups(childComplexity), true
-
-	case "PageAndPageGroups.pages":
-		if e.complexity.PageAndPageGroups.Pages == nil {
-			break
-		}
-
-		return e.complexity.PageAndPageGroups.Pages(childComplexity), true
-
-	case "PageAndPageGroups.subpages":
-		if e.complexity.PageAndPageGroups.Subpages == nil {
-			break
-		}
-
-		return e.complexity.PageAndPageGroups.Subpages(childComplexity), true
-
-	case "PageGroup.created_by":
-		if e.complexity.PageGroup.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.PageGroup.CreatedBy(childComplexity), true
-
-	case "PageGroup.createdOn":
-		if e.complexity.PageGroup.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.PageGroup.CreatedOn(childComplexity), true
-
-	case "PageGroup.id":
-		if e.complexity.PageGroup.ID == nil {
-			break
-		}
-
-		return e.complexity.PageGroup.ID(childComplexity), true
-
-	case "PageGroup.modifiedBy":
-		if e.complexity.PageGroup.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.PageGroup.ModifiedBy(childComplexity), true
-
-	case "PageGroup.modifiedOn":
-		if e.complexity.PageGroup.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.PageGroup.ModifiedOn(childComplexity), true
-
-	case "PageGroup.orderIndex":
-		if e.complexity.PageGroup.OrderIndex == nil {
-			break
-		}
-
-		return e.complexity.PageGroup.OrderIndex(childComplexity), true
-
-	case "PageGroup.pagegroupName":
-		if e.complexity.PageGroup.PagegroupName == nil {
-			break
-		}
-
-		return e.complexity.PageGroup.PagegroupName(childComplexity), true
-
-	case "ProductPricing.endDate":
-		if e.complexity.ProductPricing.EndDate == nil {
-			break
-		}
-
-		return e.complexity.ProductPricing.EndDate(childComplexity), true
-
-	case "ProductPricing.id":
-		if e.complexity.ProductPricing.ID == nil {
-			break
-		}
-
-		return e.complexity.ProductPricing.ID(childComplexity), true
-
-	case "ProductPricing.price":
-		if e.complexity.ProductPricing.Price == nil {
-			break
-		}
-
-		return e.complexity.ProductPricing.Price(childComplexity), true
-
-	case "ProductPricing.priceId":
-		if e.complexity.ProductPricing.PriceID == nil {
-			break
-		}
-
-		return e.complexity.ProductPricing.PriceID(childComplexity), true
-
-	case "ProductPricing.priority":
-		if e.complexity.ProductPricing.Priority == nil {
-			break
-		}
-
-		return e.complexity.ProductPricing.Priority(childComplexity), true
-
-	case "ProductPricing.sku":
-		if e.complexity.ProductPricing.Sku == nil {
-			break
-		}
-
-		return e.complexity.ProductPricing.Sku(childComplexity), true
-
-	case "ProductPricing.startDtae":
-		if e.complexity.ProductPricing.StartDtae == nil {
-			break
-		}
-
-		return e.complexity.ProductPricing.StartDtae(childComplexity), true
-
-	case "ProductPricing.type":
-		if e.complexity.ProductPricing.Type == nil {
-			break
-		}
-
-		return e.complexity.ProductPricing.Type(childComplexity), true
-
-	case "Query.categoriesList":
-		if e.complexity.Query.CategoriesList == nil {
-			break
-		}
-
-		args, err := ec.field_Query_categoriesList_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.CategoriesList(childComplexity, args["limit"].(*int), args["offset"].(*int), args["categoryGroupId"].(*int), args["hierarchyLevel"].(*int), args["checkEntriesPresence"].(*int)), true
-
-	case "Query.channelDetail":
-		if e.complexity.Query.ChannelDetail == nil {
-			break
-		}
-
-		args, err := ec.field_Query_channelDetail_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.ChannelDetail(childComplexity, args["channelId"].(int)), true
-
-	case "Query.channelEntriesList":
-		if e.complexity.Query.ChannelEntriesList == nil {
-			break
-		}
-
-		args, err := ec.field_Query_channelEntriesList_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.ChannelEntriesList(childComplexity, args["channelId"].(*int), args["categoryId"].(*int), args["limit"].(int), args["offset"].(int), args["title"].(*string), args["categoryChildId"].(*int), args["categorySlug"].(*string), args["categoryChildSlug"].(*string)), true
-
-	case "Query.channelEntryDetail":
-		if e.complexity.Query.ChannelEntryDetail == nil {
-			break
-		}
-
-		args, err := ec.field_Query_channelEntryDetail_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.ChannelEntryDetail(childComplexity, args["categoryId"].(*int), args["channelId"].(*int), args["channelEntryId"].(*int), args["slug"].(*string), args["categoryChildId"].(*int)), true
-
-	case "Query.channelList":
-		if e.complexity.Query.ChannelList == nil {
-			break
-		}
-
-		args, err := ec.field_Query_channelList_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.ChannelList(childComplexity, args["limit"].(int), args["offset"].(int)), true
-
-	case "Query.ecommerceProductDetails":
-		if e.complexity.Query.EcommerceProductDetails == nil {
-			break
-		}
-
-		args, err := ec.field_Query_ecommerceProductDetails_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.EcommerceProductDetails(childComplexity, args["productId"].(int)), true
-
-	case "Query.ecommerceProductList":
-		if e.complexity.Query.EcommerceProductList == nil {
-			break
-		}
-
-		args, err := ec.field_Query_ecommerceProductList_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.EcommerceProductList(childComplexity, args["limit"].(int), args["offset"].(int), args["filter"].(*model.ProductFilter), args["sort"].(*model.ProductSort)), true
-
-	case "Query.PagesAndPageGroupsUnderSpace":
-		if e.complexity.Query.PagesAndPageGroupsUnderSpace == nil {
-			break
-		}
-
-		args, err := ec.field_Query_PagesAndPageGroupsUnderSpace_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.PagesAndPageGroupsUnderSpace(childComplexity, args["spaceId"].(int)), true
-
-	case "Query.spaceDetails":
-		if e.complexity.Query.SpaceDetails == nil {
-			break
-		}
-
-		args, err := ec.field_Query_spaceDetails_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.SpaceDetails(childComplexity, args["spaceId"].(int)), true
-
-	case "Query.spaceList":
-		if e.complexity.Query.SpaceList == nil {
-			break
-		}
-
-		args, err := ec.field_Query_spaceList_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.SpaceList(childComplexity, args["limit"].(int), args["offset"].(int), args["categoriesId"].(*int)), true
-
-	case "Section.createdBy":
-		if e.complexity.Section.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Section.CreatedBy(childComplexity), true
-
-	case "Section.createdOn":
-		if e.complexity.Section.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.Section.CreatedOn(childComplexity), true
-
-	case "Section.modifiedBY":
-		if e.complexity.Section.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.Section.ModifiedBy(childComplexity), true
-
-	case "Section.modifiedOn":
-		if e.complexity.Section.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.Section.ModifiedOn(childComplexity), true
-
-	case "Section.orderIndex":
-		if e.complexity.Section.OrderIndex == nil {
-			break
-		}
-
-		return e.complexity.Section.OrderIndex(childComplexity), true
-
-	case "Section.sectionId":
-		if e.complexity.Section.SectionID == nil {
-			break
-		}
-
-		return e.complexity.Section.SectionID(childComplexity), true
-
-	case "Section.sectionName":
-		if e.complexity.Section.SectionName == nil {
-			break
-		}
-
-		return e.complexity.Section.SectionName(childComplexity), true
-
-	case "Section.sectionTypeId":
-		if e.complexity.Section.SectionTypeID == nil {
-			break
-		}
-
-		return e.complexity.Section.SectionTypeID(childComplexity), true
-
-	case "Space.categories":
-		if e.complexity.Space.Categories == nil {
-			break
-		}
-
-		return e.complexity.Space.Categories(childComplexity), true
-
-	case "Space.categoryId":
-		if e.complexity.Space.CategoryID == nil {
-			break
-		}
-
-		return e.complexity.Space.CategoryID(childComplexity), true
-
-	case "Space.createdBy":
-		if e.complexity.Space.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Space.CreatedBy(childComplexity), true
-
-	case "Space.createdOn":
-		if e.complexity.Space.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.Space.CreatedOn(childComplexity), true
-
-	case "Space.id":
-		if e.complexity.Space.ID == nil {
-			break
-		}
-
-		return e.complexity.Space.ID(childComplexity), true
-
-	case "Space.imagePath":
-		if e.complexity.Space.ImagePath == nil {
-			break
-		}
-
-		return e.complexity.Space.ImagePath(childComplexity), true
-
-	case "Space.languageId":
-		if e.complexity.Space.LanguageID == nil {
-			break
-		}
-
-		return e.complexity.Space.LanguageID(childComplexity), true
-
-	case "Space.modifiedBy":
-		if e.complexity.Space.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.Space.ModifiedBy(childComplexity), true
-
-	case "Space.modifiedOn":
-		if e.complexity.Space.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.Space.ModifiedOn(childComplexity), true
-
-	case "Space.spaceDescription":
-		if e.complexity.Space.SpaceDescription == nil {
-			break
-		}
-
-		return e.complexity.Space.SpaceDescription(childComplexity), true
-
-	case "Space.spaceName":
-		if e.complexity.Space.SpaceName == nil {
-			break
-		}
-
-		return e.complexity.Space.SpaceName(childComplexity), true
-
-	case "Space.spaceSlug":
-		if e.complexity.Space.SpaceSlug == nil {
-			break
-		}
-
-		return e.complexity.Space.SpaceSlug(childComplexity), true
-
-	case "SpaceDetails.count":
-		if e.complexity.SpaceDetails.Count == nil {
-			break
-		}
-
-		return e.complexity.SpaceDetails.Count(childComplexity), true
-
-	case "SpaceDetails.spacelist":
-		if e.complexity.SpaceDetails.Spacelist == nil {
-			break
-		}
-
-		return e.complexity.SpaceDetails.Spacelist(childComplexity), true
-
-	case "SubPage.conent":
-		if e.complexity.SubPage.Conent == nil {
-			break
-		}
-
-		return e.complexity.SubPage.Conent(childComplexity), true
-
-	case "SubPage.created_by":
-		if e.complexity.SubPage.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.SubPage.CreatedBy(childComplexity), true
-
-	case "SubPage.createdOn":
-		if e.complexity.SubPage.CreatedOn == nil {
-			break
-		}
-
-		return e.complexity.SubPage.CreatedOn(childComplexity), true
-
-	case "SubPage.id":
-		if e.complexity.SubPage.ID == nil {
-			break
-		}
-
-		return e.complexity.SubPage.ID(childComplexity), true
-
-	case "SubPage.modifiedBy":
-		if e.complexity.SubPage.ModifiedBy == nil {
-			break
-		}
-
-		return e.complexity.SubPage.ModifiedBy(childComplexity), true
-
-	case "SubPage.modifiedOn":
-		if e.complexity.SubPage.ModifiedOn == nil {
-			break
-		}
-
-		return e.complexity.SubPage.ModifiedOn(childComplexity), true
-
-	case "SubPage.orderIndex":
-		if e.complexity.SubPage.OrderIndex == nil {
-			break
-		}
-
-		return e.complexity.SubPage.OrderIndex(childComplexity), true
-
-	case "SubPage.pageGroupId":
-		if e.complexity.SubPage.PageGroupID == nil {
-			break
-		}
-
-		return e.complexity.SubPage.PageGroupID(childComplexity), true
-
-	case "SubPage.parentId":
-		if e.complexity.SubPage.ParentID == nil {
-			break
-		}
-
-		return e.complexity.SubPage.ParentID(childComplexity), true
-
-	case "SubPage.status":
-		if e.complexity.SubPage.Status == nil {
-			break
-		}
-
-		return e.complexity.SubPage.Status(childComplexity), true
-
-	case "SubPage.subpageName":
-		if e.complexity.SubPage.SubpageName == nil {
-			break
-		}
-
-		return e.complexity.SubPage.SubpageName(childComplexity), true
-
-	}
 	return 0, false
 }
 
@@ -9906,11 +7726,14 @@ func (ec *executionContext) _MemberProfile_id(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_MemberProfile_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9947,11 +7770,14 @@ func (ec *executionContext) _MemberProfile_memberId(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_MemberProfile_memberId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9988,11 +7814,14 @@ func (ec *executionContext) _MemberProfile_profileName(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_MemberProfile_profileName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10029,11 +7858,14 @@ func (ec *executionContext) _MemberProfile_profileSlug(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_MemberProfile_profileSlug(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10070,11 +7902,14 @@ func (ec *executionContext) _MemberProfile_profilePage(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_MemberProfile_profilePage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10827,9 +8662,9 @@ func (ec *executionContext) _Mutation_verifyMemberOtp(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.LoginDetails)
+	res := resTmp.(*model.LoginDetails)
 	fc.Result = res
-	return ec.marshalNLoginDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐLoginDetails(ctx, field.Selections, res)
+	return ec.marshalNLoginDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐLoginDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_verifyMemberOtp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12631,10 +10466,10 @@ func (ec *executionContext) _Query_channelList(ctx context.Context, field graphq
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(model.ChannelDetails); ok {
+		if data, ok := tmp.(*model.ChannelDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.ChannelDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.ChannelDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12646,9 +10481,9 @@ func (ec *executionContext) _Query_channelList(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ChannelDetails)
+	res := resTmp.(*model.ChannelDetails)
 	fc.Result = res
-	return ec.marshalNChannelDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelDetails(ctx, field.Selections, res)
+	return ec.marshalNChannelDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_channelList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12712,10 +10547,10 @@ func (ec *executionContext) _Query_channelDetail(ctx context.Context, field grap
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(model.Channel); ok {
+		if data, ok := tmp.(*model.Channel); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.Channel`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.Channel`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12727,9 +10562,9 @@ func (ec *executionContext) _Query_channelDetail(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Channel)
+	res := resTmp.(*model.Channel)
 	fc.Result = res
-	return ec.marshalNChannel2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannel(ctx, field.Selections, res)
+	return ec.marshalNChannel2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_channelDetail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12809,10 +10644,10 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(model.ChannelEntriesDetails); ok {
+		if data, ok := tmp.(*model.ChannelEntriesDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.ChannelEntriesDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.ChannelEntriesDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12824,9 +10659,9 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ChannelEntriesDetails)
+	res := resTmp.(*model.ChannelEntriesDetails)
 	fc.Result = res
-	return ec.marshalNChannelEntriesDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntriesDetails(ctx, field.Selections, res)
+	return ec.marshalNChannelEntriesDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntriesDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_channelEntriesList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12890,10 +10725,10 @@ func (ec *executionContext) _Query_channelEntryDetail(ctx context.Context, field
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(model.ChannelEntries); ok {
+		if data, ok := tmp.(*model.ChannelEntries); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.ChannelEntries`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.ChannelEntries`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12905,9 +10740,9 @@ func (ec *executionContext) _Query_channelEntryDetail(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ChannelEntries)
+	res := resTmp.(*model.ChannelEntries)
 	fc.Result = res
-	return ec.marshalNChannelEntries2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx, field.Selections, res)
+	return ec.marshalNChannelEntries2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13035,10 +10870,10 @@ func (ec *executionContext) _Query_spaceList(ctx context.Context, field graphql.
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(model.SpaceDetails); ok {
+		if data, ok := tmp.(*model.SpaceDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.SpaceDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.SpaceDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13050,9 +10885,9 @@ func (ec *executionContext) _Query_spaceList(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.SpaceDetails)
+	res := resTmp.(*model.SpaceDetails)
 	fc.Result = res
-	return ec.marshalNSpaceDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpaceDetails(ctx, field.Selections, res)
+	return ec.marshalNSpaceDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpaceDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_spaceList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13116,10 +10951,10 @@ func (ec *executionContext) _Query_spaceDetails(ctx context.Context, field graph
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(model.Space); ok {
+		if data, ok := tmp.(*model.Space); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.Space`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.Space`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13131,9 +10966,9 @@ func (ec *executionContext) _Query_spaceDetails(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Space)
+	res := resTmp.(*model.Space)
 	fc.Result = res
-	return ec.marshalNSpace2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpace(ctx, field.Selections, res)
+	return ec.marshalNSpace2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpace(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_spaceDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13217,10 +11052,10 @@ func (ec *executionContext) _Query_PagesAndPageGroupsUnderSpace(ctx context.Cont
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(model.PageAndPageGroups); ok {
+		if data, ok := tmp.(*model.PageAndPageGroups); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.PageAndPageGroups`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.PageAndPageGroups`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13232,9 +11067,9 @@ func (ec *executionContext) _Query_PagesAndPageGroupsUnderSpace(ctx context.Cont
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.PageAndPageGroups)
+	res := resTmp.(*model.PageAndPageGroups)
 	fc.Result = res
-	return ec.marshalNPageAndPageGroups2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageAndPageGroups(ctx, field.Selections, res)
+	return ec.marshalNPageAndPageGroups2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageAndPageGroups(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_PagesAndPageGroupsUnderSpace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13300,10 +11135,10 @@ func (ec *executionContext) _Query_categoriesList(ctx context.Context, field gra
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(model.CategoriesList); ok {
+		if data, ok := tmp.(*model.CategoriesList); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be spurtcms-graphql/graph/model.CategoriesList`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.CategoriesList`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13315,9 +11150,9 @@ func (ec *executionContext) _Query_categoriesList(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.CategoriesList)
+	res := resTmp.(*model.CategoriesList)
 	fc.Result = res
-	return ec.marshalNCategoriesList2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoriesList(ctx, field.Selections, res)
+	return ec.marshalNCategoriesList2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoriesList(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_categoriesList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13376,9 +11211,9 @@ func (ec *executionContext) _Query_ecommerceProductList(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.EcommerceProducts)
+	res := resTmp.(*model.EcommerceProducts)
 	fc.Result = res
-	return ec.marshalNEcommerceProducts2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProducts(ctx, field.Selections, res)
+	return ec.marshalNEcommerceProducts2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProducts(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_ecommerceProductList(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -13437,9 +11272,9 @@ func (ec *executionContext) _Query_ecommerceProductDetails(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.EcommerceProduct)
+	res := resTmp.(*model.EcommerceProduct)
 	fc.Result = res
-	return ec.marshalNEcommerceProduct2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProduct(ctx, field.Selections, res)
+	return ec.marshalNEcommerceProduct2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProduct(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_ecommerceProductDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -16889,7 +14724,7 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputClaimData(ctx context.Context, obj interface{}) (model.ClaimData, error) {
+func (ec *executionContext) unmarshalInputClaimData(ctx context.Context, obj interface{}) (*model.ClaimData, error) {
 	var it model.ClaimData
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
@@ -16909,7 +14744,7 @@ func (ec *executionContext) unmarshalInputClaimData(ctx context.Context, obj int
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileName"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.ProfileName = data
 		case "workMail":
@@ -16918,7 +14753,7 @@ func (ec *executionContext) unmarshalInputClaimData(ctx context.Context, obj int
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workMail"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.WorkMail = data
 		case "companyNumber":
@@ -16927,7 +14762,7 @@ func (ec *executionContext) unmarshalInputClaimData(ctx context.Context, obj int
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyNumber"))
 			data, err := ec.unmarshalNLargeInt2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.CompanyNumber = data
 		case "personName":
@@ -16936,16 +14771,16 @@ func (ec *executionContext) unmarshalInputClaimData(ctx context.Context, obj int
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("personName"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.PersonName = data
 		}
 	}
 
-	return it, nil
+	return &it, nil
 }
 
-func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj interface{}) (model.MemberDetails, error) {
+func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj interface{}) (*model.MemberDetails, error) {
 	var it model.MemberDetails
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
@@ -16965,7 +14800,7 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.FirstName = data
 		case "lastName":
@@ -16974,7 +14809,7 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.LastName = data
 		case "mobile":
@@ -16983,7 +14818,7 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mobile"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.Mobile = data
 		case "email":
@@ -16992,7 +14827,7 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.Email = data
 		case "password":
@@ -17001,7 +14836,7 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.Password = data
 		case "isActive":
@@ -17010,52 +14845,52 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.IsActive = data
+			it.IsActive = graphql.OmittableOf(data)
 		case "profileImage":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileImage"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.ProfileImage = data
+			it.ProfileImage = graphql.OmittableOf(data)
 		case "profileImagePath":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileImagePath"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.ProfileImagePath = data
+			it.ProfileImagePath = graphql.OmittableOf(data)
 		case "username":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.Username = data
+			it.Username = graphql.OmittableOf(data)
 		case "groupId":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.GroupID = data
+			it.GroupID = graphql.OmittableOf(data)
 		}
 	}
 
-	return it, nil
+	return &it, nil
 }
 
-func (ec *executionContext) unmarshalInputProductFilter(ctx context.Context, obj interface{}) (model.ProductFilter, error) {
+func (ec *executionContext) unmarshalInputProductFilter(ctx context.Context, obj interface{}) (*model.ProductFilter, error) {
 	var it model.ProductFilter
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
@@ -17075,61 +14910,61 @@ func (ec *executionContext) unmarshalInputProductFilter(ctx context.Context, obj
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("releaseDate"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.ReleaseDate = data
+			it.ReleaseDate = graphql.OmittableOf(data)
 		case "startingPrice":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startingPrice"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.StartingPrice = data
+			it.StartingPrice = graphql.OmittableOf(data)
 		case "endingPrice":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endingPrice"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.EndingPrice = data
+			it.EndingPrice = graphql.OmittableOf(data)
 		case "categoryName":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.CategoryName = data
+			it.CategoryName = graphql.OmittableOf(data)
 		case "categoryId":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.CategoryID = data
+			it.CategoryID = graphql.OmittableOf(data)
 		case "starRatings":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("starRatings"))
 			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.StarRatings = data
+			it.StarRatings = graphql.OmittableOf(data)
 		}
 	}
 
-	return it, nil
+	return &it, nil
 }
 
-func (ec *executionContext) unmarshalInputProductSort(ctx context.Context, obj interface{}) (model.ProductSort, error) {
+func (ec *executionContext) unmarshalInputProductSort(ctx context.Context, obj interface{}) (*model.ProductSort, error) {
 	var it model.ProductSort
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
@@ -17149,25 +14984,25 @@ func (ec *executionContext) unmarshalInputProductSort(ctx context.Context, obj i
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.Price = data
+			it.Price = graphql.OmittableOf(data)
 		case "date":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.Date = data
+			it.Date = graphql.OmittableOf(data)
 		}
 	}
 
-	return it, nil
+	return &it, nil
 }
 
-func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj interface{}) (model.ProfileData, error) {
+func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj interface{}) (*model.ProfileData, error) {
 	var it model.ProfileData
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
@@ -17187,40 +15022,40 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.Website = data
+			it.Website = graphql.OmittableOf(data)
 		case "twitter":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("twitter"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.Twitter = data
+			it.Twitter = graphql.OmittableOf(data)
 		case "linkedin":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedin"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
-			it.Linkedin = data
+			it.Linkedin = graphql.OmittableOf(data)
 		case "memberProfile":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memberProfile"))
 			data, err := ec.unmarshalNJSON2string(ctx, v)
 			if err != nil {
-				return it, err
+				return &it, err
 			}
 			it.MemberProfile = data
 		}
 	}
 
-	return it, nil
+	return &it, nil
 }
 
 // endregion **************************** input.gotpl *****************************
@@ -18409,14 +16244,29 @@ func (ec *executionContext) _MemberProfile(ctx context.Context, sel ast.Selectio
 			out.Values[i] = graphql.MarshalString("MemberProfile")
 		case "id":
 			out.Values[i] = ec._MemberProfile_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "memberId":
 			out.Values[i] = ec._MemberProfile_memberId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "profileName":
 			out.Values[i] = ec._MemberProfile_profileName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "profileSlug":
 			out.Values[i] = ec._MemberProfile_profileSlug(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "profilePage":
 			out.Values[i] = ec._MemberProfile_profilePage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "memberDetails":
 			out.Values[i] = ec._MemberProfile_memberDetails(ctx, field, obj)
 		case "companyName":
@@ -19738,6 +17588,16 @@ func (ec *executionContext) marshalNCategoriesList2spurtcmsᚑgraphqlᚋgraphᚋ
 	return ec._CategoriesList(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNCategoriesList2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoriesList(ctx context.Context, sel ast.SelectionSet, v *model.CategoriesList) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CategoriesList(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNCategory2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
 	return ec._Category(ctx, sel, &v)
 }
@@ -19878,8 +17738,28 @@ func (ec *executionContext) marshalNChannel2ᚕspurtcmsᚑgraphqlᚋgraphᚋmode
 	return ret
 }
 
+func (ec *executionContext) marshalNChannel2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannel(ctx context.Context, sel ast.SelectionSet, v *model.Channel) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Channel(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNChannelDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelDetails(ctx context.Context, sel ast.SelectionSet, v model.ChannelDetails) graphql.Marshaler {
 	return ec._ChannelDetails(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChannelDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelDetails(ctx context.Context, sel ast.SelectionSet, v *model.ChannelDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNChannelEntries2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx context.Context, sel ast.SelectionSet, v model.ChannelEntries) graphql.Marshaler {
@@ -19930,13 +17810,33 @@ func (ec *executionContext) marshalNChannelEntries2ᚕspurtcmsᚑgraphqlᚋgraph
 	return ret
 }
 
+func (ec *executionContext) marshalNChannelEntries2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx context.Context, sel ast.SelectionSet, v *model.ChannelEntries) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelEntries(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNChannelEntriesDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntriesDetails(ctx context.Context, sel ast.SelectionSet, v model.ChannelEntriesDetails) graphql.Marshaler {
 	return ec._ChannelEntriesDetails(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNChannelEntriesDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntriesDetails(ctx context.Context, sel ast.SelectionSet, v *model.ChannelEntriesDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelEntriesDetails(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNClaimData2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐClaimData(ctx context.Context, v interface{}) (model.ClaimData, error) {
 	res, err := ec.unmarshalInputClaimData(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
+	return *res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNEcommerceProduct2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProduct(ctx context.Context, sel ast.SelectionSet, v model.EcommerceProduct) graphql.Marshaler {
@@ -19987,8 +17887,28 @@ func (ec *executionContext) marshalNEcommerceProduct2ᚕspurtcmsᚑgraphqlᚋgra
 	return ret
 }
 
+func (ec *executionContext) marshalNEcommerceProduct2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProduct(ctx context.Context, sel ast.SelectionSet, v *model.EcommerceProduct) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EcommerceProduct(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNEcommerceProducts2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProducts(ctx context.Context, sel ast.SelectionSet, v model.EcommerceProducts) graphql.Marshaler {
 	return ec._EcommerceProducts(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNEcommerceProducts2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProducts(ctx context.Context, sel ast.SelectionSet, v *model.EcommerceProducts) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EcommerceProducts(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNField2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐField(ctx context.Context, sel ast.SelectionSet, v model.Field) graphql.Marshaler {
@@ -20048,9 +17968,19 @@ func (ec *executionContext) marshalNLoginDetails2spurtcmsᚑgraphqlᚋgraphᚋmo
 	return ec._LoginDetails(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNLoginDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐLoginDetails(ctx context.Context, sel ast.SelectionSet, v *model.LoginDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LoginDetails(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNMemberDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberDetails(ctx context.Context, v interface{}) (model.MemberDetails, error) {
 	res, err := ec.unmarshalInputMemberDetails(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
+	return *res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNMemberGroup2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberGroup(ctx context.Context, sel ast.SelectionSet, v model.MemberGroup) graphql.Marshaler {
@@ -20113,6 +18043,16 @@ func (ec *executionContext) marshalNPageAndPageGroups2spurtcmsᚑgraphqlᚋgraph
 	return ec._PageAndPageGroups(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNPageAndPageGroups2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageAndPageGroups(ctx context.Context, sel ast.SelectionSet, v *model.PageAndPageGroups) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PageAndPageGroups(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNPageGroup2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐPageGroup(ctx context.Context, sel ast.SelectionSet, v model.PageGroup) graphql.Marshaler {
 	return ec._PageGroup(ctx, sel, &v)
 }
@@ -20163,7 +18103,7 @@ func (ec *executionContext) marshalNPageGroup2ᚕspurtcmsᚑgraphqlᚋgraphᚋmo
 
 func (ec *executionContext) unmarshalNProfileData2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐProfileData(ctx context.Context, v interface{}) (model.ProfileData, error) {
 	res, err := ec.unmarshalInputProfileData(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
+	return *res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNSection2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSection(ctx context.Context, sel ast.SelectionSet, v model.Section) graphql.Marshaler {
@@ -20218,8 +18158,28 @@ func (ec *executionContext) marshalNSpace2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodel�
 	return ret
 }
 
+func (ec *executionContext) marshalNSpace2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpace(ctx context.Context, sel ast.SelectionSet, v *model.Space) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Space(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNSpaceDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpaceDetails(ctx context.Context, sel ast.SelectionSet, v model.SpaceDetails) graphql.Marshaler {
 	return ec._SpaceDetails(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSpaceDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSpaceDetails(ctx context.Context, sel ast.SelectionSet, v *model.SpaceDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SpaceDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -20787,7 +18747,7 @@ func (ec *executionContext) unmarshalOProductFilter2ᚖspurtcmsᚑgraphqlᚋgrap
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputProductFilter(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOProductSort2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductSort(ctx context.Context, v interface{}) (*model.ProductSort, error) {
@@ -20795,7 +18755,7 @@ func (ec *executionContext) unmarshalOProductSort2ᚖspurtcmsᚑgraphqlᚋgraph�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputProductSort(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOSection2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐSectionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Section) graphql.Marshaler {

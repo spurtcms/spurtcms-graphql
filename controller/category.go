@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel, checkEntriesPresence *int) (model.CategoriesList, error) {
+func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel, checkEntriesPresence *int) (*model.CategoriesList, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -64,20 +64,20 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 	res := `WITH RECURSIVE cat_tree AS (
 		SELECT id, category_name, category_slug,image_path, parent_id,created_on,modified_on,is_deleted` + selecthierarchy_string + `
 		FROM tbl_categories ` + category_string + `
-		UNION ALL
+		UNION
 		SELECT cat.id, cat.category_name, cat.category_slug, cat.image_path ,cat.parent_id,cat.created_on,cat.modified_on,
 		cat.is_deleted` + fromhierarchy_string + `
 		FROM tbl_categories AS cat
 		JOIN cat_tree ON cat.parent_id = cat_tree.id ` + hierarchy_string + ` )`
 
-	if err := db.Debug().Raw(` ` + res + `SELECT cat_tree.* FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0 order by id desc ` + limit_offString).Find(&categories).Error; err != nil {
+	if err := db.Debug().Raw(` ` + res + `SELECT distinct(cat_tree.id),cat_tree.* FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0 order by id desc ` + limit_offString).Find(&categories).Error; err != nil {
 
-		return model.CategoriesList{}, err
+		return &model.CategoriesList{}, err
 	}
 
-	if err := db.Raw(` ` + res + ` SELECT count(*) FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0  group by id order by id desc`).Count(&count).Error; err != nil {
+	if err := db.Raw(` ` + res + ` SELECT count(distinct(cat_tree.id)) FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0  group by id order by id desc`).Count(&count).Error; err != nil {
 
-		return model.CategoriesList{}, err
+		return &model.CategoriesList{}, err
 	}
 
 	var final_categoriesList []model.Category
@@ -112,7 +112,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 				if err != nil {
 
-					return model.CategoriesList{}, err
+					return &model.CategoriesList{}, err
 				}
 
 				if categoryIds != "" {
@@ -157,5 +157,5 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 		count = int64(len(final_categoriesList))
 	}
 
-	return model.CategoriesList{Categories: final_categoriesList, Count: int(count)}, nil
+	return &model.CategoriesList{Categories: final_categoriesList, Count: int(count)}, nil
 }

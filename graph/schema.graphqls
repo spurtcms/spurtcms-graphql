@@ -96,7 +96,7 @@ type ChannelEntries{
 	fields:               [Field!]
 	author:               String
 	sortOrder:            Int
-	createDate:          String
+	createDate:           String
 	publishedTime:        String
 	readingTime:          Int
 	tags:                 String
@@ -116,11 +116,11 @@ type Author{
 }
 
 type MemberProfile{
-	id:                Int
-	memberId:          Int
-	profileName:       String
-	profileSlug:       String
-	profilePage:       String
+	id:                Int!
+	memberId:          Int!
+	profileName:       String!
+	profileSlug:       String!
+	profilePage:       String!
 	memberDetails:     Any
 	companyName:       String
 	companyLocation:   String

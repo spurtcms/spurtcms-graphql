@@ -4,6 +4,8 @@ package model
 
 import (
 	"time"
+
+	"github.com/99designs/gqlgen/graphql"
 )
 
 type AdditionalFields struct {
@@ -200,16 +202,16 @@ type Member struct {
 }
 
 type MemberDetails struct {
-	FirstName        string  `json:"firstName"`
-	LastName         string  `json:"lastName"`
-	Mobile           string  `json:"mobile"`
-	Email            string  `json:"email"`
-	Password         string  `json:"password"`
-	IsActive         *int    `json:"isActive,omitempty"`
-	ProfileImage     *string `json:"profileImage,omitempty"`
-	ProfileImagePath *string `json:"profileImagePath,omitempty"`
-	Username         *string `json:"username,omitempty"`
-	GroupID          *int    `json:"groupId,omitempty"`
+	FirstName        string                     `json:"firstName"`
+	LastName         string                     `json:"lastName"`
+	Mobile           string                     `json:"mobile"`
+	Email            string                     `json:"email"`
+	Password         string                     `json:"password"`
+	IsActive         graphql.Omittable[*int]    `json:"isActive,omitempty"`
+	ProfileImage     graphql.Omittable[*string] `json:"profileImage,omitempty"`
+	ProfileImagePath graphql.Omittable[*string] `json:"profileImagePath,omitempty"`
+	Username         graphql.Omittable[*string] `json:"username,omitempty"`
+	GroupID          graphql.Omittable[*int]    `json:"groupId,omitempty"`
 }
 
 type MemberGroup struct {
@@ -225,11 +227,11 @@ type MemberGroup struct {
 }
 
 type MemberProfile struct {
-	ID              *int        `json:"id,omitempty"`
-	MemberID        *int        `json:"memberId,omitempty"`
-	ProfileName     *string     `json:"profileName,omitempty"`
-	ProfileSlug     *string     `json:"profileSlug,omitempty"`
-	ProfilePage     *string     `json:"profilePage,omitempty"`
+	ID              int         `json:"id"`
+	MemberID        int         `json:"memberId"`
+	ProfileName     string      `json:"profileName"`
+	ProfileSlug     string      `json:"profileSlug"`
+	ProfilePage     string      `json:"profilePage"`
 	MemberDetails   interface{} `json:"memberDetails,omitempty" gorm:"column:member_details;type:jsonb"`
 	CompanyName     *string     `json:"companyName,omitempty"`
 	CompanyLocation *string     `json:"companyLocation,omitempty"`
@@ -279,12 +281,12 @@ type PageGroup struct {
 }
 
 type ProductFilter struct {
-	ReleaseDate   *string  `json:"releaseDate,omitempty"`
-	StartingPrice *int     `json:"startingPrice,omitempty"`
-	EndingPrice   *int     `json:"endingPrice,omitempty"`
-	CategoryName  *string  `json:"categoryName,omitempty"`
-	CategoryID    *int     `json:"categoryId,omitempty"`
-	StarRatings   *float64 `json:"starRatings,omitempty"`
+	ReleaseDate   graphql.Omittable[*string]  `json:"releaseDate,omitempty"`
+	StartingPrice graphql.Omittable[*int]     `json:"startingPrice,omitempty"`
+	EndingPrice   graphql.Omittable[*int]     `json:"endingPrice,omitempty"`
+	CategoryName  graphql.Omittable[*string]  `json:"categoryName,omitempty"`
+	CategoryID    graphql.Omittable[*int]     `json:"categoryId,omitempty"`
+	StarRatings   graphql.Omittable[*float64] `json:"starRatings,omitempty"`
 }
 
 type ProductPricing struct {
@@ -299,15 +301,15 @@ type ProductPricing struct {
 }
 
 type ProductSort struct {
-	Price *int `json:"price,omitempty"`
-	Date  *int `json:"date,omitempty"`
+	Price graphql.Omittable[*int] `json:"price,omitempty"`
+	Date  graphql.Omittable[*int] `json:"date,omitempty"`
 }
 
 type ProfileData struct {
-	Website       *string `json:"website,omitempty"`
-	Twitter       *string `json:"twitter,omitempty"`
-	Linkedin      *string `json:"linkedin,omitempty"`
-	MemberProfile string  `json:"memberProfile"`
+	Website       graphql.Omittable[*string] `json:"website,omitempty"`
+	Twitter       graphql.Omittable[*string] `json:"twitter,omitempty"`
+	Linkedin      graphql.Omittable[*string] `json:"linkedin,omitempty"`
+	MemberProfile string                     `json:"memberProfile"`
 }
 
 type Section struct {

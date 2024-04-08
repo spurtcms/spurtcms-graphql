@@ -16,7 +16,7 @@ func (r *mutationResolver) MemberLogin(ctx context.Context, email string) (bool,
 }
 
 // VerifyMemberOtp is the resolver for the verifyMemberOtp field.
-func (r *mutationResolver) VerifyMemberOtp(ctx context.Context, email string, otp int) (model.LoginDetails, error) {
+func (r *mutationResolver) VerifyMemberOtp(ctx context.Context, email string, otp int) (*model.LoginDetails, error) {
 	return VerifyMemberOtp(r.DB, ctx, email, otp)
 }
 
@@ -51,52 +51,52 @@ func (r *mutationResolver) TemplateMemberLogin(ctx context.Context, username str
 }
 
 // Channellist is the resolver for the channellist field.
-func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) (model.ChannelDetails, error) {
+func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) (*model.ChannelDetails, error) {
 	return Channellist(r.DB, ctx, limit, offset)
 }
 
 // ChannelDetail is the resolver for the channelDetail field.
-func (r *queryResolver) ChannelDetail(ctx context.Context, channelID int) (model.Channel, error) {
+func (r *queryResolver) ChannelDetail(ctx context.Context, channelID int) (*model.Channel, error) {
 	return ChannelDetail(r.DB, ctx, channelID)
 }
 
 // ChannelEntriesList is the resolver for the channelEntriesList field.
-func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (model.ChannelEntriesDetails, error) {
+func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (*model.ChannelEntriesDetails, error) {
 	return ChannelEntriesList(r.DB, ctx, channelID, categoryID, limit, offset, title, categoryChildID, categorySlug, categoryChildSlug)
 }
 
 // ChannelEntryDetail is the resolver for the channelEntryDetail field.
-func (r *queryResolver) ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (model.ChannelEntries, error) {
+func (r *queryResolver) ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (*model.ChannelEntries, error) {
 	return ChannelEntryDetail(r.DB, ctx, channelID, categoryID, channelEntryID, slug)
 }
 
 // SpaceList is the resolver for the spaceList field.
-func (r *queryResolver) SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (model.SpaceDetails, error) {
+func (r *queryResolver) SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error) {
 	return SpaceList(r.DB, ctx, limit, offset, categoriesID)
 }
 
 // SpaceDetails is the resolver for the spaceDetails field.
-func (r *queryResolver) SpaceDetails(ctx context.Context, spaceID int) (model.Space, error) {
+func (r *queryResolver) SpaceDetails(ctx context.Context, spaceID int) (*model.Space, error) {
 	return SpaceDetails(r.DB, ctx, spaceID)
 }
 
 // PagesAndPageGroupsUnderSpace is the resolver for the PagesAndPageGroupsUnderSpace field.
-func (r *queryResolver) PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (model.PageAndPageGroups, error) {
+func (r *queryResolver) PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (*model.PageAndPageGroups, error) {
 	return PagesAndPageGroupsUnderSpace(r.DB, ctx, spaceID)
 }
 
 // CategoriesList is the resolver for the categoriesList field.
-func (r *queryResolver) CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (model.CategoriesList, error) {
+func (r *queryResolver) CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (*model.CategoriesList, error) {
 	return CategoriesList(r.DB, ctx, limit, offset, categoryGroupID, hierarchyLevel, checkEntriesPresence)
 }
 
 // EcommerceProductList is the resolver for the ecommerceProductList field.
-func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (model.EcommerceProducts, error) {
+func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {
 	return EcommerceProductList(r.DB, ctx, limit, offset, filter, sort)
 }
 
 // EcommerceProductDetails is the resolver for the ecommerceProductDetails field.
-func (r *queryResolver) EcommerceProductDetails(ctx context.Context, productID int) (model.EcommerceProduct, error) {
+func (r *queryResolver) EcommerceProductDetails(ctx context.Context, productID int) (*model.EcommerceProduct, error) {
 	panic(fmt.Errorf("not implemented: EcommerceProductDetails - ecommerceProductDetails"))
 }
 
