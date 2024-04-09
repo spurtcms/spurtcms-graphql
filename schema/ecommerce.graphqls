@@ -1,0 +1,61 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type EcommerceProducts{
+	productList:  [EcommerceProduct!]!
+	count:        Int!
+}
+
+type EcommerceProduct{
+	id:                        Int!
+	categoriesId:              Int!
+	productName:               String!
+	productDescription:        String!
+	productImagePath:          String!
+	productVideoPath:          String!
+	sku:                       String!
+	tax:                       Int!
+	totalcost:                 Int!
+	isActive:                  Int!
+	createdOn:                 Time!
+	createdBy:                 Int!
+	modifiedOn:                Time
+	modifiedBy:                Int
+	isDeleted:                 Int!
+	deletedBy:                 Int
+	deletedOn:                 Time
+	defaultPrice:              Int! 
+	discountPrice:             Int
+	specialPrice:              Int
+} 
+
+type ProductPricing{
+	id:          Int!
+	priceId:     Int!
+	sku:         String!
+	priority:    Int!
+	price:       Int!
+	startDtae:   Time!
+	endDate:     Time!
+	type:        String!
+}
+
+extend type Query{
+    ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
+	ecommerceProductDetails(productId: Int!): EcommerceProduct!
+}
+
+input ProductFilter{
+	releaseDate:           String
+	startingPrice:         Int
+	endingPrice:           Int
+	categoryName:          String
+	categoryId:            Int
+	starRatings:           Float
+}
+
+input ProductSort{
+	price:        Int
+	date:         Int
+}

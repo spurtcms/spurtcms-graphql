@@ -91,11 +91,12 @@ type ChannelEntries struct {
 	Fields           []Field           `json:"fields,omitempty" gorm:"-"`
 	Author           *string           `json:"author,omitempty"`
 	SortOrder        *int              `json:"sortOrder,omitempty"`
-	CreateDate       *string           `json:"createDate,omitempty"`
-	PublishedTime    *string           `json:"publishedTime,omitempty"`
+	CreateTime       *time.Time        `json:"createTime,omitempty"`
+	PublishedTime    *time.Time        `json:"publishedTime,omitempty"`
 	ReadingTime      *int              `json:"readingTime,omitempty"`
 	Tags             *string           `json:"tags,omitempty"`
 	Excerpt          *string           `json:"excerpt,omitempty"`
+	ImageAltTag      *string           `json:"imageAltTag,omitempty"`
 }
 
 type ChannelEntriesDetails struct {
@@ -227,11 +228,11 @@ type MemberGroup struct {
 }
 
 type MemberProfile struct {
-	ID              int         `json:"id"`
-	MemberID        int         `json:"memberId"`
-	ProfileName     string      `json:"profileName"`
-	ProfileSlug     string      `json:"profileSlug"`
-	ProfilePage     string      `json:"profilePage"`
+	ID              *int        `json:"id,omitempty"`
+	MemberID        *int        `json:"memberId,omitempty"`
+	ProfileName     *string     `json:"profileName,omitempty"`
+	ProfileSlug     *string     `json:"profileSlug,omitempty"`
+	ProfilePage     *string     `json:"profilePage,omitempty"`
 	MemberDetails   interface{} `json:"memberDetails,omitempty" gorm:"column:member_details;type:jsonb"`
 	CompanyName     *string     `json:"companyName,omitempty"`
 	CompanyLocation *string     `json:"companyLocation,omitempty"`
@@ -248,6 +249,9 @@ type MemberProfile struct {
 	ModifiedOn      *time.Time  `json:"modifiedOn,omitempty"`
 	ModifiedBy      *int        `json:"modifiedBy,omitempty"`
 	ClaimStatus     *int        `json:"claimStatus,omitempty"`
+}
+
+type Mutation struct {
 }
 
 type Page struct {
@@ -310,6 +314,9 @@ type ProfileData struct {
 	Twitter       graphql.Omittable[*string] `json:"twitter,omitempty"`
 	Linkedin      graphql.Omittable[*string] `json:"linkedin,omitempty"`
 	MemberProfile string                     `json:"memberProfile"`
+}
+
+type Query struct {
 }
 
 type Section struct {

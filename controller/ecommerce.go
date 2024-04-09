@@ -98,3 +98,16 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 
 	return &model.EcommerceProducts{ProductList: ecom_products, Count: int(count)}, nil
 }
+
+func EcommerceProductDetails(db *gorm.DB, ctx context.Context, productId int) (model.EcommerceProduct, error) {
+
+	var productdtl model.EcommerceProduct
+
+	currentTime := time.Now().In(TimeZone).Format("2006-01-02 15:04:05")
+
+	if err := db.Debug().Table("tbl_ecom_products").Select("tbl_ecom_products.*,rp.price AS discount_price ,rs.price AS special_price").Joins("inner join tbl_ecom_product_pricings on tbl_ecom_product_pricings.product_id = tbl_ecom_products.id").Joins("left join (select , ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= '"+currentTime+"' and tbl_ecom_product_pricings.end_date >= '"+currentTime+"') rp on rp.product_id = tbl_ecom_products.id").Joins("left join (select , ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= '"+currentTime+"' and tbl_ecom_product_pricings.end_date >= '"+currentTime+"') rs on rs.product_id = tbl_ecom_products.id").Where("tbl_ecom_products.id = ?", productId).First(&productdtl).Error; err != nil {
+		return model.EcommerceProduct{}, err
+	}
+	return productdtl, nil
+
+}

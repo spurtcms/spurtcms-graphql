@@ -1,0 +1,192 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Channel{
+	id:                  Int!
+	channelName:         String!
+	channelDescription:  String!
+	slugName:            String!
+	fieldGroupId:        Int!
+	isActive:            Int!
+	createdOn:           Time!
+	createdBy:           Int!
+	modifiedOn:          Time          
+	modifiedBy:          Int                                              
+}
+
+type ChannelDetails{
+    channellist: [Channel!]!
+    count:       Int!
+}
+
+type ChannelEntriesDetails{
+    channelEntriesList: [ChannelEntries!]!
+    count:              Int!
+}
+
+type ChannelEntries{
+	id:                   Int!
+	title:                String! 
+	slug:                 String! 
+	description:          String!
+	userId:               Int!
+	channelId:            Int!
+	status:               Int!
+	isActive:             Int!
+	createdOn:            Time!
+	createdBy:            Int!
+	modifiedBy:           Int     
+	modifiedOn:           Time 
+	coverImage:           String!
+	thumbnailImage:       String!
+	metaTitle:            String!
+	metaDescription:      String!
+	keyword:              String!
+	categoriesId:         String!
+	relatedArticles:      String!
+	featuredEntry:        Int!
+	viewCount:            Int!
+	categories:           [[Category!]!]!
+	additionalFields:     AdditionalFields
+	authorDetails:        Author!
+	memberProfile:        MemberProfile!
+	claimStatus:          Boolean!
+	fields:               [Field!]
+	author:               String
+	sortOrder:            Int
+	createTime:           Time
+	publishedTime:        Time
+	readingTime:          Int
+	tags:                 String
+	excerpt:              String
+	imageAltTag:          String
+}
+
+type Author{
+	AuthorId:             Int! 
+	FirstName:            String!
+	LastName:             String!
+	Email:                String!
+	MobileNo:             String
+	IsActive:             Int
+	ProfileImagePath:     String
+	CreatedOn:            Time!
+	CreatedBy:            Int!      
+}
+
+type MemberProfile{
+	id:                Int
+	memberId:          Int
+	profileName:       String
+	profileSlug:       String
+	profilePage:       String
+	memberDetails:     Any
+	companyName:       String
+	companyLocation:   String
+	companyLogo:       String
+	about:             String
+	seoTitle:          String
+	seoDescription:    String
+	seoKeyword:        String
+	linkedin:          String
+	twitter:           String
+	website:           String
+	createdBy:         Int
+	createdOn:         Time
+	modifiedOn:        Time 
+	modifiedBy:        Int 
+	claimStatus:       Int      
+}
+
+
+type AdditionalFields{
+	sections:   [Section!]
+	fields:     [Field!]
+}
+
+type Section{
+	sectionId:         Int
+	sectionName:       String!
+	sectionTypeId:     Int!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+	orderIndex:        Int!
+}
+
+type Field{
+	fieldId:           Int!
+	fieldName:         String!
+	fieldTypeId:       Int!
+	mandatoryField:    Int!
+	optionExist:       Int!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+	fieldDesc:         String!
+	orderIndex:        Int!
+	imagePath:         String!
+	datetimeFormat:    String
+	timeFormat:        String
+	sectionParentId:   Int
+	characterAllowed:  Int
+	fieldTypeName:     String!
+	fieldValue:        FieldValue
+	fieldOptions:      [FieldOptions!]
+}
+
+type FieldValue{
+	id:                Int!
+	fieldValue:        String!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+}
+
+type FieldOptions{
+	id:                Int!
+	optionName:        String!
+	optionValue:       String!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBY:        Int
+}
+
+type LoginDetails{
+	claimEntryDetails:  ChannelEntries!
+	token:              String! 
+}
+
+extend type Query{
+    channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
+	channelDetail(channelId: Int!): Channel! @auth
+    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String): ChannelEntriesDetails! @auth
+	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int): ChannelEntries! @auth
+}
+
+extend type Mutation{
+    memberLogin(email: String!): Boolean!
+	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
+	memberProfileUpdate(profiledata: ProfileData!,entryId: Int!):Boolean! @auth
+	memberclaimnow(input: ClaimData!,entryId: Int!): Boolean! @auth
+	profileNameVerification(profileName: String!): Boolean! @auth
+}
+
+input ProfileData{
+	website:         String
+	twitter:         String
+	linkedin:        String
+	memberProfile:   JSON!
+}
+
+input ClaimData{
+	profileName:     String!
+	workMail:        String!
+    companyNumber:   LargeInt!
+	personName:      String!
+}

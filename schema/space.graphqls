@@ -1,0 +1,73 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type SpaceDetails{
+	spacelist:      [Space!]!
+	count:          Int!
+}
+
+type Space{
+	id:                   Int!
+	spaceName:            String!
+	spaceSlug:            String!
+	spaceDescription:     String!
+	imagePath:            String!
+	languageId:           Int!
+	createdOn:            Time!
+	createdBy:            Int!
+	modifiedOn:           Time        
+	modifiedBy:           Int 
+	categoryId:           Int!                                                                                                
+	categories:           [Category!]!                                                                               
+}
+
+type PageAndPageGroups{
+	pages:         [Page!]!
+	subpages:      [SubPage!]!
+	pagegroups:    [PageGroup!]!
+}
+
+type Page{
+    id:               Int!
+	pageName:         String!
+	content:          String!
+	pagegroupId:      Int!
+	orderIndex:       Int!
+	parentId:         Int!
+	status:           String!
+	createdOn:        Time!
+	created_by:       Int!
+	modifiedOn:       Time
+	modifiedBy:       Int
+}
+
+type SubPage{
+    id:             Int!
+    subpageName:    String!
+    conent:         String!
+    parentId:       Int!
+    pageGroupId:    Int!
+    orderIndex:     Int!
+    status:         String!
+    createdOn:      Time!
+    created_by:     Int!
+    modifiedOn:     Time
+    modifiedBy:     Int
+}
+
+type PageGroup{
+    id:             Int!
+    pagegroupName:  String!
+    orderIndex:     Int!
+	createdOn:      Time!
+    created_by:     Int!
+    modifiedOn:     Time
+    modifiedBy:     Int
+}
+
+extend type Query{
+	spaceList(limit: Int!,offset: Int!,categoriesId: Int): SpaceDetails! @auth
+	spaceDetails(spaceId: Int!): Space! @auth
+	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
+}

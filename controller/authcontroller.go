@@ -133,6 +133,10 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 		for _, category := range categories {
 
+			categoryModon := category.ModifiedOn
+
+			categoryModBy := category.ModifiedBy
+
 			conv_category := model.Category{
 				ID:           category.Id,
 				CategoryName: category.CategoryName,
@@ -141,8 +145,8 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 				ImagePath:    category.ImagePath,
 				CreatedOn:    category.CreatedOn,
 				CreatedBy:    category.CreatedBy,
-				ModifiedOn:   &category.ModifiedOn,
-				ModifiedBy:   &category.ModifiedBy,
+				ModifiedOn:   &categoryModon,
+				ModifiedBy:   &categoryModBy,
 				ParentID:     category.ParentId,
 			}
 
@@ -169,14 +173,20 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	for _, section := range channelEntry.Sections {
 
+		sectionId := section.Id
+
+		sectionModon := section.ModifiedOn
+
+		sectionModBy := section.ModifiedBy
+
 		conv_section := model.Section{
-			SectionID:     &section.Id,
+			SectionID:     &sectionId,
 			SectionName:   section.FieldName,
 			SectionTypeID: section.FieldTypeId,
 			CreatedOn:     section.CreatedOn,
 			CreatedBy:     section.CreatedBy,
-			ModifiedOn:    &section.ModifiedOn,
-			ModifiedBy:    &section.ModifiedBy,
+			ModifiedOn:    &sectionModon,
+			ModifiedBy:    &sectionModBy,
 			OrderIndex:    section.OrderIndex,
 		}
 
@@ -187,18 +197,26 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	for _, field := range channelEntry.Fields {
 
+		fieldValueModon := field.FieldValue.ModifiedOn
+
+		fieldValueModBy := field.FieldValue.ModifiedBy
+
 		conv_field_value := model.FieldValue{
 			ID:         field.FieldValue.FieldId,
 			FieldValue: field.FieldValue.FieldValue,
 			CreatedOn:  field.FieldValue.CreatedOn,
 			CreatedBy:  field.FieldValue.CreatedBy,
-			ModifiedOn: &field.FieldValue.ModifiedOn,
-			ModifiedBy: &field.FieldValue.ModifiedBy,
+			ModifiedOn: &fieldValueModon,
+			ModifiedBy: &fieldValueModBy,
 		}
 
 		var conv_fieldOptions []model.FieldOptions
 
 		for _, field_option := range field.FieldOptions {
+
+			optionModOn := field_option.ModifiedOn
+
+			optionModBy := field_option.ModifiedBy
 
 			conv_fieldOption := model.FieldOptions{
 				ID:          field_option.Id,
@@ -206,12 +224,24 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 				OptionValue: field_option.OptionValue,
 				CreatedOn:   field_option.CreatedOn,
 				CreatedBy:   field_option.CreatedBy,
-				ModifiedOn:  &field_option.ModifiedOn,
-				ModifiedBy:  &field_option.ModifiedBy,
+				ModifiedOn:  &optionModOn,
+				ModifiedBy:  &optionModBy,
 			}
 
 			conv_fieldOptions = append(conv_fieldOptions, conv_fieldOption)
 		}
+
+		fieldModon := field.ModifiedOn
+
+		fieldModBy := field.ModifiedBy
+
+		fieldDateTime := field.DatetimeFormat
+
+		fieldTime := field.TimeFormat
+
+		fieldSectionParentId := field.SectionParentId
+
+		fieldCharAllowed := field.CharacterAllowed
 
 		conv_field := model.Field{
 			FieldID:          field.Id,
@@ -221,15 +251,15 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 			OptionExist:      field.OptionExist,
 			CreatedOn:        field.CreatedOn,
 			CreatedBy:        field.CreatedBy,
-			ModifiedOn:       &field.ModifiedOn,
-			ModifiedBy:       &field.ModifiedBy,
+			ModifiedOn:       &fieldModon,
+			ModifiedBy:       &fieldModBy,
 			FieldDesc:        field.FieldDesc,
 			OrderIndex:       field.OrderIndex,
 			ImagePath:        field.ImagePath,
-			DatetimeFormat:   &field.DatetimeFormat,
-			TimeFormat:       &field.TimeFormat,
-			SectionParentID:  &field.SectionParentId,
-			CharacterAllowed: &field.CharacterAllowed,
+			DatetimeFormat:   &fieldDateTime,
+			TimeFormat:       &fieldTime,
+			SectionParentID:  &fieldSectionParentId,
+			CharacterAllowed: &fieldCharAllowed,
 			FieldTypeName:    field.FieldTypeName,
 			FieldValue:       &conv_field_value,
 			FieldOptions:     conv_fieldOptions,
@@ -240,29 +270,52 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
-	MemberProfile := model.MemberProfile{
-		ID:              channelEntry.MemberProfile.Id,
-		MemberID:        channelEntry.MemberProfile.MemberId,
-		ProfileName:     channelEntry.MemberProfile.ProfileName,
-		ProfileSlug:     channelEntry.MemberProfile.ProfileSlug,
-		ProfilePage:     channelEntry.MemberProfile.ProfilePage,
-		MemberDetails:   channelEntry.MemberProfile.MemberDetails,
-		CompanyName:     &channelEntry.MemberProfile.CompanyName,
-		CompanyLocation: &channelEntry.MemberProfile.CompanyLocation,
-		CompanyLogo:     &channelEntry.MemberProfile.CompanyLogo,
-		About:           &channelEntry.MemberProfile.About,
-		SeoTitle:        &channelEntry.MemberProfile.SeoTitle,
-		SeoDescription:  &channelEntry.MemberProfile.SeoDescription,
-		SeoKeyword:      &channelEntry.MemberProfile.SeoKeyword,
-		CreatedBy:       &channelEntry.MemberProfile.CreatedBy,
-		CreatedOn:       &channelEntry.MemberProfile.CreatedOn,
-		ModifiedOn:      &channelEntry.MemberProfile.ModifiedOn,
-		ModifiedBy:      &channelEntry.MemberProfile.ModifiedBy,
-		Linkedin:        &channelEntry.MemberProfile.Linkedin,
-		Twitter:         &channelEntry.MemberProfile.Twitter,
-		Website:         &channelEntry.MemberProfile.Website,
-		ClaimStatus:     &channelEntry.MemberProfile.ClaimStatus,
-	}
+	    memberProfileId := channelEntry.MemberProfile.Id
+		memberProfileMemId := channelEntry.MemberProfile.MemberId
+        memberProfileName := channelEntry.MemberProfile.ProfileName
+		memberProfileSlug := channelEntry.MemberProfile.ProfileSlug
+		memberProfilePage := channelEntry.MemberProfile.ProfilePage
+		memberProfileMemDetails := channelEntry.MemberProfile.MemberDetails
+		memberProfileComName := channelEntry.MemberProfile.CompanyName
+		memberProfileComLocation := channelEntry.MemberProfile.CompanyLocation
+		memberProfileComLogo := channelEntry.MemberProfile.CompanyLogo
+		memberProfileAbout := channelEntry.MemberProfile.About
+		memberProfileSeoTitle := channelEntry.MemberProfile.SeoTitle
+		memberProfileSeoDesc := channelEntry.MemberProfile.SeoDescription
+		memberProfileSeoKey := channelEntry.MemberProfile.SeoKeyword
+		memberProfileCreateBy := channelEntry.MemberProfile.CreatedBy
+		memberProfileCreateOn := channelEntry.MemberProfile.CreatedOn
+		memberProfileModon := channelEntry.MemberProfile.ModifiedOn
+		memberProfileModBy := channelEntry.MemberProfile.ModifiedBy
+		memberProfileLinkedin := channelEntry.MemberProfile.Linkedin
+		memberProfileTwitter := channelEntry.MemberProfile.Twitter
+		memberProfileWeb := channelEntry.MemberProfile.Website
+		memberProfileClaim := channelEntry.MemberProfile.ClaimStatus
+
+
+		MemberProfile := model.MemberProfile{
+			ID:              &memberProfileId,
+			MemberID:        &memberProfileMemId,
+			ProfileName:     &memberProfileName,
+			ProfileSlug:     &memberProfileSlug,
+			ProfilePage:     &memberProfilePage,
+			MemberDetails:   &memberProfileMemDetails,
+			CompanyName:     &memberProfileComName,
+			CompanyLocation: &memberProfileComLocation,
+			CompanyLogo:     &memberProfileComLogo,
+			About:           &memberProfileAbout,
+			SeoTitle:        &memberProfileSeoTitle,
+			SeoDescription:  &memberProfileSeoDesc,
+			SeoKeyword:      &memberProfileSeoKey,
+			CreatedBy:       &memberProfileCreateBy,
+			CreatedOn:       &memberProfileCreateOn,
+			ModifiedOn:      &memberProfileModon,
+			ModifiedBy:      &memberProfileModBy,
+			Linkedin:        &memberProfileLinkedin,
+			Twitter:         &memberProfileTwitter,
+			Website:         &memberProfileWeb,
+			ClaimStatus:     &memberProfileClaim,
+		}
 
 	var claimStatus bool
 
@@ -304,7 +357,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 		ClaimStatus:      claimStatus,
 		Author:           &channelEntry.Author,
 		SortOrder:        &channelEntry.SortOrder,
-		CreateDate:       &channelEntry.CreateDate,
+		CreateTime:       &channelEntry.CreateTime,
 		PublishedTime:    &channelEntry.PublishedTime,
 		ReadingTime:      &channelEntry.ReadingTime,
 		Tags:             &channelEntry.Tags,
@@ -323,7 +376,7 @@ func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
 
 	var err error
 
-	if input.ProfileImage.IsSet(){
+	if input.ProfileImage.IsSet() {
 
 		imageName, imagePath, err = StoreImageBase64ToLocal(*input.ProfileImage.Value(), ProfileImagePath, "PROFILE")
 
@@ -347,7 +400,7 @@ func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
 
 	_, isMemberExists, err := Mem.CheckEmailInMember(0, input.Email)
 
-	if isMemberExists || err!= nil {
+	if isMemberExists || err != nil {
 
 		return isMemberExists, errors.New("Member already exists!")
 	}
