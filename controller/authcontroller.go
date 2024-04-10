@@ -42,6 +42,13 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		ModifiedBy:       &member_details.ModifiedBy,
 	}
 
+	var memberProfileData model.MemberProfile
+
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", conv_member.ID).First(&memberProfileData).Error; err != nil {
+
+		return false, err
+	}
+
 	channel := make(chan bool)
 
 	// rand.Seed(time.Now().UnixNano())
@@ -61,7 +68,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, err
 	}
 
-	data := map[string]interface{}{"otp": otp, "expiryTime": mail_expiry_time, "member": conv_member, "additionalData": AdditionalData}
+	data := map[string]interface{}{"otp": otp, "expiryTime": mail_expiry_time, "member": conv_member, "additionalData": AdditionalData, "memberProfile": memberProfileData}
 
 	tmpl, err := template.ParseFiles("view/email/login-template.html")
 
@@ -270,52 +277,51 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
-	    memberProfileId := channelEntry.MemberProfile.Id
-		memberProfileMemId := channelEntry.MemberProfile.MemberId
-        memberProfileName := channelEntry.MemberProfile.ProfileName
-		memberProfileSlug := channelEntry.MemberProfile.ProfileSlug
-		memberProfilePage := channelEntry.MemberProfile.ProfilePage
-		memberProfileMemDetails := channelEntry.MemberProfile.MemberDetails
-		memberProfileComName := channelEntry.MemberProfile.CompanyName
-		memberProfileComLocation := channelEntry.MemberProfile.CompanyLocation
-		memberProfileComLogo := channelEntry.MemberProfile.CompanyLogo
-		memberProfileAbout := channelEntry.MemberProfile.About
-		memberProfileSeoTitle := channelEntry.MemberProfile.SeoTitle
-		memberProfileSeoDesc := channelEntry.MemberProfile.SeoDescription
-		memberProfileSeoKey := channelEntry.MemberProfile.SeoKeyword
-		memberProfileCreateBy := channelEntry.MemberProfile.CreatedBy
-		memberProfileCreateOn := channelEntry.MemberProfile.CreatedOn
-		memberProfileModon := channelEntry.MemberProfile.ModifiedOn
-		memberProfileModBy := channelEntry.MemberProfile.ModifiedBy
-		memberProfileLinkedin := channelEntry.MemberProfile.Linkedin
-		memberProfileTwitter := channelEntry.MemberProfile.Twitter
-		memberProfileWeb := channelEntry.MemberProfile.Website
-		memberProfileClaim := channelEntry.MemberProfile.ClaimStatus
+	memberProfileId := channelEntry.MemberProfile.Id
+	memberProfileMemId := channelEntry.MemberProfile.MemberId
+	memberProfileName := channelEntry.MemberProfile.ProfileName
+	memberProfileSlug := channelEntry.MemberProfile.ProfileSlug
+	memberProfilePage := channelEntry.MemberProfile.ProfilePage
+	memberProfileMemDetails := channelEntry.MemberProfile.MemberDetails
+	memberProfileComName := channelEntry.MemberProfile.CompanyName
+	memberProfileComLocation := channelEntry.MemberProfile.CompanyLocation
+	memberProfileComLogo := channelEntry.MemberProfile.CompanyLogo
+	memberProfileAbout := channelEntry.MemberProfile.About
+	memberProfileSeoTitle := channelEntry.MemberProfile.SeoTitle
+	memberProfileSeoDesc := channelEntry.MemberProfile.SeoDescription
+	memberProfileSeoKey := channelEntry.MemberProfile.SeoKeyword
+	memberProfileCreateBy := channelEntry.MemberProfile.CreatedBy
+	memberProfileCreateOn := channelEntry.MemberProfile.CreatedOn
+	memberProfileModon := channelEntry.MemberProfile.ModifiedOn
+	memberProfileModBy := channelEntry.MemberProfile.ModifiedBy
+	memberProfileLinkedin := channelEntry.MemberProfile.Linkedin
+	memberProfileTwitter := channelEntry.MemberProfile.Twitter
+	memberProfileWeb := channelEntry.MemberProfile.Website
+	memberProfileClaim := channelEntry.MemberProfile.ClaimStatus
 
-
-		MemberProfile := model.MemberProfile{
-			ID:              &memberProfileId,
-			MemberID:        &memberProfileMemId,
-			ProfileName:     &memberProfileName,
-			ProfileSlug:     &memberProfileSlug,
-			ProfilePage:     &memberProfilePage,
-			MemberDetails:   &memberProfileMemDetails,
-			CompanyName:     &memberProfileComName,
-			CompanyLocation: &memberProfileComLocation,
-			CompanyLogo:     &memberProfileComLogo,
-			About:           &memberProfileAbout,
-			SeoTitle:        &memberProfileSeoTitle,
-			SeoDescription:  &memberProfileSeoDesc,
-			SeoKeyword:      &memberProfileSeoKey,
-			CreatedBy:       &memberProfileCreateBy,
-			CreatedOn:       &memberProfileCreateOn,
-			ModifiedOn:      &memberProfileModon,
-			ModifiedBy:      &memberProfileModBy,
-			Linkedin:        &memberProfileLinkedin,
-			Twitter:         &memberProfileTwitter,
-			Website:         &memberProfileWeb,
-			ClaimStatus:     &memberProfileClaim,
-		}
+	MemberProfile := model.MemberProfile{
+		ID:              &memberProfileId,
+		MemberID:        &memberProfileMemId,
+		ProfileName:     &memberProfileName,
+		ProfileSlug:     &memberProfileSlug,
+		ProfilePage:     &memberProfilePage,
+		MemberDetails:   &memberProfileMemDetails,
+		CompanyName:     &memberProfileComName,
+		CompanyLocation: &memberProfileComLocation,
+		CompanyLogo:     &memberProfileComLogo,
+		About:           &memberProfileAbout,
+		SeoTitle:        &memberProfileSeoTitle,
+		SeoDescription:  &memberProfileSeoDesc,
+		SeoKeyword:      &memberProfileSeoKey,
+		CreatedBy:       &memberProfileCreateBy,
+		CreatedOn:       &memberProfileCreateOn,
+		ModifiedOn:      &memberProfileModon,
+		ModifiedBy:      &memberProfileModBy,
+		Linkedin:        &memberProfileLinkedin,
+		Twitter:         &memberProfileTwitter,
+		Website:         &memberProfileWeb,
+		ClaimStatus:     &memberProfileClaim,
+	}
 
 	var claimStatus bool
 
