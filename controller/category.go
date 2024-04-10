@@ -86,8 +86,6 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 	for _, category := range categories {
 
-		log.Println("seen",category)
-
 		if !seenCategory[category.ID] {
 
 			var categoryIds string
