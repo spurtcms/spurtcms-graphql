@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"spurtcms-graphql/graph/model"
 )
 
@@ -17,5 +16,5 @@ func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, off
 
 // EcommerceProductDetails is the resolver for the ecommerceProductDetails field.
 func (r *queryResolver) EcommerceProductDetails(ctx context.Context, productID int) (*model.EcommerceProduct, error) {
-	panic(fmt.Errorf("not implemented: EcommerceProductDetails - ecommerceProductDetails"))
+	return EcommerceProductDetails(r.DB,ctx,productID)
 }

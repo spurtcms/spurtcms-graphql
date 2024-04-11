@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
 	"time"
@@ -19,13 +20,60 @@ import (
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
 	member_details, err := Mem.GraphqlMemberLogin(email)
 
 	if err != nil {
 
+		adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
+
+		var admin_mail_data = MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "OwnDesk: Unauthorized guest login attempt"}
+
+		channel := make(chan error)
+
+		tmpls, err := template.ParseFiles("view/email/admin-loginenquiry.html")
+
+		if err != nil {
+
+			err = errors.New("failed to send unauthorized login attempt mail to admin")
+
+			c.AbortWithError(http.StatusUnauthorized, err)
+
+			return false, err
+		}
+
+		var template_buffers bytes.Buffer
+
+		if err := tmpls.Execute(&template_buffers,map[string]interface{}{"adminDetails": adminDetails,"unauthorizedMail": email}); err != nil {
+
+			err = errors.New("failed to send unauthorized login attempt mail to admin")
+
+			c.AbortWithError(http.StatusUnauthorized, err)
+
+			return false, err
+		}
+
+		admin_content := template_buffers.String()
+
+		go SendMail(admin_mail_data, admin_content, channel)
+
+		if <-channel!=nil{
+
+			err = errors.New("failed to send unauthorized login attempt mail to admin")
+
+			c.AbortWithError(http.StatusUnauthorized, err)
+
+			return false,err
+
+		}
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
 		return false, err
+
 	}
 
 	conv_member := model.Member{
@@ -46,10 +94,12 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", conv_member.ID).First(&memberProfileData).Error; err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError, err)
+
 		return false, err
 	}
 
-	channel := make(chan bool)
+	channel := make(chan error)
 
 	// rand.Seed(time.Now().UnixNano())
 
@@ -65,6 +115,8 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError, err)
+
 		return false, err
 	}
 
@@ -74,12 +126,16 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError, err)
+
 		return false, err
 	}
 
 	var template_buffer bytes.Buffer
 
 	if err := tmpl.Execute(&template_buffer, data); err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
@@ -90,13 +146,15 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	go SendMail(mail_data, html_content, channel)
 
-	if <-channel {
+	if <-channel == nil {
 
 		return true, nil
 
 	} else {
 
-		return false, errors.New("mail sent unsuccess")
+		c.AbortWithError(http.StatusServiceUnavailable, <-channel)
+
+		return false, <-channel
 	}
 }
 

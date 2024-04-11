@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"html/template"
+	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
 	"strconv"
@@ -30,6 +31,8 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 	channelList, count, err := channelAuth.GetGraphqlChannelList(limit, offset)
 
 	if err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError,err)
 
 		return &model.ChannelDetails{}, err
 	}
@@ -78,6 +81,8 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, PathUrl, title, categoryChildId, categorySlug, categoryChildSlug)
 
 	if err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError,err)
 
 		return &model.ChannelEntriesDetails{}, err
 	}
@@ -393,6 +398,13 @@ func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (*model.Chan
 
 	channel, err := channelAuth.GetGraphqlChannelDetails(channelID)
 
+	if err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError,err)
+
+		return &model.Channel{}, err
+	}
+
 	conv_channel := model.Channel{
 		ID:                 channel.Id,
 		ChannelName:        channel.ChannelName,
@@ -404,11 +416,6 @@ func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (*model.Chan
 		ModifiedOn:         &channel.ModifiedOn,
 		CreatedBy:          channel.CreatedBy,
 		ModifiedBy:         &channel.ModifiedBy,
-	}
-
-	if err != nil {
-
-		return &model.Channel{}, err
 	}
 
 	return &conv_channel, nil
@@ -427,6 +434,8 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(channelEntryId, channelId, categoryId, PathUrl, SectionTypeId, MemberFieldTypeId, slug)
 
 	if err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError,err)
 
 		return &model.ChannelEntries{}, err
 	}
@@ -684,13 +693,15 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	memberid := c.GetInt("memberid")
 
-	verify_chan := make(chan bool)
+	verify_chan := make(chan error)
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token, db)}
 
 	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(&entryId, nil, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil)
 
 	if err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError,err)
 
 		return false, err
 	}
@@ -940,13 +951,22 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	log.Println("maildata", data["link"], conv_channelEntry.ClaimStatus, data["additionalData"])
 
-	tmpl, _ := template.ParseFiles("view/email/claim-template.html")
+	tmpl, err := template.ParseFiles("view/email/claim-template.html")
+
+	if err!=nil{
+
+		c.AbortWithError(http.StatusInternalServerError,err)
+
+		return false,err
+	}
 
 	var template_buff bytes.Buffer
 
 	err = tmpl.Execute(&template_buff, data)
 
 	if err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError,err)
 
 		return false, err
 	}
@@ -957,7 +977,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	go SendMail(mail_data, html_content, verify_chan)
 
-	if <-verify_chan {
+	if <-verify_chan==nil {
 
 		return true, nil
 
@@ -977,12 +997,16 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	if token == SpecialToken || token == "" || memberid == 0 {
 
+		c.AbortWithStatus(http.StatusUnauthorized)
+
 		return false, errors.New("login required")
 	}
 
 	var memberProfile model.MemberProfile
 
 	if err := db.Debug().Table("tbl_channel_entry_fields").Select("tbl_member_profiles.*").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_members on tbl_members.id = tbl_channel_entry_fields.field_value::integer").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = tbl_members.id").Where("tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_fields.field_type_id = ? and tbl_channel_entry_fields.channel_entry_id = ?", MemberFieldTypeId, entryId).Find(&memberProfile).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError,err)
 
 		return false, err
 	}
@@ -993,10 +1017,19 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	if err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError,err)
+
 		return false, err
 	}
 
-	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().In(TimeZone).Format("2006-01-02 15:04:05"))
+	currentTime, err := time.Parse("2006-01-02 15:04:05", time.Now().In(TimeZone).Format("2006-01-02 15:04:05"))
+
+	if err!=nil{
+
+		c.AbortWithError(http.StatusInternalServerError,err)
+
+		return false,err
+	}
 
 	memberProfileDetails := model.MemberProfile{
 		MemberDetails: profiledata.MemberProfile,
@@ -1008,11 +1041,15 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	if memberid != *memberProfile.MemberID {
 
+		c.AbortWithStatus(http.StatusUnauthorized)
+
 		return false, errors.New("authorized member id mismatched in member profile")
 	}
 
 	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id = ?", memberProfile.MemberID).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn}).Error; err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError,err)
+		
 		return false, err
 	}
 
@@ -1020,6 +1057,8 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 }
 
 func VerifyProfileName(db *gorm.DB, ctx context.Context, profileName string) (bool, error) {
+
+	c,_ := ctx.Value(ContextKey).(*gin.Context)
 
 	if profileName == "" {
 
@@ -1030,6 +1069,8 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileName string) (bo
 
 	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_member_profiles.profile_name = ?", profileName).Count(&count).Error; err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError,err)
+		
 		return false, err
 	}
 

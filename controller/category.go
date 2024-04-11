@@ -2,8 +2,8 @@ package controller
 
 import (
 	"context"
+	"net/http"
 	"spurtcms-graphql/graph/model"
-	"log"
 	"strconv"
 	"strings"
 
@@ -59,8 +59,6 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 		limit_offString = `limit ` + strconv.Itoa(*limit) + ` offset ` + strconv.Itoa(*offset)
 	}
 
-	log.Println("limitoff",limit_offString)
-
 	res := `WITH RECURSIVE cat_tree AS (
 		SELECT id, category_name, category_slug,image_path, parent_id,created_on,modified_on,is_deleted` + selecthierarchy_string + `
 		FROM tbl_categories ` + category_string + `
@@ -72,11 +70,15 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 	if err := db.Debug().Raw(` ` + res + `SELECT distinct(cat_tree.id),cat_tree.* FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0 order by id desc ` + limit_offString).Find(&categories).Error; err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError,err)
+
 		return &model.CategoriesList{}, err
 	}
 
 	if err := db.Raw(` ` + res + ` SELECT count(distinct(cat_tree.id)) FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0  group by id order by id desc`).Count(&count).Error; err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError,err)
+		
 		return &model.CategoriesList{}, err
 	}
 
@@ -110,12 +112,12 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 				if err != nil {
 
+					c.AbortWithError(http.StatusInternalServerError,err)
+
 					return &model.CategoriesList{}, err
 				}
 
 				if categoryIds != "" {
-
-					log.Println("categoryIds", categoryIds)
 
 					var modified_path string
 

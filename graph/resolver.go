@@ -87,3 +87,7 @@ func VerifyProfileName(db *gorm.DB,ctx context.Context, profileName string) (boo
 func TemplateMemberLogin(db *gorm.DB,ctx context.Context, username string, password string) (string, error) {
 	return controller.TemplateMemberLogin(db,ctx,username,password)
 }
+
+func EcommerceProductDetails(db *gorm.DB,ctx context.Context, productID int) (*model.EcommerceProduct, error) {
+	return controller.EcommerceProductDetails(db,ctx,productID)
+}

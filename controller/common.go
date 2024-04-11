@@ -39,6 +39,8 @@ var(
     MemberFieldTypeId = 14
 	PathUrl string
 	EmailImageUrlPrefix string
+	SmtpPort,SmtpHost string
+	OwndeskChannelId int = 108
 	AdditionalData map[string]interface{}
 )
 
@@ -65,6 +67,10 @@ func init(){
 
 		PathUrl = os.Getenv("LOCAL_URL")
 	}
+
+	SmtpHost = os.Getenv("SMTP_HOST")
+
+	SmtpPort = os.Getenv("SMTP_PORT")
 
 	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
 
@@ -157,23 +163,19 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 	return imageName,storageDestination,nil
 }
 
-func SendMail(config MailConfig,html_content string,channel chan bool) {
+func SendMail(config MailConfig,html_content string,channel chan error) {
 
-	// Sender data.
+	// Sender data
 	from := config.MailUsername
 	password := config.MailPassword
 
-	// Receiver email address.
+	// Receiver email address
 	to := []string{
 		config.Email,
 	}
 
-	// smtp server configuration.
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
-
-	// Authentication.
-	auth := smtp.PlainAuth("", from, password, smtpHost)
+	// Authentication
+	auth := smtp.PlainAuth("", from, password, SmtpHost)
 
 	subject := "Subject:"+config.Subject+" \n"
 
@@ -181,17 +183,17 @@ func SendMail(config MailConfig,html_content string,channel chan bool) {
 
 	msg := []byte(subject + mime + html_content)
 
-	// Sending email.
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
+	// Sending email
+	err := smtp.SendMail(SmtpHost+":"+SmtpPort, auth, from, to, msg)
 
 	if err != nil {
 
 		log.Println(err)
 
-		channel <- false
+		channel <- err
 
 		return
 	}
 
-	channel <- true
+	channel <- nil
 }
