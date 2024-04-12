@@ -24,8 +24,8 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 	return controller.MemberLogin(db, ctx, email)
 }
 
-func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
-	return controller.MemberRegister(db, input)
+func MemberRegister(db *gorm.DB,ctx context.Context,input model.MemberDetails) (bool, error) {
+	return controller.MemberRegister(db,ctx,input)
 }
 
 func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.ChannelDetails, error) {

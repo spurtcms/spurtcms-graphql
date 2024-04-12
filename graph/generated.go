@@ -531,14 +531,14 @@ extend type Mutation{
 
 input MemberDetails{
     firstName:        String!
-    lastName:         String!
-    mobile:           String!
+    lastName:         String
+    mobile:           String
     email:            String!
     password:         String!
     isActive:         Int
     profileImage:     String
     profileImagePath: String
-    username:         String
+    username:         String!
     groupId:          Int 
 }`, BuiltIn: false},
 	{Name: "../schema/space.graphqls", Input: `# GraphQL schema example
@@ -15228,18 +15228,18 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			it.FirstName = data
 		case "lastName":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
-			it.LastName = data
+			it.LastName = graphql.OmittableOf(data)
 		case "mobile":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mobile"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
-			it.Mobile = data
+			it.Mobile = graphql.OmittableOf(data)
 		case "email":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -15277,11 +15277,11 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			it.ProfileImagePath = graphql.OmittableOf(data)
 		case "username":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return &it, err
 			}
-			it.Username = graphql.OmittableOf(data)
+			it.Username = data
 		case "groupId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)

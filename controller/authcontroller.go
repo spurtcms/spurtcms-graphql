@@ -30,7 +30,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
 
-		var admin_mail_data = MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "OwnDesk: Unauthorized guest login attempt"}
+		var admin_mail_data = MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "Notification: New User Attempted Login to OwnDesk Platform"}
 
 		channel := make(chan error)
 
@@ -47,7 +47,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		var template_buffers bytes.Buffer
 
-		if err := tmpls.Execute(&template_buffers,map[string]interface{}{"adminDetails": adminDetails,"unauthorizedMail": email}); err != nil {
+		if err := tmpls.Execute(&template_buffers, map[string]interface{}{"adminDetails": adminDetails, "unauthorizedMail": email,"currentTime": time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM")}); err != nil {
 
 			err = errors.New("failed to send unauthorized login attempt mail to admin")
 
@@ -60,17 +60,17 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		go SendMail(admin_mail_data, admin_content, channel)
 
-		if <-channel!=nil{
+		if <-channel != nil {
 
 			err = errors.New("failed to send unauthorized login attempt mail to admin")
 
 			c.AbortWithError(http.StatusUnauthorized, err)
 
-			return false,err
+			return false, err
 
 		}
 
-		c.AbortWithError(http.StatusUnauthorized, err)
+		c.AbortWithError(http.StatusUnauthorized, errors.New("unauthorized access"))
 
 		return false, err
 
@@ -432,7 +432,9 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 }
 
-func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
+func MemberRegister(db *gorm.DB,ctx context.Context, input model.MemberDetails) (bool, error) {
+
+	c,_:= ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
@@ -446,32 +448,53 @@ func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
 
 		if err != nil {
 
+			c.AbortWithError(http.StatusInternalServerError,err)
+
 			return false, err
 		}
 
 	}
 
-	memberDetails := member.MemberCreation{
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		MobileNo:  input.Mobile,
-		Email:     input.Email,
-		Password:  input.Password,
-		//  Username: *input.Username,
-		ProfileImage:     imageName,
-		ProfileImagePath: imagePath,
+	var memberDetails member.MemberCreation
+
+	if input.Mobile.IsSet(){
+
+		memberDetails.MobileNo = *input.Mobile.Value()
 	}
 
-	_, isMemberExists, err := Mem.CheckEmailInMember(0, input.Email)
+	if imageName!="" && imagePath!=""{
 
-	if isMemberExists || err != nil {
+		memberDetails.ProfileImage = imageName
 
-		return isMemberExists, errors.New("Member already exists!")
+		memberDetails.ProfileImagePath = imagePath
+	}
+
+	memberDetails.FirstName = input.FirstName
+
+	memberDetails.LastName = *input.LastName.Value()
+
+	memberDetails.Email = input.Email
+
+	memberDetails.Password = input.Password
+
+	memberDetails.Username = input.Username
+
+	_, isMemberExists, err := Mem.CheckUsernameInMember(0, input.Username)
+
+	if isMemberExists || err == nil {
+
+		err = errors.New("member already exists") 
+
+		c.AbortWithError(http.StatusBadRequest,err)
+
+		return isMemberExists, err
 	}
 
 	isRegistered, err := Mem.MemberRegister(memberDetails)
 
 	if !isRegistered || err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError,err)
 
 		return isRegistered, err
 	}
@@ -505,14 +528,14 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	memberDetails := member.MemberCreation{
 		FirstName:        memberdata.FirstName,
-		LastName:         memberdata.LastName,
-		MobileNo:         memberdata.Mobile,
+		LastName:         *memberdata.LastName.Value(),
+		MobileNo:         *memberdata.Mobile.Value(),
 		Email:            memberdata.Email,
 		Password:         memberdata.Password,
 		ProfileImage:     imageName,
 		ProfileImagePath: imagePath,
 		// IsActive: *memberdata.IsActive,
-		// Username: *memberdata.Username,
+		// Username: *memberdata.Username.Value(),
 		// GroupId: *memberdata.GroupID,
 	}
 

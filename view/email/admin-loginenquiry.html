@@ -21,13 +21,21 @@
 </head>
 
 <body>
-    <h4>
-     Dear {{.adminDetails.FirstName}} {{.adminDetails.LastName}},
-    </h4>
+    <h3>
+        Dear {{.adminDetails.FirstName}} {{.adminDetails.LastName}},
+    </h3>
 
-    <p>We have noticed that an unauthorized login attempt has been made on OwnDesk from the mail address: {{.unauthorizedMail}}</p>
+    <p>Informing you that a new user attempted to login to the OwnDesk platform just now. However, it seems this user is
+        not currently registered as a member.</p>
 
-    <p>you may contact through this mail address if you want to contact the person who attempted to login on owndesk</p>
+    <h4>Details of the Login Attempt:</h4>
+    <ul>
+        <li style="margin-bottom: 3px;">Email: {{.unauthorizedMail}}</li>
+        <li>Date and Time: {{.currentTime}}</li>
+    </ul>
+
+    <p>As the individual is a potential lead for us, this could indicate interest in our platform. It might be worth
+        reaching out to them to assist with registration or to provide further information about our services.</p>
 
     <p>Best Regards,</p>
 

@@ -39,13 +39,13 @@ extend type Mutation{
 
 input MemberDetails{
     firstName:        String!
-    lastName:         String!
-    mobile:           String!
+    lastName:         String
+    mobile:           String
     email:            String!
     password:         String!
     isActive:         Int
     profileImage:     String
     profileImagePath: String
-    username:         String
+    username:         String!
     groupId:          Int 
 }

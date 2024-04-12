@@ -16,5 +16,5 @@ func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, off
 
 // EcommerceProductDetails is the resolver for the ecommerceProductDetails field.
 func (r *queryResolver) EcommerceProductDetails(ctx context.Context, productID int) (*model.EcommerceProduct, error) {
-	return EcommerceProductDetails(r.DB,ctx,productID)
+	return EcommerceProductDetails(r.DB, ctx, productID)
 }

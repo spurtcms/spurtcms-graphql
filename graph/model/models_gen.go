@@ -204,14 +204,14 @@ type Member struct {
 
 type MemberDetails struct {
 	FirstName        string                     `json:"firstName"`
-	LastName         string                     `json:"lastName"`
-	Mobile           string                     `json:"mobile"`
+	LastName         graphql.Omittable[*string] `json:"lastName,omitempty"`
+	Mobile           graphql.Omittable[*string] `json:"mobile,omitempty"`
 	Email            string                     `json:"email"`
 	Password         string                     `json:"password"`
 	IsActive         graphql.Omittable[*int]    `json:"isActive,omitempty"`
 	ProfileImage     graphql.Omittable[*string] `json:"profileImage,omitempty"`
 	ProfileImagePath graphql.Omittable[*string] `json:"profileImagePath,omitempty"`
-	Username         graphql.Omittable[*string] `json:"username,omitempty"`
+	Username         string                     `json:"username"`
 	GroupID          graphql.Omittable[*int]    `json:"groupId,omitempty"`
 }
 

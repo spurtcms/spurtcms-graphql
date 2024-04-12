@@ -11,7 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gin-gonic/gin"
 
-	"github.com/spurtcms/pkgcore/member"
+	"github.com/spurtcms/pkgcore/auth"
 )
 
 // Implement the AuthMiddleware function
@@ -43,7 +43,7 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	currentTime := time.Now().In(controller.TimeZone).Unix()
 
-	memberid,groupid,err :=  member.VerifyTokenWithExpiryTime(token,os.Getenv("JWT_SECRET"),currentTime)
+	memberid,groupid,err :=  auth.VerifyTokenWithExpiryTime(token,os.Getenv("JWT_SECRET"),currentTime)
 	
 	if err != nil {
 
