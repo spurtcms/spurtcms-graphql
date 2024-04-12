@@ -16,7 +16,7 @@ func (r *mutationResolver) TemplateMemberLogin(ctx context.Context, username str
 
 // MemberRegister is the resolver for the memberRegister field.
 func (r *mutationResolver) MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error) {
-	return MemberRegister(r.DB,ctx,input)
+	return MemberRegister(r.DB, ctx, input)
 }
 
 // MemberUpdate is the resolver for the memberUpdate field.

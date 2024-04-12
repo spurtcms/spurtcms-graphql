@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spurtcms/pkgcontent/channels"
 	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 )
@@ -171,264 +170,23 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 		return &model.LoginDetails{}, err
 	}
 
-	log.Println("memberdetails", memberDetails)
-
 	var channelEntryDetails model.ChannelEntries
 
 	if err := db.Debug().Table("tbl_channel_entries").Select("tbl_channel_entries.*").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Joins("inner join tbl_channel_entry_fields on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").Joins("inner join tbl_members on tbl_members.id = any(string_to_array(tbl_channel_entry_fields.field_value,',')::integer[])").
-		Joins("inner join tbl_member_profiles on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ?", MemberFieldTypeId, memberDetails.Id).First(&channelEntryDetails).Error; err != nil {
+		Joins("inner join tbl_member_profiles on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ? and tbl_member_profiles.claim_status = 1", MemberFieldTypeId, memberDetails.Id).First(&channelEntryDetails).Error; err != nil {
 
 		return &model.LoginDetails{}, err
 	}
 
-	channelAuth := channels.Channel{Authority: GetAuthorization(token, db)}
+	var memberProfileDetails model.MemberProfile
 
-	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(&channelEntryDetails.ID, &channelEntryDetails.ChannelID, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil)
-
-	if err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Joins("INNER JOIN TBL_CHANNEL_ENTRY_FIELDS ON TBL_MEMBERS.ID::text = tbl_channel_entry_fields.field_value").Joins("inner join tbl_channel_entries on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").
+	          Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ? and tbl_member_profiles.claim_status = 1", MemberFieldTypeId, memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
 
 		return &model.LoginDetails{}, err
 	}
 
-	var conv_categories [][]model.Category
-
-	for _, categories := range channelEntry.Categories {
-
-		var conv_categoryz []model.Category
-
-		for _, category := range categories {
-
-			categoryModon := category.ModifiedOn
-
-			categoryModBy := category.ModifiedBy
-
-			conv_category := model.Category{
-				ID:           category.Id,
-				CategoryName: category.CategoryName,
-				CategorySlug: category.CategorySlug,
-				Description:  category.Description,
-				ImagePath:    category.ImagePath,
-				CreatedOn:    category.CreatedOn,
-				CreatedBy:    category.CreatedBy,
-				ModifiedOn:   &categoryModon,
-				ModifiedBy:   &categoryModBy,
-				ParentID:     category.ParentId,
-			}
-
-			conv_categoryz = append(conv_categoryz, conv_category)
-
-		}
-
-		conv_categories = append(conv_categories, conv_categoryz)
-
-	}
-	authorDetails := model.Author{
-		AuthorID:         channelEntry.AuthorDetail.AuthorID,
-		FirstName:        channelEntry.AuthorDetail.FirstName,
-		LastName:         channelEntry.AuthorDetail.LastName,
-		Email:            channelEntry.AuthorDetail.Email,
-		MobileNo:         channelEntry.AuthorDetail.MobileNo,
-		IsActive:         channelEntry.AuthorDetail.IsActive,
-		ProfileImagePath: channelEntry.AuthorDetail.ProfileImagePath,
-		CreatedOn:        channelEntry.AuthorDetail.CreatedOn,
-		CreatedBy:        channelEntry.AuthorDetail.CreatedBy,
-	}
-
-	var conv_sections []model.Section
-
-	for _, section := range channelEntry.Sections {
-
-		sectionId := section.Id
-
-		sectionModon := section.ModifiedOn
-
-		sectionModBy := section.ModifiedBy
-
-		conv_section := model.Section{
-			SectionID:     &sectionId,
-			SectionName:   section.FieldName,
-			SectionTypeID: section.FieldTypeId,
-			CreatedOn:     section.CreatedOn,
-			CreatedBy:     section.CreatedBy,
-			ModifiedOn:    &sectionModon,
-			ModifiedBy:    &sectionModBy,
-			OrderIndex:    section.OrderIndex,
-		}
-
-		conv_sections = append(conv_sections, conv_section)
-	}
-
-	var conv_fields []model.Field
-
-	for _, field := range channelEntry.Fields {
-
-		fieldValueModon := field.FieldValue.ModifiedOn
-
-		fieldValueModBy := field.FieldValue.ModifiedBy
-
-		conv_field_value := model.FieldValue{
-			ID:         field.FieldValue.FieldId,
-			FieldValue: field.FieldValue.FieldValue,
-			CreatedOn:  field.FieldValue.CreatedOn,
-			CreatedBy:  field.FieldValue.CreatedBy,
-			ModifiedOn: &fieldValueModon,
-			ModifiedBy: &fieldValueModBy,
-		}
-
-		var conv_fieldOptions []model.FieldOptions
-
-		for _, field_option := range field.FieldOptions {
-
-			optionModOn := field_option.ModifiedOn
-
-			optionModBy := field_option.ModifiedBy
-
-			conv_fieldOption := model.FieldOptions{
-				ID:          field_option.Id,
-				OptionName:  field_option.OptionName,
-				OptionValue: field_option.OptionValue,
-				CreatedOn:   field_option.CreatedOn,
-				CreatedBy:   field_option.CreatedBy,
-				ModifiedOn:  &optionModOn,
-				ModifiedBy:  &optionModBy,
-			}
-
-			conv_fieldOptions = append(conv_fieldOptions, conv_fieldOption)
-		}
-
-		fieldModon := field.ModifiedOn
-
-		fieldModBy := field.ModifiedBy
-
-		fieldDateTime := field.DatetimeFormat
-
-		fieldTime := field.TimeFormat
-
-		fieldSectionParentId := field.SectionParentId
-
-		fieldCharAllowed := field.CharacterAllowed
-
-		conv_field := model.Field{
-			FieldID:          field.Id,
-			FieldName:        field.FieldName,
-			FieldTypeID:      field.FieldTypeId,
-			MandatoryField:   field.MandatoryField,
-			OptionExist:      field.OptionExist,
-			CreatedOn:        field.CreatedOn,
-			CreatedBy:        field.CreatedBy,
-			ModifiedOn:       &fieldModon,
-			ModifiedBy:       &fieldModBy,
-			FieldDesc:        field.FieldDesc,
-			OrderIndex:       field.OrderIndex,
-			ImagePath:        field.ImagePath,
-			DatetimeFormat:   &fieldDateTime,
-			TimeFormat:       &fieldTime,
-			SectionParentID:  &fieldSectionParentId,
-			CharacterAllowed: &fieldCharAllowed,
-			FieldTypeName:    field.FieldTypeName,
-			FieldValue:       &conv_field_value,
-			FieldOptions:     conv_fieldOptions,
-		}
-
-		conv_fields = append(conv_fields, conv_field)
-	}
-
-	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
-
-	memberProfileId := channelEntry.MemberProfile.Id
-	memberProfileMemId := channelEntry.MemberProfile.MemberId
-	memberProfileName := channelEntry.MemberProfile.ProfileName
-	memberProfileSlug := channelEntry.MemberProfile.ProfileSlug
-	memberProfilePage := channelEntry.MemberProfile.ProfilePage
-	memberProfileMemDetails := channelEntry.MemberProfile.MemberDetails
-	memberProfileComName := channelEntry.MemberProfile.CompanyName
-	memberProfileComLocation := channelEntry.MemberProfile.CompanyLocation
-	memberProfileComLogo := channelEntry.MemberProfile.CompanyLogo
-	memberProfileAbout := channelEntry.MemberProfile.About
-	memberProfileSeoTitle := channelEntry.MemberProfile.SeoTitle
-	memberProfileSeoDesc := channelEntry.MemberProfile.SeoDescription
-	memberProfileSeoKey := channelEntry.MemberProfile.SeoKeyword
-	memberProfileCreateBy := channelEntry.MemberProfile.CreatedBy
-	memberProfileCreateOn := channelEntry.MemberProfile.CreatedOn
-	memberProfileModon := channelEntry.MemberProfile.ModifiedOn
-	memberProfileModBy := channelEntry.MemberProfile.ModifiedBy
-	memberProfileLinkedin := channelEntry.MemberProfile.Linkedin
-	memberProfileTwitter := channelEntry.MemberProfile.Twitter
-	memberProfileWeb := channelEntry.MemberProfile.Website
-	memberProfileClaim := channelEntry.MemberProfile.ClaimStatus
-
-	MemberProfile := model.MemberProfile{
-		ID:              &memberProfileId,
-		MemberID:        &memberProfileMemId,
-		ProfileName:     &memberProfileName,
-		ProfileSlug:     &memberProfileSlug,
-		ProfilePage:     &memberProfilePage,
-		MemberDetails:   &memberProfileMemDetails,
-		CompanyName:     &memberProfileComName,
-		CompanyLocation: &memberProfileComLocation,
-		CompanyLogo:     &memberProfileComLogo,
-		About:           &memberProfileAbout,
-		SeoTitle:        &memberProfileSeoTitle,
-		SeoDescription:  &memberProfileSeoDesc,
-		SeoKeyword:      &memberProfileSeoKey,
-		CreatedBy:       &memberProfileCreateBy,
-		CreatedOn:       &memberProfileCreateOn,
-		ModifiedOn:      &memberProfileModon,
-		ModifiedBy:      &memberProfileModBy,
-		Linkedin:        &memberProfileLinkedin,
-		Twitter:         &memberProfileTwitter,
-		Website:         &memberProfileWeb,
-		ClaimStatus:     &memberProfileClaim,
-	}
-
-	var claimStatus bool
-
-	if channelEntry.MemberProfile.ClaimStatus == 1 {
-
-		claimStatus = true
-
-	} else {
-
-		claimStatus = false
-	}
-
-	conv_channelEntry := model.ChannelEntries{
-		ID:               channelEntry.Id,
-		Title:            channelEntry.Title,
-		Slug:             channelEntry.Slug,
-		Description:      channelEntry.Description,
-		UserID:           channelEntry.UserId,
-		ChannelID:        channelEntry.ChannelId,
-		Status:           channelEntry.Status,
-		IsActive:         channelEntry.IsActive,
-		CreatedOn:        channelEntry.CreatedOn,
-		CreatedBy:        channelEntry.CreatedBy,
-		ModifiedBy:       &channelEntry.ModifiedBy,
-		ModifiedOn:       &channelEntry.ModifiedOn,
-		CoverImage:       channelEntry.CoverImage,
-		ThumbnailImage:   channelEntry.ThumbnailImage,
-		MetaTitle:        channelEntry.MetaTitle,
-		MetaDescription:  channelEntry.MetaDescription,
-		Keyword:          channelEntry.Keyword,
-		CategoriesID:     channelEntry.CategoriesId,
-		RelatedArticles:  channelEntry.RelatedArticles,
-		Categories:       conv_categories,
-		AdditionalFields: additionalFields,
-		MemberProfile:    MemberProfile,
-		AuthorDetails:    authorDetails,
-		FeaturedEntry:    channelEntry.Feature,
-		ViewCount:        channelEntry.ViewCount,
-		ClaimStatus:      claimStatus,
-		Author:           &channelEntry.Author,
-		SortOrder:        &channelEntry.SortOrder,
-		CreateTime:       &channelEntry.CreateTime,
-		PublishedTime:    &channelEntry.PublishedTime,
-		ReadingTime:      &channelEntry.ReadingTime,
-		Tags:             &channelEntry.Tags,
-		Excerpt:          &channelEntry.Excerpt,
-	}
-
-	return &model.LoginDetails{ClaimEntryDetails: conv_channelEntry, Token: token}, nil
+	return &model.LoginDetails{ClaimEntryDetails: channelEntryDetails,MemberProfileData: memberProfileDetails, Token: token}, nil
 
 }
 

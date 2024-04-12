@@ -6,8 +6,19 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"spurtcms-graphql/graph/model"
 )
+
+// EcommerceAddToCart is the resolver for the ecommerceAddToCart field.
+func (r *mutationResolver) EcommerceAddToCart(ctx context.Context, productID int, customerID int, quantity int) (bool, error) {
+	panic(fmt.Errorf("not implemented: EcommerceAddToCart - ecommerceAddToCart"))
+}
+
+// EcommerceCartList is the resolver for the ecommerceCartList field.
+func (r *mutationResolver) EcommerceCartList(ctx context.Context, customerID int) (*model.EcommerceCartDetails, error) {
+	panic(fmt.Errorf("not implemented: EcommerceCartList - ecommerceCartList"))
+}
 
 // EcommerceProductList is the resolver for the ecommerceProductList field.
 func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {

@@ -111,6 +111,22 @@ type ClaimData struct {
 	PersonName    string `json:"personName"`
 }
 
+type EcommerceCart struct {
+	ID         int        `json:"id"`
+	ProductID  int        `json:"productId"`
+	CustomerID int        `json:"customerId"`
+	Quantity   int        `json:"quantity"`
+	CreatedOn  time.Time  `json:"createdOn"`
+	ModifiedOn *time.Time `json:"modifiedOn,omitempty"`
+	IsDeleted  int        `json:"isDeleted"`
+	DeletedOn  *time.Time `json:"deletedOn,omitempty"`
+}
+
+type EcommerceCartDetails struct {
+	CartList []EcommerceCart `json:"cartList"`
+	Count    int             `json:"Count"`
+}
+
 type EcommerceProduct struct {
 	ID                 int        `json:"id"`
 	CategoriesID       int        `json:"categoriesId"`
@@ -182,6 +198,7 @@ type FieldValue struct {
 
 type LoginDetails struct {
 	ClaimEntryDetails ChannelEntries `json:"claimEntryDetails"`
+	MemberProfileData MemberProfile  `json:"memberProfileData"`
 	Token             string         `json:"token"`
 }
 
