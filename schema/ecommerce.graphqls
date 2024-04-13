@@ -42,19 +42,28 @@ type ProductPricing{
 }
 
 type EcommerceCart{
-	id:            Int!
-	productId:     Int!
-	customerId:    Int!
-	quantity:      Int!
-	createdOn:     Time!
-	modifiedOn:    Time
-	isDeleted:     Int!
-	deletedOn:     Time
+	id:              Int!
+	productId:       Int!
+	customerId:      Int!
+	quantity:        Int!
+	createdOn:       Time!
+	modifiedOn:      Time
+	isDeleted:       Int!
+	deletedOn:       Time
+	productdetails:  EcommerceProduct!
 }
 
 type EcommerceCartDetails{
-	cartList:   [EcommerceCart!]!
-	Count:      Int!
+	cartList:        [EcommerceCart!]!
+	orderSummary:    OrderSummary!
+	Count:           Int!
+}
+
+type OrderSummary{
+	subTotal:         LargeInt!
+	shippingAmount:   Int!
+	totalTax:         LargeInt!
+	totalCost:        LargeInt!  
 }
 
 extend type Query{
@@ -65,6 +74,7 @@ extend type Query{
 extend type Mutation{
 	ecommerceAddToCart(productId: Int!,customerId: Int!,quantity: Int!): Boolean!
 	ecommerceCartList(customerId: Int!):EcommerceCartDetails!
+	ecommerceOrderPlacement(customerId: Int!,productId: Int!)
 }
 
 input ProductFilter{

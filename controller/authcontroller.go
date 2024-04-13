@@ -159,6 +159,8 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails, error) {
 
+	c,_ := ctx.Value(ContextKey).(*gin.Context)
+
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
 	currentTime := time.Now().In(TimeZone).Unix()
@@ -175,6 +177,8 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 	if err := db.Debug().Table("tbl_channel_entries").Select("tbl_channel_entries.*").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Joins("inner join tbl_channel_entry_fields on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").Joins("inner join tbl_members on tbl_members.id = any(string_to_array(tbl_channel_entry_fields.field_value,',')::integer[])").
 		Joins("inner join tbl_member_profiles on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ? and tbl_member_profiles.claim_status = 1", MemberFieldTypeId, memberDetails.Id).First(&channelEntryDetails).Error; err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError,err)
+		
 		return &model.LoginDetails{}, err
 	}
 
@@ -182,6 +186,8 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Joins("INNER JOIN TBL_CHANNEL_ENTRY_FIELDS ON TBL_MEMBERS.ID::text = tbl_channel_entry_fields.field_value").Joins("inner join tbl_channel_entries on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").
 	          Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ? and tbl_member_profiles.claim_status = 1", MemberFieldTypeId, memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError,err)
 
 		return &model.LoginDetails{}, err
 	}
@@ -310,11 +316,15 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username string, password string) (string, error) {
 
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
 	member_details, err := Mem.CheckMemberLogin(member.MemberLogin{Username: username, Password: password}, db, os.Getenv("JWT_SECRET"))
 
 	if err != nil {
+
+		c.AbortWithError(http.StatusUnauthorized,err)
 
 		log.Println(err)
 	}

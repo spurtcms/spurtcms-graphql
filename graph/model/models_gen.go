@@ -112,19 +112,21 @@ type ClaimData struct {
 }
 
 type EcommerceCart struct {
-	ID         int        `json:"id"`
-	ProductID  int        `json:"productId"`
-	CustomerID int        `json:"customerId"`
-	Quantity   int        `json:"quantity"`
-	CreatedOn  time.Time  `json:"createdOn"`
-	ModifiedOn *time.Time `json:"modifiedOn,omitempty"`
-	IsDeleted  int        `json:"isDeleted"`
-	DeletedOn  *time.Time `json:"deletedOn,omitempty"`
+	ID             int              `json:"id"`
+	ProductID      int              `json:"productId"`
+	CustomerID     int              `json:"customerId"`
+	Quantity       int              `json:"quantity"`
+	CreatedOn      time.Time        `json:"createdOn"`
+	ModifiedOn     *time.Time       `json:"modifiedOn,omitempty"`
+	IsDeleted      int              `json:"isDeleted"`
+	DeletedOn      *time.Time       `json:"deletedOn,omitempty"`
+	Productdetails EcommerceProduct `json:"productdetails"`
 }
 
 type EcommerceCartDetails struct {
-	CartList []EcommerceCart `json:"cartList"`
-	Count    int             `json:"Count"`
+	CartList     []EcommerceCart `json:"cartList"`
+	OrderSummary OrderSummary    `json:"orderSummary"`
+	Count        int             `json:"Count"`
 }
 
 type EcommerceProduct struct {
@@ -269,6 +271,13 @@ type MemberProfile struct {
 }
 
 type Mutation struct {
+}
+
+type OrderSummary struct {
+	SubTotal       string `json:"subTotal"`
+	ShippingAmount int    `json:"shippingAmount"`
+	TotalTax       string `json:"totalTax"`
+	TotalCost      string `json:"totalCost"`
 }
 
 type Page struct {
