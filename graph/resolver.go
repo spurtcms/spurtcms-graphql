@@ -91,3 +91,8 @@ func TemplateMemberLogin(db *gorm.DB,ctx context.Context, username string, passw
 func EcommerceProductDetails(db *gorm.DB,ctx context.Context, productID int) (*model.EcommerceProduct, error) {
 	return controller.EcommerceProductDetails(db,ctx,productID)
 }
+
+func EcommerceCartList(db *gorm.DB,ctx context.Context, customerID int) (*model.EcommerceCartDetails, error) {
+	return controller.EcommerceCartList(db,ctx,customerID)
+}
+

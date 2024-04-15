@@ -28,6 +28,7 @@ type EcommerceProduct{
 	defaultPrice:              Int! 
 	discountPrice:             Int
 	specialPrice:              Int
+	ecommerceCart:             EcommerceCart
 } 
 
 type ProductPricing{
@@ -50,11 +51,10 @@ type EcommerceCart{
 	modifiedOn:      Time
 	isDeleted:       Int!
 	deletedOn:       Time
-	productdetails:  EcommerceProduct!
 }
 
 type EcommerceCartDetails{
-	cartList:        [EcommerceCart!]!
+	cartList:        [EcommerceProduct!]!
 	orderSummary:    OrderSummary!
 	Count:           Int!
 }
@@ -69,12 +69,12 @@ type OrderSummary{
 extend type Query{
     ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
 	ecommerceProductDetails(productId: Int!): EcommerceProduct!
+	ecommerceCartList(customerId: Int!):EcommerceCartDetails!
 }
 
 extend type Mutation{
 	ecommerceAddToCart(productId: Int!,customerId: Int!,quantity: Int!): Boolean!
-	ecommerceCartList(customerId: Int!):EcommerceCartDetails!
-	ecommerceOrderPlacement(customerId: Int!,productId: Int!)
+	ecommerceOrderPlacement(customerId: Int!,productId: Int!): Boolean!
 }
 
 input ProductFilter{

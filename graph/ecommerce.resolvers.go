@@ -15,9 +15,9 @@ func (r *mutationResolver) EcommerceAddToCart(ctx context.Context, productID int
 	panic(fmt.Errorf("not implemented: EcommerceAddToCart - ecommerceAddToCart"))
 }
 
-// EcommerceCartList is the resolver for the ecommerceCartList field.
-func (r *mutationResolver) EcommerceCartList(ctx context.Context, customerID int) (*model.EcommerceCartDetails, error) {
-	panic(fmt.Errorf("not implemented: EcommerceCartList - ecommerceCartList"))
+// EcommerceOrderPlacement is the resolver for the ecommerceOrderPlacement field.
+func (r *mutationResolver) EcommerceOrderPlacement(ctx context.Context, customerID int, productID int) (bool, error) {
+	panic(fmt.Errorf("not implemented: EcommerceOrderPlacement - ecommerceOrderPlacement"))
 }
 
 // EcommerceProductList is the resolver for the ecommerceProductList field.
@@ -28,4 +28,9 @@ func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, off
 // EcommerceProductDetails is the resolver for the ecommerceProductDetails field.
 func (r *queryResolver) EcommerceProductDetails(ctx context.Context, productID int) (*model.EcommerceProduct, error) {
 	return EcommerceProductDetails(r.DB, ctx, productID)
+}
+
+// EcommerceCartList is the resolver for the ecommerceCartList field.
+func (r *queryResolver) EcommerceCartList(ctx context.Context, customerID int) (*model.EcommerceCartDetails, error) {
+	return EcommerceCartList(r.DB, ctx, customerID)
 }

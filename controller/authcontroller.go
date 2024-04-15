@@ -233,9 +233,13 @@ func MemberRegister(db *gorm.DB,ctx context.Context, input model.MemberDetails) 
 		memberDetails.ProfileImagePath = imagePath
 	}
 
-	memberDetails.FirstName = input.FirstName
+	if input.LastName.IsSet(){
 
-	memberDetails.LastName = *input.LastName.Value()
+		memberDetails.LastName = *input.LastName.Value()
+		
+	}
+
+	memberDetails.FirstName = input.FirstName
 
 	memberDetails.Email = input.Email
 

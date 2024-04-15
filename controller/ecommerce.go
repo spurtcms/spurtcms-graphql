@@ -2,11 +2,13 @@ package controller
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
+	"log"
 	"net/http"
 	"spurtcms-graphql/graph/model"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {
@@ -121,4 +123,50 @@ func EcommerceProductDetails(db *gorm.DB, ctx context.Context, productId int) (*
 
 	return &productdtl, nil
 
+}
+
+func EcommerceAddToCart(db *gorm.DB, ctx context.Context, productID int, customerID int, quantity int) (bool, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	var cart model.EcommerceCart
+
+	cart.ProductID = productID
+
+	cart.CustomerID = customerID
+
+	cart.Quantity = quantity
+
+	cart.CreatedOn, _ = time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+	if err := db.Debug().Table("tbl_ecom_carts").Create(&cart).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	return true, nil
+}
+
+func EcommerceCartList(db *gorm.DB, ctx context.Context, customerId int) (*model.EcommerceCartDetails, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	log.Println("customer_id", customerId)
+
+	var cartProductList []model.EcommerceProduct
+
+	if err := db.Debug().Table("tbl_ecom_carts").Select("tbl_ecom_carts.*,tbl_ecom_products.*,SUM(tbl_ecom_carts.id)").Joins("inner join tbl_ecom_products on tbl_ecom_products.id = tbl_ecom_carts.product_id").Joins("inner join tbl_ecom_customers on tbl_ecom_customers.id = tbl_ecom_carts.customer_id").
+		Where("tbl_ecom_carts.is_deleted = 0 and tbl_ecom_products.is_deleted = 0 and tbl_ecom_customers.is_deleted = 0").Preload("EcommerceCart").Find(&cartProductList).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return &model.EcommerceCartDetails{}, err
+	}
+
+	log.Println("cartList", cartProductList)
+
+
+	return &model.EcommerceCartDetails{CartList: cartProductList, OrderSummary: model.OrderSummary{}, Count: len(cartProductList)}, nil
 }
