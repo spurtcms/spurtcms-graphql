@@ -25,6 +25,14 @@ type Author struct {
 	CreatedBy        int       `json:"CreatedBy"`
 }
 
+type CartSummary struct {
+	SubTotal       string `json:"subTotal"`
+	ShippingAmount int    `json:"shippingAmount"`
+	TotalTax       string `json:"totalTax"`
+	TotalCost      string `json:"totalCost"`
+	TotalQuantity  int    `json:"totalQuantity"`
+}
+
 type CategoriesList struct {
 	Categories []Category `json:"categories"`
 	Count      int        `json:"count"`
@@ -121,9 +129,9 @@ type EcommerceCart struct {
 }
 
 type EcommerceCartDetails struct {
-	CartList     []EcommerceProduct `json:"cartList"`
-	OrderSummary OrderSummary       `json:"orderSummary"`
-	Count        int                `json:"Count"`
+	CartList    []EcommerceProduct `json:"cartList"`
+	CartSummary CartSummary        `json:"cartSummary"`
+	Count       int                `json:"Count"`
 }
 
 type EcommerceProduct struct {
@@ -144,7 +152,7 @@ type EcommerceProduct struct {
 	IsDeleted          int            `json:"isDeleted"`
 	DeletedBy          *int           `json:"deletedBy,omitempty"`
 	DeletedOn          *time.Time     `json:"deletedOn,omitempty"`
-	DefaultPrice       int            `json:"defaultPrice" gorm:"product_price"`
+	DefaultPrice       int            `json:"defaultPrice" gorm:"column:product_price"`
 	DiscountPrice      *int           `json:"discountPrice,omitempty" gorm:"column:discount_price"`
 	SpecialPrice       *int           `json:"specialPrice,omitempty" gorm:"column:special_price"`
 	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ID"`
@@ -269,13 +277,6 @@ type MemberProfile struct {
 }
 
 type Mutation struct {
-}
-
-type OrderSummary struct {
-	SubTotal       string `json:"subTotal"`
-	ShippingAmount int    `json:"shippingAmount"`
-	TotalTax       string `json:"totalTax"`
-	TotalCost      string `json:"totalCost"`
 }
 
 type Page struct {

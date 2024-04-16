@@ -403,7 +403,7 @@ func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (*model.Chan
 	return &conv_channel, nil
 }
 
-func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channelId, categoryId *int, slug *string) (*model.ChannelEntries, error) {
+func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channelId, categoryId *int, slug, profileSlug *string) (*model.ChannelEntries, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -413,7 +413,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
-	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(channelEntryId, channelId, categoryId, PathUrl, SectionTypeId, MemberFieldTypeId, slug)
+	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(channelEntryId, channelId, categoryId, PathUrl, SectionTypeId, MemberFieldTypeId, slug, profileSlug)
 
 	if err != nil {
 
@@ -666,7 +666,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token, db)}
 
-	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(&entryId, nil, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil)
+	channelEntry, err := channelAuth.GetGraphqlChannelEntriesDetails(&entryId, nil, nil, PathUrl, SectionTypeId, MemberFieldTypeId, nil,nil)
 
 	if err != nil {
 

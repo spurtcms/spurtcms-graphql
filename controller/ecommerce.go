@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"spurtcms-graphql/graph/model"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -159,16 +161,80 @@ func EcommerceCartList(db *gorm.DB, ctx context.Context, limit,offset, customerI
 
 	var cartProductList []model.EcommerceProduct
 
-	if err := db.Debug().Table("tbl_ecom_carts").Distinct("tbl_ecom_products.id").Select("tbl_ecom_carts.*,tbl_ecom_products.*,rp.price AS discount_price ,rs.price AS special_price").Joins("inner join tbl_ecom_products on tbl_ecom_products.id = tbl_ecom_carts.product_id").Joins("inner join tbl_ecom_product_pricings on tbl_ecom_product_pricings.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rp on rp.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rs on rs.product_id = tbl_ecom_products.id").Joins("inner join tbl_ecom_customers on tbl_ecom_customers.id = tbl_ecom_carts.customer_id").
-		Where("tbl_ecom_carts.is_deleted = 0 and tbl_ecom_products.is_deleted = 0 and tbl_ecom_customers.is_deleted = 0 and tbl_ecom_products.is_active = 1").Preload("EcommerceCart").Limit(limit).Offset(offset).Order("tbl_ecom_carts.id desc").Find(&cartProductList).Error; err != nil {
+	var count int64
+
+	if err := db.Debug().Table("tbl_ecom_carts").Select("tbl_ecom_carts.*,tbl_ecom_products.*,rp.price AS discount_price ,rs.price AS special_price").Joins("inner join tbl_ecom_products on tbl_ecom_products.id = tbl_ecom_carts.product_id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rp on rp.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rs on rs.product_id = tbl_ecom_products.id").Joins("inner join tbl_ecom_customers on tbl_ecom_customers.id = tbl_ecom_carts.customer_id").
+		Where("tbl_ecom_carts.is_deleted = 0 and tbl_ecom_products.is_deleted = 0 and tbl_ecom_customers.is_deleted = 0 and tbl_ecom_products.is_active = 1 and tbl_ecom_customers.id = ?",customerId).Preload("EcommerceCart").Limit(limit).Offset(offset).Order("tbl_ecom_carts.id desc").Find(&cartProductList).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return &model.EcommerceCartDetails{}, err
 	}
 
+	if err := db.Debug().Table("tbl_ecom_carts").Joins("inner join tbl_ecom_products on tbl_ecom_products.id = tbl_ecom_carts.product_id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rp on rp.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rs on rs.product_id = tbl_ecom_products.id").Joins("inner join tbl_ecom_customers on tbl_ecom_customers.id = tbl_ecom_carts.customer_id").
+		Where("tbl_ecom_carts.is_deleted = 0 and tbl_ecom_products.is_deleted = 0 and tbl_ecom_customers.is_deleted = 0 and tbl_ecom_products.is_active = 1 and tbl_ecom_customers.id = ?",customerId).Count(&count).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return &model.EcommerceCartDetails{}, err
+	}
+	
 	log.Println("cartList", cartProductList)
 
+	var subtotal,totalTax int64
 
-	return &model.EcommerceCartDetails{CartList: cartProductList, OrderSummary: model.OrderSummary{}, Count: len(cartProductList)}, nil
+	var totalQuantity int
+
+	for _,cartProduct := range cartProductList{
+
+		if cartProduct.ProductImagePath!=""{
+
+			modified_path := PathUrl + strings.TrimPrefix(cartProduct.ProductImagePath,"/")
+
+			cartProduct.ProductImagePath = modified_path
+		}
+
+		if cartProduct.ProductVideoPath!=""{
+
+			modified_path := PathUrl + strings.TrimPrefix(cartProduct.ProductVideoPath,"/")
+
+			cartProduct.ProductVideoPath = modified_path
+		}
+
+		var priceByQuantity int64 
+
+		if cartProduct.SpecialPrice!= nil{
+
+			reductionPrice := cartProduct.DefaultPrice - *cartProduct.SpecialPrice
+
+			priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(reductionPrice)
+
+			subtotal = subtotal + priceByQuantity
+
+		}else if cartProduct.DiscountPrice!= nil{
+
+			priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(*cartProduct.DiscountPrice)
+			
+			subtotal = subtotal + priceByQuantity
+
+		}else{
+
+			priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) *  int64(cartProduct.DefaultPrice)
+
+			subtotal = subtotal + priceByQuantity
+		}
+
+		var taxByQuantity int64 = int64(cartProduct.EcommerceCart.Quantity) * int64(cartProduct.Tax)
+
+		totalTax = totalTax + taxByQuantity
+
+		totalQuantity = totalQuantity + cartProduct.EcommerceCart.Quantity
+		
+	}
+
+	conv_totalCost := strconv.Itoa(int(subtotal)+int(totalTax))
+
+    cartSummary := model.CartSummary{SubTotal: strconv.Itoa(int(subtotal)),TotalTax: strconv.Itoa(int(totalTax)),TotalCost: conv_totalCost,TotalQuantity: totalQuantity}
+
+	return &model.EcommerceCartDetails{CartList: cartProductList, CartSummary: cartSummary, Count: int(count)}, nil
 }

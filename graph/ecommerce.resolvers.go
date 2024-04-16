@@ -32,5 +32,5 @@ func (r *queryResolver) EcommerceProductDetails(ctx context.Context, productID i
 
 // EcommerceCartList is the resolver for the ecommerceCartList field.
 func (r *queryResolver) EcommerceCartList(ctx context.Context, limit int, offset int, customerID int) (*model.EcommerceCartDetails, error) {
-	return EcommerceCartList(r.DB,ctx,limit,offset,customerID)
+	return EcommerceCartList(r.DB, ctx, limit, offset, customerID)
 }

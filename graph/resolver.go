@@ -60,8 +60,8 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 	return controller.CategoriesList(db, ctx, limit, offset, categoryGroupId, hierarchyLevel, checkEntriesPresence)
 }
 
-func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelID *int, categoryID *int, channelEntryID *int, slug *string) (*model.ChannelEntries, error) {
-	return controller.ChannelEntryDetail(db, ctx, channelEntryID, channelID, categoryID, slug)
+func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelID *int, categoryID *int, channelEntryID *int, slug,profileSlug *string) (*model.ChannelEntries, error) {
+	return controller.ChannelEntryDetail(db, ctx, channelEntryID, channelID, categoryID, slug,profileSlug)
 }
 
 func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId int) (bool, error) {

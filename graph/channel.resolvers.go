@@ -50,8 +50,8 @@ func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, 
 }
 
 // ChannelEntryDetail is the resolver for the channelEntryDetail field.
-func (r *queryResolver) ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (*model.ChannelEntries, error) {
-	return ChannelEntryDetail(r.DB, ctx, channelID, categoryID, channelEntryID, slug)
+func (r *queryResolver) ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int, profileSlug *string) (*model.ChannelEntries, error) {
+	return ChannelEntryDetail(r.DB, ctx, channelID, categoryID, channelEntryID, slug,profileSlug)
 }
 
 // Mutation returns MutationResolver implementation.

@@ -55,15 +55,16 @@ type EcommerceCart{
 
 type EcommerceCartDetails{
 	cartList:        [EcommerceProduct!]!
-	orderSummary:    OrderSummary!
+	cartSummary:     CartSummary!
 	Count:           Int!
 }
 
-type OrderSummary{
+type CartSummary{
 	subTotal:         LargeInt!
 	shippingAmount:   Int!
 	totalTax:         LargeInt!
-	totalCost:        LargeInt!  
+	totalCost:        LargeInt!
+	totalQuantity:    Int! 
 }
 
 extend type Query{
