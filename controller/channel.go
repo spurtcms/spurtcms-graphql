@@ -12,9 +12,6 @@ import (
 	"strconv"
 	"time"
 
-	"log"
-	// "time"
-
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
 	"gorm.io/gorm"
@@ -68,7 +65,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	token, _ := c.Get("token")
 
-	memberid := c.GetInt("memberid")
+	// memberid := c.GetInt("memberid")
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
@@ -240,8 +237,6 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		}
 
-		conv_channelEntries[index].Fields = conv_fields
-
 		additionalFields := model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
 		conv_channelEntries[index].AdditionalFields = &additionalFields
@@ -294,19 +289,6 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 		}
 
 		conv_channelEntries[index].MemberProfile = MemberProfile
-
-		var claimStatus bool
-
-		if entry.MemberProfile.ClaimStatus == 1 && memberid == entry.MemberProfile.MemberId {
-
-			claimStatus = true
-
-		} else {
-
-			claimStatus = false
-		}
-
-		conv_channelEntries[index].ClaimStatus = claimStatus
 
 		conv_channelEntries[index].Author = &entry.Author
 
@@ -427,7 +409,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 	token, _ := c.Get("token")
 
-	memberid := c.GetInt("memberid")
+	// memberid := c.GetInt("memberid")
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
@@ -632,17 +614,6 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 			ClaimStatus:     &memberProfileClaim,
 		}
 
-	var claimStatus bool
-
-	if *MemberProfile.ClaimStatus==1 && memberid == *MemberProfile.MemberID {
-
-		claimStatus = true
-
-	} else {
-
-		claimStatus = false
-	}
-
 	conv_channelEntry := model.ChannelEntries{
 		ID:               channelEntry.Id,
 		Title:            channelEntry.Title,
@@ -669,7 +640,6 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
-		ClaimStatus:      claimStatus,
 		Author:           &channelEntry.Author,
 		SortOrder:        &channelEntry.SortOrder,
 		CreateTime:       &channelEntry.CreateTime,
@@ -678,7 +648,6 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		Tags:             &channelEntry.Tags,
 		Excerpt:          &channelEntry.Excerpt,
 		ImageAltTag:      &channelEntry.ImageAltTag,
-		Fields:           conv_fields,
 	}
 
 	return &conv_channelEntry, nil
@@ -691,7 +660,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	token := c.GetString("token")
 
-	memberid := c.GetInt("memberid")
+	// memberid := c.GetInt("memberid")
 
 	verify_chan := make(chan error)
 
@@ -898,17 +867,6 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 			ClaimStatus:     &memberProfileClaim,
 		}
 
-	var claimStatus bool
-
-	if *MemberProfile.ClaimStatus==1 && memberid == *MemberProfile.MemberID {
-
-		claimStatus = true
-
-	} else {
-
-		claimStatus = false
-	}
-
 	conv_channelEntry := model.ChannelEntries{
 		ID:               channelEntry.Id,
 		Title:            channelEntry.Title,
@@ -935,7 +893,6 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		AuthorDetails:    authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
-		ClaimStatus:      claimStatus,
 		Author:           &channelEntry.Author,
 		SortOrder:        &channelEntry.SortOrder,
 		CreateTime:       &channelEntry.CreateTime,
@@ -944,12 +901,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		Tags:             &channelEntry.Tags,
 		Excerpt:          &channelEntry.Excerpt,
 		ImageAltTag:      &channelEntry.ImageAltTag,
-		Fields:           conv_fields,
 	}
 
 	data := map[string]interface{}{"claimData": profileData, "authorDetails": conv_channelEntry.AuthorDetails, "entry": conv_channelEntry, "additionalData": AdditionalData, "link": PathUrl + "member/updatemember?id=" + strconv.Itoa(*conv_channelEntry.MemberProfile.MemberID)}
-
-	log.Println("maildata", data["link"], conv_channelEntry.ClaimStatus, data["additionalData"])
 
 	tmpl, err := template.ParseFiles("view/email/claim-template.html")
 

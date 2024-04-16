@@ -14,7 +14,7 @@ type AdditionalFields struct {
 }
 
 type Author struct {
-	AuthorID         int       `json:"AuthorId"`
+	AuthorID         int       `json:"AuthorId" gorm:"column:id"`
 	FirstName        string    `json:"FirstName"`
 	LastName         string    `json:"LastName"`
 	Email            string    `json:"Email"`
@@ -83,12 +83,10 @@ type ChannelEntries struct {
 	RelatedArticles  string            `json:"relatedArticles"`
 	FeaturedEntry    int               `json:"featuredEntry"`
 	ViewCount        int               `json:"viewCount"`
-	Categories       [][]Category      `json:"categories"`
-	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"`
-	AuthorDetails    Author            `json:"authorDetails"`
-	MemberProfile    MemberProfile     `json:"memberProfile"`
-	ClaimStatus      bool              `json:"claimStatus"`
-	Fields           []Field           `json:"fields,omitempty"`
+	Categories       [][]Category      `json:"categories" gorm:"-"`
+	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty" gorm:"-"`
+	AuthorDetails    Author            `json:"authorDetails" gorm:"-"`
+	MemberProfile    MemberProfile     `json:"memberProfile" gorm:"-"`
 	Author           *string           `json:"author,omitempty"`
 	SortOrder        *int              `json:"sortOrder,omitempty"`
 	CreateTime       *time.Time        `json:"createTime,omitempty"`
@@ -146,10 +144,10 @@ type EcommerceProduct struct {
 	IsDeleted          int            `json:"isDeleted"`
 	DeletedBy          *int           `json:"deletedBy,omitempty"`
 	DeletedOn          *time.Time     `json:"deletedOn,omitempty"`
-	DefaultPrice       int            `json:"defaultPrice"`
-	DiscountPrice      *int           `json:"discountPrice,omitempty"`
-	SpecialPrice       *int           `json:"specialPrice,omitempty"`
-	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty"  gorm:"foreignKey:ID"`
+	DefaultPrice       int            `json:"defaultPrice" gorm:"product_price"`
+	DiscountPrice      *int           `json:"discountPrice,omitempty" gorm:"column:discount_price"`
+	SpecialPrice       *int           `json:"specialPrice,omitempty" gorm:"column:special_price"`
+	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ID"`
 }
 
 type EcommerceProducts struct {
@@ -230,7 +228,7 @@ type MemberDetails struct {
 	IsActive         graphql.Omittable[*int]    `json:"isActive,omitempty"`
 	ProfileImage     graphql.Omittable[*string] `json:"profileImage,omitempty"`
 	ProfileImagePath graphql.Omittable[*string] `json:"profileImagePath,omitempty"`
-	Username         string                     `json:"username"`
+	Username         graphql.Omittable[*string] `json:"username,omitempty"`
 	GroupID          graphql.Omittable[*int]    `json:"groupId,omitempty"`
 }
 
@@ -252,7 +250,7 @@ type MemberProfile struct {
 	ProfileName     *string     `json:"profileName,omitempty"`
 	ProfileSlug     *string     `json:"profileSlug,omitempty"`
 	ProfilePage     *string     `json:"profilePage,omitempty"`
-	MemberDetails   interface{} `json:"memberDetails,omitempty"`
+	MemberDetails   interface{} `json:"memberDetails,omitempty" gorm:"column:member_details;type:jsonb"`
 	CompanyName     *string     `json:"companyName,omitempty"`
 	CompanyLocation *string     `json:"companyLocation,omitempty"`
 	CompanyLogo     *string     `json:"companyLogo,omitempty"`
@@ -391,5 +389,6 @@ type SubPage struct {
 }
 
 func (EcommerceCart) TableName() string {
+
     return "tbl_ecom_carts" // Specify the actual table name in your database
 }

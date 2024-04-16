@@ -69,7 +69,7 @@ type OrderSummary{
 extend type Query{
     ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
 	ecommerceProductDetails(productId: Int!): EcommerceProduct!
-	ecommerceCartList(customerId: Int!):EcommerceCartDetails!
+	ecommerceCartList(limit: Int!,offset: Int!,customerId: Int!):EcommerceCartDetails!
 }
 
 extend type Mutation{

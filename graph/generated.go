@@ -58,7 +58,7 @@ type MutationResolver interface {
 	ProfileNameVerification(ctx context.Context, profileName string) (bool, error)
 	EcommerceAddToCart(ctx context.Context, productID int, customerID int, quantity int) (bool, error)
 	EcommerceOrderPlacement(ctx context.Context, customerID int, productID int) (bool, error)
-	TemplateMemberLogin(ctx context.Context, username string, password string) (string, error)
+	TemplateMemberLogin(ctx context.Context, username *string, email *string, password string) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
 }
@@ -70,7 +70,7 @@ type QueryResolver interface {
 	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int) (*model.ChannelEntries, error)
 	EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error)
 	EcommerceProductDetails(ctx context.Context, productID int) (*model.EcommerceProduct, error)
-	EcommerceCartList(ctx context.Context, customerID int) (*model.EcommerceCartDetails, error)
+	EcommerceCartList(ctx context.Context, limit int, offset int, customerID int) (*model.EcommerceCartDetails, error)
 	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (*model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (*model.PageAndPageGroups, error)
@@ -293,8 +293,6 @@ type ChannelEntries{
 	additionalFields:     AdditionalFields
 	authorDetails:        Author!
 	memberProfile:        MemberProfile!
-	claimStatus:          Boolean!
-	fields:               [Field!]
 	author:               String
 	sortOrder:            Int
 	createTime:           Time
@@ -504,7 +502,7 @@ type OrderSummary{
 extend type Query{
     ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
 	ecommerceProductDetails(productId: Int!): EcommerceProduct!
-	ecommerceCartList(customerId: Int!):EcommerceCartDetails!
+	ecommerceCartList(limit: Int!,offset: Int!,customerId: Int!):EcommerceCartDetails!
 }
 
 extend type Mutation{
@@ -559,7 +557,7 @@ type MemberGroup{
 }
 
 extend type Mutation{
-    templateMemberLogin(username: String!,password: String!): String! 
+    templateMemberLogin(username: String,email: String,password: String!): String! 
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
 }
@@ -573,7 +571,7 @@ input MemberDetails{
     isActive:         Int
     profileImage:     String
     profileImagePath: String
-    username:         String!
+    username:         String
     groupId:          Int 
 }`, BuiltIn: false},
 	{Name: "../schema/space.graphqls", Input: `# GraphQL schema example
@@ -824,24 +822,33 @@ func (ec *executionContext) field_Mutation_profileNameVerification_args(ctx cont
 func (ec *executionContext) field_Mutation_templateMemberLogin_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 *string
 	if tmp, ok := rawArgs["username"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["username"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["password"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg1 *string
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["password"] = arg1
+	args["email"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg2
 	return args, nil
 }
 
@@ -1122,14 +1129,32 @@ func (ec *executionContext) field_Query_ecommerceCartList_args(ctx context.Conte
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
-	if tmp, ok := rawArgs["customerId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customerId"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["customerId"] = arg0
+	args["limit"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["customerId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customerId"))
+		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["customerId"] = arg2
 	return args, nil
 }
 
@@ -4074,131 +4099,6 @@ func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ChannelEntries_claimStatus(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ClaimStatus, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ChannelEntries_claimStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ChannelEntries",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ChannelEntries_fields(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChannelEntries_fields(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Fields, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]model.Field)
-	fc.Result = res
-	return ec.marshalOField2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ChannelEntries_fields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ChannelEntries",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "fieldId":
-				return ec.fieldContext_Field_fieldId(ctx, field)
-			case "fieldName":
-				return ec.fieldContext_Field_fieldName(ctx, field)
-			case "fieldTypeId":
-				return ec.fieldContext_Field_fieldTypeId(ctx, field)
-			case "mandatoryField":
-				return ec.fieldContext_Field_mandatoryField(ctx, field)
-			case "optionExist":
-				return ec.fieldContext_Field_optionExist(ctx, field)
-			case "createdOn":
-				return ec.fieldContext_Field_createdOn(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_Field_createdBy(ctx, field)
-			case "modifiedOn":
-				return ec.fieldContext_Field_modifiedOn(ctx, field)
-			case "modifiedBY":
-				return ec.fieldContext_Field_modifiedBY(ctx, field)
-			case "fieldDesc":
-				return ec.fieldContext_Field_fieldDesc(ctx, field)
-			case "orderIndex":
-				return ec.fieldContext_Field_orderIndex(ctx, field)
-			case "imagePath":
-				return ec.fieldContext_Field_imagePath(ctx, field)
-			case "datetimeFormat":
-				return ec.fieldContext_Field_datetimeFormat(ctx, field)
-			case "timeFormat":
-				return ec.fieldContext_Field_timeFormat(ctx, field)
-			case "sectionParentId":
-				return ec.fieldContext_Field_sectionParentId(ctx, field)
-			case "characterAllowed":
-				return ec.fieldContext_Field_characterAllowed(ctx, field)
-			case "fieldTypeName":
-				return ec.fieldContext_Field_fieldTypeName(ctx, field)
-			case "fieldValue":
-				return ec.fieldContext_Field_fieldValue(ctx, field)
-			case "fieldOptions":
-				return ec.fieldContext_Field_fieldOptions(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Field", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _ChannelEntries_author(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChannelEntries_author(ctx, field)
 	if err != nil {
@@ -4616,10 +4516,6 @@ func (ec *executionContext) fieldContext_ChannelEntriesDetails_channelEntriesLis
 				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
 			case "memberProfile":
 				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
-			case "claimStatus":
-				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
-			case "fields":
-				return ec.fieldContext_ChannelEntries_fields(ctx, field)
 			case "author":
 				return ec.fieldContext_ChannelEntries_author(ctx, field)
 			case "sortOrder":
@@ -7763,10 +7659,6 @@ func (ec *executionContext) fieldContext_LoginDetails_claimEntryDetails(ctx cont
 				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
 			case "memberProfile":
 				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
-			case "claimStatus":
-				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
-			case "fields":
-				return ec.fieldContext_ChannelEntries_fields(ctx, field)
 			case "author":
 				return ec.fieldContext_ChannelEntries_author(ctx, field)
 			case "sortOrder":
@@ -10267,7 +10159,7 @@ func (ec *executionContext) _Mutation_templateMemberLogin(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().TemplateMemberLogin(rctx, fc.Args["username"].(string), fc.Args["password"].(string))
+		return ec.resolvers.Mutation().TemplateMemberLogin(rctx, fc.Args["username"].(*string), fc.Args["email"].(*string), fc.Args["password"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12391,10 +12283,6 @@ func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Co
 				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
 			case "memberProfile":
 				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
-			case "claimStatus":
-				return ec.fieldContext_ChannelEntries_claimStatus(ctx, field)
-			case "fields":
-				return ec.fieldContext_ChannelEntries_fields(ctx, field)
 			case "author":
 				return ec.fieldContext_ChannelEntries_author(ctx, field)
 			case "sortOrder":
@@ -12603,7 +12491,7 @@ func (ec *executionContext) _Query_ecommerceCartList(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().EcommerceCartList(rctx, fc.Args["customerId"].(int))
+		return ec.resolvers.Query().EcommerceCartList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["customerId"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -16418,11 +16306,11 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			it.ProfileImagePath = graphql.OmittableOf(data)
 		case "username":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
-			it.Username = data
+			it.Username = graphql.OmittableOf(data)
 		case "groupId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
@@ -17067,13 +16955,6 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "claimStatus":
-			out.Values[i] = ec._ChannelEntries_claimStatus(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "fields":
-			out.Values[i] = ec._ChannelEntries_fields(ctx, field, obj)
 		case "author":
 			out.Values[i] = ec._ChannelEntries_author(ctx, field, obj)
 		case "sortOrder":

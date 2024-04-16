@@ -51,8 +51,6 @@ type ChannelEntries{
 	additionalFields:     AdditionalFields
 	authorDetails:        Author!
 	memberProfile:        MemberProfile!
-	claimStatus:          Boolean!
-	fields:               [Field!]
 	author:               String
 	sortOrder:            Int
 	createTime:           Time

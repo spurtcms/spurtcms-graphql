@@ -112,9 +112,9 @@ func EcommerceProductDetails(db *gorm.DB, ctx context.Context, productId int) (*
 
 	var productdtl model.EcommerceProduct
 
-	currentTime := time.Now().In(TimeZone).Format("2006-01-02 15:04:05")
+	// currentTime := time.Now().In(TimeZone).Format("2006-01-02 15:04:05")
 
-	if err := db.Debug().Table("tbl_ecom_products").Select("tbl_ecom_products.*,rp.price AS discount_price ,rs.price AS special_price").Joins("inner join tbl_ecom_product_pricings on tbl_ecom_product_pricings.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= ? and tbl_ecom_product_pricings.end_date >= ?) rp on rp.product_id = tbl_ecom_products.id", currentTime, currentTime).Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= ? and tbl_ecom_product_pricings.end_date >= ?) rs on rs.product_id = tbl_ecom_products.id", currentTime, currentTime).Where("tbl_ecom_products.is_deleted = 0 and tbl_ecom_products.is_active = 1").Where("tbl_ecom_products.id = ?", productId).First(&productdtl).Error; err != nil {
+	if err := db.Debug().Table("tbl_ecom_products").Select("tbl_ecom_products.*,rp.price AS discount_price ,rs.price AS special_price").Joins("inner join tbl_ecom_product_pricings on tbl_ecom_product_pricings.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rp on rp.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rs on rs.product_id = tbl_ecom_products.id").Where("tbl_ecom_products.is_deleted = 0 and tbl_ecom_products.is_active = 1").Where("tbl_ecom_products.id = ?", productId).First(&productdtl).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -137,6 +137,8 @@ func EcommerceAddToCart(db *gorm.DB, ctx context.Context, productID int, custome
 
 	cart.Quantity = quantity
 
+	cart.IsDeleted  = 0
+
 	cart.CreatedOn, _ = time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
 	if err := db.Debug().Table("tbl_ecom_carts").Create(&cart).Error; err != nil {
@@ -149,7 +151,7 @@ func EcommerceAddToCart(db *gorm.DB, ctx context.Context, productID int, custome
 	return true, nil
 }
 
-func EcommerceCartList(db *gorm.DB, ctx context.Context, customerId int) (*model.EcommerceCartDetails, error) {
+func EcommerceCartList(db *gorm.DB, ctx context.Context, limit,offset, customerId int) (*model.EcommerceCartDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -157,8 +159,8 @@ func EcommerceCartList(db *gorm.DB, ctx context.Context, customerId int) (*model
 
 	var cartProductList []model.EcommerceProduct
 
-	if err := db.Debug().Table("tbl_ecom_carts").Select("tbl_ecom_carts.*,tbl_ecom_products.*,SUM(tbl_ecom_carts.id)").Joins("inner join tbl_ecom_products on tbl_ecom_products.id = tbl_ecom_carts.product_id").Joins("inner join tbl_ecom_customers on tbl_ecom_customers.id = tbl_ecom_carts.customer_id").
-		Where("tbl_ecom_carts.is_deleted = 0 and tbl_ecom_products.is_deleted = 0 and tbl_ecom_customers.is_deleted = 0").Preload("EcommerceCart").Find(&cartProductList).Error; err != nil {
+	if err := db.Debug().Table("tbl_ecom_carts").Distinct("tbl_ecom_products.id").Select("tbl_ecom_carts.*,tbl_ecom_products.*,rp.price AS discount_price ,rs.price AS special_price").Joins("inner join tbl_ecom_products on tbl_ecom_products.id = tbl_ecom_carts.product_id").Joins("inner join tbl_ecom_product_pricings on tbl_ecom_product_pricings.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rp on rp.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rs on rs.product_id = tbl_ecom_products.id").Joins("inner join tbl_ecom_customers on tbl_ecom_customers.id = tbl_ecom_carts.customer_id").
+		Where("tbl_ecom_carts.is_deleted = 0 and tbl_ecom_products.is_deleted = 0 and tbl_ecom_customers.is_deleted = 0 and tbl_ecom_products.is_active = 1").Preload("EcommerceCart").Limit(limit).Offset(offset).Order("tbl_ecom_carts.id desc").Find(&cartProductList).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 

@@ -84,15 +84,15 @@ func VerifyProfileName(db *gorm.DB,ctx context.Context, profileName string) (boo
 	return controller.VerifyProfileName(db,ctx,profileName)
 }
 
-func TemplateMemberLogin(db *gorm.DB,ctx context.Context, username string, password string) (string, error) {
-	return controller.TemplateMemberLogin(db,ctx,username,password)
+func TemplateMemberLogin(db *gorm.DB,ctx context.Context, username,email *string, password string) (string, error) {
+	return controller.TemplateMemberLogin(db,ctx,username,email,password)
 }
 
 func EcommerceProductDetails(db *gorm.DB,ctx context.Context, productID int) (*model.EcommerceProduct, error) {
 	return controller.EcommerceProductDetails(db,ctx,productID)
 }
 
-func EcommerceCartList(db *gorm.DB,ctx context.Context, customerID int) (*model.EcommerceCartDetails, error) {
-	return controller.EcommerceCartList(db,ctx,customerID)
+func EcommerceCartList(db *gorm.DB,ctx context.Context,limit,offset, customerID int) (*model.EcommerceCartDetails, error) {
+	return controller.EcommerceCartList(db,ctx,limit,offset,customerID)
 }
 

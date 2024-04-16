@@ -239,24 +239,42 @@ func MemberRegister(db *gorm.DB,ctx context.Context, input model.MemberDetails) 
 		
 	}
 
+	if input.Username.IsSet(){
+
+		memberDetails.Username = *input.Username.Value()
+
+		_, isMemberExists, err := Mem.CheckUsernameInMember(0, *input.Username.Value())
+
+		if isMemberExists || err == nil {
+
+			err = errors.New("member already exists") 
+	
+			c.AbortWithError(http.StatusBadRequest,err)
+	
+			return isMemberExists, err
+		}
+	
+	}
+
+	if input.Email!=""{
+
+		memberDetails.Email = input.Email
+
+		_, isMemberExists, err := Mem.CheckEmailInMember(0, input.Email)
+
+		if isMemberExists || err == nil {
+
+			err = errors.New("member already exists") 
+	
+			c.AbortWithError(http.StatusBadRequest,err)
+	
+			return isMemberExists, err
+		}
+	}
+
 	memberDetails.FirstName = input.FirstName
 
-	memberDetails.Email = input.Email
-
 	memberDetails.Password = input.Password
-
-	memberDetails.Username = input.Username
-
-	_, isMemberExists, err := Mem.CheckUsernameInMember(0, input.Username)
-
-	if isMemberExists || err == nil {
-
-		err = errors.New("member already exists") 
-
-		c.AbortWithError(http.StatusBadRequest,err)
-
-		return isMemberExists, err
-	}
 
 	isRegistered, err := Mem.MemberRegister(memberDetails)
 
@@ -318,13 +336,26 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 }
 
-func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username string, password string) (string, error) {
+func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username,email *string, password string) (string, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
-	member_details, err := Mem.CheckMemberLogin(member.MemberLogin{Username: username, Password: password}, db, os.Getenv("JWT_SECRET"))
+	var memberLogin member.MemberLogin
+
+	if username != nil{
+
+		memberLogin.Username = *username
+		
+	}else if email != nil{
+
+		memberLogin.Emailid = *email
+	}
+
+	memberLogin.Password = password
+
+	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"))
 
 	if err != nil {
 
@@ -333,5 +364,5 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username string, pass
 		log.Println(err)
 	}
 
-	return member_details, err
+	return token, err
 }

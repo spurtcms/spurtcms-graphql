@@ -32,7 +32,7 @@ type MemberGroup{
 }
 
 extend type Mutation{
-    templateMemberLogin(username: String!,password: String!): String! 
+    templateMemberLogin(username: String,email: String,password: String!): String! 
     memberRegister(input: MemberDetails!): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
 }
@@ -46,6 +46,6 @@ input MemberDetails{
     isActive:         Int
     profileImage:     String
     profileImagePath: String
-    username:         String!
+    username:         String
     groupId:          Int 
 }
