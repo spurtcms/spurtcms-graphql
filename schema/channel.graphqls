@@ -173,6 +173,7 @@ extend type Mutation{
 	memberProfileUpdate(profiledata: ProfileData!,entryId: Int!):Boolean! @auth
 	memberclaimnow(input: ClaimData!,entryId: Int!): Boolean! @auth
 	profileNameVerification(profileName: String!): Boolean! @auth
+	updateChannelEntryViewCount(entryId: Int,slug: String): Boolean! @auth
 }
 
 input ProfileData{

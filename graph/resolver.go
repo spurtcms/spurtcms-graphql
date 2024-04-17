@@ -100,3 +100,7 @@ func EcommerceAddToCart(db *gorm.DB,ctx context.Context, productID int, customer
 	return controller.EcommerceAddToCart(db,ctx,productID,customerID,quantity)
 }
 
+func UpdateChannelEntryViewCount(db *gorm.DB,ctx context.Context,entryId *int,slug *string ) (bool, error) {
+	return controller.UpdateChannelEntryViewCount(db,ctx,entryId,slug)
+}
+
