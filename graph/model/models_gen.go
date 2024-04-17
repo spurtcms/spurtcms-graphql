@@ -205,7 +205,6 @@ type FieldValue struct {
 }
 
 type LoginDetails struct {
-	ClaimEntryDetails ChannelEntries `json:"claimEntryDetails"`
 	MemberProfileData MemberProfile  `json:"memberProfileData"`
 	Token             string         `json:"token"`
 }

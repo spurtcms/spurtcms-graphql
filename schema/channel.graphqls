@@ -156,7 +156,6 @@ type FieldOptions{
 }
 
 type LoginDetails{
-	claimEntryDetails:  ChannelEntries!
 	memberProfileData:  MemberProfile!
 	token:              String! 
 }

@@ -96,3 +96,7 @@ func EcommerceCartList(db *gorm.DB,ctx context.Context,limit,offset, customerID 
 	return controller.EcommerceCartList(db,ctx,limit,offset,customerID)
 }
 
+func EcommerceAddToCart(db *gorm.DB,ctx context.Context, productID int, customerID int, quantity int) (bool, error) {
+	return controller.EcommerceAddToCart(db,ctx,productID,customerID,quantity)
+}
+

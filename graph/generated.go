@@ -398,7 +398,6 @@ type FieldOptions{
 }
 
 type LoginDetails{
-	claimEntryDetails:  ChannelEntries!
 	memberProfileData:  MemberProfile!
 	token:              String! 
 }
@@ -7802,118 +7801,6 @@ func (ec *executionContext) fieldContext_FieldValue_modifiedBY(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _LoginDetails_claimEntryDetails(ctx context.Context, field graphql.CollectedField, obj *model.LoginDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_LoginDetails_claimEntryDetails(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ClaimEntryDetails, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.ChannelEntries)
-	fc.Result = res
-	return ec.marshalNChannelEntries2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐChannelEntries(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_LoginDetails_claimEntryDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "LoginDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_ChannelEntries_id(ctx, field)
-			case "title":
-				return ec.fieldContext_ChannelEntries_title(ctx, field)
-			case "slug":
-				return ec.fieldContext_ChannelEntries_slug(ctx, field)
-			case "description":
-				return ec.fieldContext_ChannelEntries_description(ctx, field)
-			case "userId":
-				return ec.fieldContext_ChannelEntries_userId(ctx, field)
-			case "channelId":
-				return ec.fieldContext_ChannelEntries_channelId(ctx, field)
-			case "status":
-				return ec.fieldContext_ChannelEntries_status(ctx, field)
-			case "isActive":
-				return ec.fieldContext_ChannelEntries_isActive(ctx, field)
-			case "createdOn":
-				return ec.fieldContext_ChannelEntries_createdOn(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_ChannelEntries_createdBy(ctx, field)
-			case "modifiedBy":
-				return ec.fieldContext_ChannelEntries_modifiedBy(ctx, field)
-			case "modifiedOn":
-				return ec.fieldContext_ChannelEntries_modifiedOn(ctx, field)
-			case "coverImage":
-				return ec.fieldContext_ChannelEntries_coverImage(ctx, field)
-			case "thumbnailImage":
-				return ec.fieldContext_ChannelEntries_thumbnailImage(ctx, field)
-			case "metaTitle":
-				return ec.fieldContext_ChannelEntries_metaTitle(ctx, field)
-			case "metaDescription":
-				return ec.fieldContext_ChannelEntries_metaDescription(ctx, field)
-			case "keyword":
-				return ec.fieldContext_ChannelEntries_keyword(ctx, field)
-			case "categoriesId":
-				return ec.fieldContext_ChannelEntries_categoriesId(ctx, field)
-			case "relatedArticles":
-				return ec.fieldContext_ChannelEntries_relatedArticles(ctx, field)
-			case "featuredEntry":
-				return ec.fieldContext_ChannelEntries_featuredEntry(ctx, field)
-			case "viewCount":
-				return ec.fieldContext_ChannelEntries_viewCount(ctx, field)
-			case "categories":
-				return ec.fieldContext_ChannelEntries_categories(ctx, field)
-			case "additionalFields":
-				return ec.fieldContext_ChannelEntries_additionalFields(ctx, field)
-			case "authorDetails":
-				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
-			case "memberProfile":
-				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
-			case "author":
-				return ec.fieldContext_ChannelEntries_author(ctx, field)
-			case "sortOrder":
-				return ec.fieldContext_ChannelEntries_sortOrder(ctx, field)
-			case "createTime":
-				return ec.fieldContext_ChannelEntries_createTime(ctx, field)
-			case "publishedTime":
-				return ec.fieldContext_ChannelEntries_publishedTime(ctx, field)
-			case "readingTime":
-				return ec.fieldContext_ChannelEntries_readingTime(ctx, field)
-			case "tags":
-				return ec.fieldContext_ChannelEntries_tags(ctx, field)
-			case "excerpt":
-				return ec.fieldContext_ChannelEntries_excerpt(ctx, field)
-			case "imageAltTag":
-				return ec.fieldContext_ChannelEntries_imageAltTag(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _LoginDetails_memberProfileData(ctx context.Context, field graphql.CollectedField, obj *model.LoginDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_LoginDetails_memberProfileData(ctx, field)
 	if err != nil {
@@ -10018,8 +9905,6 @@ func (ec *executionContext) fieldContext_Mutation_verifyMemberOtp(ctx context.Co
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "claimEntryDetails":
-				return ec.fieldContext_LoginDetails_claimEntryDetails(ctx, field)
 			case "memberProfileData":
 				return ec.fieldContext_LoginDetails_memberProfileData(ctx, field)
 			case "token":
@@ -17669,11 +17554,6 @@ func (ec *executionContext) _LoginDetails(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("LoginDetails")
-		case "claimEntryDetails":
-			out.Values[i] = ec._LoginDetails_claimEntryDetails(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "memberProfileData":
 			out.Values[i] = ec._LoginDetails_memberProfileData(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

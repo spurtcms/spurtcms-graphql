@@ -12,7 +12,7 @@ import (
 
 // EcommerceAddToCart is the resolver for the ecommerceAddToCart field.
 func (r *mutationResolver) EcommerceAddToCart(ctx context.Context, productID int, customerID int, quantity int) (bool, error) {
-	panic(fmt.Errorf("not implemented: EcommerceAddToCart - ecommerceAddToCart"))
+	return EcommerceAddToCart(r.DB,ctx,productID,customerID,quantity)
 }
 
 // EcommerceOrderPlacement is the resolver for the ecommerceOrderPlacement field.
