@@ -502,14 +502,14 @@ type CartSummary{
 }
 
 extend type Query{
-    ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
-	ecommerceProductDetails(productId: Int!): EcommerceProduct!
-	ecommerceCartList(limit: Int!,offset: Int!,customerId: Int!):EcommerceCartDetails!
+    ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! @auth
+	ecommerceProductDetails(productId: Int!): EcommerceProduct! @auth
+	ecommerceCartList(limit: Int!,offset: Int!,customerId: Int!):EcommerceCartDetails! @auth
 }
 
 extend type Mutation{
-	ecommerceAddToCart(productId: Int!,customerId: Int!,quantity: Int!): Boolean!
-	ecommerceOrderPlacement(customerId: Int!,productId: Int!): Boolean!
+	ecommerceAddToCart(productId: Int!,customerId: Int!,quantity: Int!): Boolean! @auth
+	ecommerceOrderPlacement(customerId: Int!,productId: Int!): Boolean! @auth
 }
 
 input ProductFilter{
@@ -10266,8 +10266,28 @@ func (ec *executionContext) _Mutation_ecommerceAddToCart(ctx context.Context, fi
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().EcommerceAddToCart(rctx, fc.Args["productId"].(int), fc.Args["customerId"].(int), fc.Args["quantity"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().EcommerceAddToCart(rctx, fc.Args["productId"].(int), fc.Args["customerId"].(int), fc.Args["quantity"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10321,8 +10341,28 @@ func (ec *executionContext) _Mutation_ecommerceOrderPlacement(ctx context.Contex
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().EcommerceOrderPlacement(rctx, fc.Args["customerId"].(int), fc.Args["productId"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().EcommerceOrderPlacement(rctx, fc.Args["customerId"].(int), fc.Args["productId"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12372,8 +12412,28 @@ func (ec *executionContext) _Query_ecommerceProductList(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().EcommerceProductList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["filter"].(*model.ProductFilter), fc.Args["sort"].(*model.ProductSort))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().EcommerceProductList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["filter"].(*model.ProductFilter), fc.Args["sort"].(*model.ProductSort))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.EcommerceProducts); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.EcommerceProducts`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12433,8 +12493,28 @@ func (ec *executionContext) _Query_ecommerceProductDetails(ctx context.Context, 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().EcommerceProductDetails(rctx, fc.Args["productId"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().EcommerceProductDetails(rctx, fc.Args["productId"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.EcommerceProduct); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.EcommerceProduct`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12532,8 +12612,28 @@ func (ec *executionContext) _Query_ecommerceCartList(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().EcommerceCartList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["customerId"].(int))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().EcommerceCartList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["customerId"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.EcommerceCartDetails); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.EcommerceCartDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)

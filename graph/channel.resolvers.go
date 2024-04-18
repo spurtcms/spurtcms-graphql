@@ -36,7 +36,7 @@ func (r *mutationResolver) ProfileNameVerification(ctx context.Context, profileN
 
 // UpdateChannelEntryViewCount is the resolver for the updateChannelEntryViewCount field.
 func (r *mutationResolver) UpdateChannelEntryViewCount(ctx context.Context, entryID *int, slug *string) (bool, error) {
-	return UpdateChannelEntryViewCount(r.DB, ctx,entryID,slug)
+	return UpdateChannelEntryViewCount(r.DB, ctx, entryID, slug)
 }
 
 // Channellist is the resolver for the channellist field.

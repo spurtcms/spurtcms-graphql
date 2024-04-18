@@ -68,14 +68,14 @@ type CartSummary{
 }
 
 extend type Query{
-    ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
-	ecommerceProductDetails(productId: Int!): EcommerceProduct!
-	ecommerceCartList(limit: Int!,offset: Int!,customerId: Int!):EcommerceCartDetails!
+    ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! @auth
+	ecommerceProductDetails(productId: Int!): EcommerceProduct! @auth
+	ecommerceCartList(limit: Int!,offset: Int!,customerId: Int!):EcommerceCartDetails! @auth
 }
 
 extend type Mutation{
-	ecommerceAddToCart(productId: Int!,customerId: Int!,quantity: Int!): Boolean!
-	ecommerceOrderPlacement(customerId: Int!,productId: Int!): Boolean!
+	ecommerceAddToCart(productId: Int!,customerId: Int!,quantity: Int!): Boolean! @auth
+	ecommerceOrderPlacement(customerId: Int!,productId: Int!): Boolean! @auth
 }
 
 input ProductFilter{
