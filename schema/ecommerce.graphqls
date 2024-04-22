@@ -69,13 +69,13 @@ type CartSummary{
 
 extend type Query{
     ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! @auth
-	ecommerceProductDetails(productId: Int!): EcommerceProduct! @auth
-	ecommerceCartList(limit: Int!,offset: Int!,customerId: Int!):EcommerceCartDetails! @auth
+	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct! @auth
+	ecommerceCartList(limit: Int!,offset: Int!):EcommerceCartDetails! @auth
 }
 
 extend type Mutation{
-	ecommerceAddToCart(productId: Int!,customerId: Int!,quantity: Int!): Boolean! @auth
-	ecommerceOrderPlacement(customerId: Int!,productId: Int!): Boolean! @auth
+	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
+	ecommerceOrderPlacement(productId: Int,productSlug: String): Boolean! @auth
 }
 
 input ProductFilter{
@@ -85,6 +85,7 @@ input ProductFilter{
 	categoryName:          String
 	categoryId:            Int
 	starRatings:           Float
+	searchKeyword:         String
 }
 
 input ProductSort{

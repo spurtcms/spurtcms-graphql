@@ -64,16 +64,16 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelID *int, catego
 	return controller.ChannelEntryDetail(db, ctx, channelEntryID, channelID, categoryID, slug,profileSlug)
 }
 
-func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId int) (bool, error) {
-	return controller.MemberProfileUpdate(db, ctx, profiledata, entryId)
+func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId *int, profileSlug *string) (bool, error) {
+	return controller.MemberProfileUpdate(db, ctx, profiledata, entryId,profileSlug)
 }
 
 func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails,error) {
 	return controller.VerifyMemberOtp(db, ctx, email, otp)
 }
 
-func Memberclaimnow(db *gorm.DB, ctx context.Context, input model.ClaimData, entryId int) (bool, error) {
-	return controller.Memberclaimnow(db, ctx, input, entryId)
+func Memberclaimnow(db *gorm.DB, ctx context.Context, input model.ClaimData, entryId *int,profileSlug *string) (bool, error) {
+	return controller.Memberclaimnow(db, ctx, input, entryId,profileSlug)
 }
 
 func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {
@@ -88,16 +88,16 @@ func TemplateMemberLogin(db *gorm.DB,ctx context.Context, username,email *string
 	return controller.TemplateMemberLogin(db,ctx,username,email,password)
 }
 
-func EcommerceProductDetails(db *gorm.DB,ctx context.Context, productID int) (*model.EcommerceProduct, error) {
-	return controller.EcommerceProductDetails(db,ctx,productID)
+func EcommerceProductDetails(db *gorm.DB,ctx context.Context, productID *int,productSlug *string) (*model.EcommerceProduct, error) {
+	return controller.EcommerceProductDetails(db,ctx,productID,productSlug)
 }
 
-func EcommerceCartList(db *gorm.DB,ctx context.Context,limit,offset, customerID int) (*model.EcommerceCartDetails, error) {
-	return controller.EcommerceCartList(db,ctx,limit,offset,customerID)
+func EcommerceCartList(db *gorm.DB,ctx context.Context,limit,offset int) (*model.EcommerceCartDetails, error) {
+	return controller.EcommerceCartList(db,ctx,limit,offset)
 }
 
-func EcommerceAddToCart(db *gorm.DB,ctx context.Context, productID int, customerID int, quantity int) (bool, error) {
-	return controller.EcommerceAddToCart(db,ctx,productID,customerID,quantity)
+func EcommerceAddToCart(db *gorm.DB,ctx context.Context, productID *int, productSlug *string, quantity int) (bool, error) {
+	return controller.EcommerceAddToCart(db,ctx,productID,productSlug,quantity)
 }
 
 func UpdateChannelEntryViewCount(db *gorm.DB,ctx context.Context,entryId *int,slug *string ) (bool, error) {

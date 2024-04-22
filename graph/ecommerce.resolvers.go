@@ -11,12 +11,12 @@ import (
 )
 
 // EcommerceAddToCart is the resolver for the ecommerceAddToCart field.
-func (r *mutationResolver) EcommerceAddToCart(ctx context.Context, productID int, customerID int, quantity int) (bool, error) {
-	return EcommerceAddToCart(r.DB, ctx, productID, customerID, quantity)
+func (r *mutationResolver) EcommerceAddToCart(ctx context.Context, productID *int, productSlug *string, quantity int) (bool, error) {
+	return EcommerceAddToCart(r.DB, ctx, productID, productSlug, quantity)
 }
 
 // EcommerceOrderPlacement is the resolver for the ecommerceOrderPlacement field.
-func (r *mutationResolver) EcommerceOrderPlacement(ctx context.Context, customerID int, productID int) (bool, error) {
+func (r *mutationResolver) EcommerceOrderPlacement(ctx context.Context, productID *int, productSlug *string) (bool, error) {
 	panic(fmt.Errorf("not implemented: EcommerceOrderPlacement - ecommerceOrderPlacement"))
 }
 
@@ -26,11 +26,11 @@ func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, off
 }
 
 // EcommerceProductDetails is the resolver for the ecommerceProductDetails field.
-func (r *queryResolver) EcommerceProductDetails(ctx context.Context, productID int) (*model.EcommerceProduct, error) {
-	return EcommerceProductDetails(r.DB, ctx, productID)
+func (r *queryResolver) EcommerceProductDetails(ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error) {
+	return EcommerceProductDetails(r.DB, ctx, productID, productSlug)
 }
 
 // EcommerceCartList is the resolver for the ecommerceCartList field.
-func (r *queryResolver) EcommerceCartList(ctx context.Context, limit int, offset int, customerID int) (*model.EcommerceCartDetails, error) {
-	return EcommerceCartList(r.DB, ctx, limit, offset, customerID)
+func (r *queryResolver) EcommerceCartList(ctx context.Context, limit int, offset int) (*model.EcommerceCartDetails, error) {
+	return EcommerceCartList(r.DB, ctx, limit, offset)
 }

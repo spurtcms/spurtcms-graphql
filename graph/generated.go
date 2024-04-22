@@ -53,12 +53,12 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	MemberLogin(ctx context.Context, email string) (bool, error)
 	VerifyMemberOtp(ctx context.Context, email string, otp int) (*model.LoginDetails, error)
-	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int) (bool, error)
-	Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int) (bool, error)
+	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID *int, profileSlug *string) (bool, error)
+	Memberclaimnow(ctx context.Context, input model.ClaimData, entryID *int, profileSlug *string) (bool, error)
 	ProfileNameVerification(ctx context.Context, profileName string) (bool, error)
 	UpdateChannelEntryViewCount(ctx context.Context, entryID *int, slug *string) (bool, error)
-	EcommerceAddToCart(ctx context.Context, productID int, customerID int, quantity int) (bool, error)
-	EcommerceOrderPlacement(ctx context.Context, customerID int, productID int) (bool, error)
+	EcommerceAddToCart(ctx context.Context, productID *int, productSlug *string, quantity int) (bool, error)
+	EcommerceOrderPlacement(ctx context.Context, productID *int, productSlug *string) (bool, error)
 	TemplateMemberLogin(ctx context.Context, username *string, email *string, password string) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
@@ -70,8 +70,8 @@ type QueryResolver interface {
 	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (*model.ChannelEntriesDetails, error)
 	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int, profileSlug *string) (*model.ChannelEntries, error)
 	EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error)
-	EcommerceProductDetails(ctx context.Context, productID int) (*model.EcommerceProduct, error)
-	EcommerceCartList(ctx context.Context, limit int, offset int, customerID int) (*model.EcommerceCartDetails, error)
+	EcommerceProductDetails(ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error)
+	EcommerceCartList(ctx context.Context, limit int, offset int) (*model.EcommerceCartDetails, error)
 	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID int) (*model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (*model.PageAndPageGroups, error)
@@ -413,8 +413,8 @@ extend type Query{
 extend type Mutation{
     memberLogin(email: String!): Boolean!
 	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
-	memberProfileUpdate(profiledata: ProfileData!,entryId: Int!):Boolean! @auth
-	memberclaimnow(input: ClaimData!,entryId: Int!): Boolean! @auth
+	memberProfileUpdate(profiledata: ProfileData!,entryId: Int,profileSlug: String):Boolean! @auth
+	memberclaimnow(input: ClaimData!,entryId: Int,profileSlug: String): Boolean! @auth
 	profileNameVerification(profileName: String!): Boolean! @auth
 	updateChannelEntryViewCount(entryId: Int,slug: String): Boolean! @auth
 }
@@ -503,13 +503,13 @@ type CartSummary{
 
 extend type Query{
     ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! @auth
-	ecommerceProductDetails(productId: Int!): EcommerceProduct! @auth
-	ecommerceCartList(limit: Int!,offset: Int!,customerId: Int!):EcommerceCartDetails! @auth
+	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct! @auth
+	ecommerceCartList(limit: Int!,offset: Int!):EcommerceCartDetails! @auth
 }
 
 extend type Mutation{
-	ecommerceAddToCart(productId: Int!,customerId: Int!,quantity: Int!): Boolean! @auth
-	ecommerceOrderPlacement(customerId: Int!,productId: Int!): Boolean! @auth
+	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
+	ecommerceOrderPlacement(productId: Int,productSlug: String): Boolean! @auth
 }
 
 input ProductFilter{
@@ -519,6 +519,7 @@ input ProductFilter{
 	categoryName:          String
 	categoryId:            Int
 	starRatings:           Float
+	searchKeyword:         String
 }
 
 input ProductSort{
@@ -659,24 +660,24 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_ecommerceAddToCart_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
+	var arg0 *int
 	if tmp, ok := rawArgs["productId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productId"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["productId"] = arg0
-	var arg1 int
-	if tmp, ok := rawArgs["customerId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customerId"))
-		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg1 *string
+	if tmp, ok := rawArgs["productSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productSlug"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["customerId"] = arg1
+	args["productSlug"] = arg1
 	var arg2 int
 	if tmp, ok := rawArgs["quantity"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
@@ -692,24 +693,24 @@ func (ec *executionContext) field_Mutation_ecommerceAddToCart_args(ctx context.C
 func (ec *executionContext) field_Mutation_ecommerceOrderPlacement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["customerId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customerId"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["customerId"] = arg0
-	var arg1 int
+	var arg0 *int
 	if tmp, ok := rawArgs["productId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productId"))
-		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["productId"] = arg1
+	args["productId"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["productSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productSlug"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["productSlug"] = arg1
 	return args, nil
 }
 
@@ -740,15 +741,24 @@ func (ec *executionContext) field_Mutation_memberProfileUpdate_args(ctx context.
 		}
 	}
 	args["profiledata"] = arg0
-	var arg1 int
+	var arg1 *int
 	if tmp, ok := rawArgs["entryId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entryId"))
-		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["entryId"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["profileSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileSlug"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["profileSlug"] = arg2
 	return args, nil
 }
 
@@ -794,15 +804,24 @@ func (ec *executionContext) field_Mutation_memberclaimnow_args(ctx context.Conte
 		}
 	}
 	args["input"] = arg0
-	var arg1 int
+	var arg1 *int
 	if tmp, ok := rawArgs["entryId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entryId"))
-		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["entryId"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["profileSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileSlug"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["profileSlug"] = arg2
 	return args, nil
 }
 
@@ -1181,30 +1200,30 @@ func (ec *executionContext) field_Query_ecommerceCartList_args(ctx context.Conte
 		}
 	}
 	args["offset"] = arg1
-	var arg2 int
-	if tmp, ok := rawArgs["customerId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customerId"))
-		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["customerId"] = arg2
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_ecommerceProductDetails_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
+	var arg0 *int
 	if tmp, ok := rawArgs["productId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productId"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["productId"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["productSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productSlug"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["productSlug"] = arg1
 	return args, nil
 }
 
@@ -9968,7 +9987,7 @@ func (ec *executionContext) _Mutation_memberProfileUpdate(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData), fc.Args["entryId"].(int))
+			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData), fc.Args["entryId"].(*int), fc.Args["profileSlug"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -10043,7 +10062,7 @@ func (ec *executionContext) _Mutation_memberclaimnow(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().Memberclaimnow(rctx, fc.Args["input"].(model.ClaimData), fc.Args["entryId"].(int))
+			return ec.resolvers.Mutation().Memberclaimnow(rctx, fc.Args["input"].(model.ClaimData), fc.Args["entryId"].(*int), fc.Args["profileSlug"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -10268,7 +10287,7 @@ func (ec *executionContext) _Mutation_ecommerceAddToCart(ctx context.Context, fi
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().EcommerceAddToCart(rctx, fc.Args["productId"].(int), fc.Args["customerId"].(int), fc.Args["quantity"].(int))
+			return ec.resolvers.Mutation().EcommerceAddToCart(rctx, fc.Args["productId"].(*int), fc.Args["productSlug"].(*string), fc.Args["quantity"].(int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -10343,7 +10362,7 @@ func (ec *executionContext) _Mutation_ecommerceOrderPlacement(ctx context.Contex
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().EcommerceOrderPlacement(rctx, fc.Args["customerId"].(int), fc.Args["productId"].(int))
+			return ec.resolvers.Mutation().EcommerceOrderPlacement(rctx, fc.Args["productId"].(*int), fc.Args["productSlug"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -12495,7 +12514,7 @@ func (ec *executionContext) _Query_ecommerceProductDetails(ctx context.Context, 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().EcommerceProductDetails(rctx, fc.Args["productId"].(int))
+			return ec.resolvers.Query().EcommerceProductDetails(rctx, fc.Args["productId"].(*int), fc.Args["productSlug"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -12614,7 +12633,7 @@ func (ec *executionContext) _Query_ecommerceCartList(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().EcommerceCartList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["customerId"].(int))
+			return ec.resolvers.Query().EcommerceCartList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -16473,7 +16492,7 @@ func (ec *executionContext) unmarshalInputProductFilter(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"releaseDate", "startingPrice", "endingPrice", "categoryName", "categoryId", "starRatings"}
+	fieldsInOrder := [...]string{"releaseDate", "startingPrice", "endingPrice", "categoryName", "categoryId", "starRatings", "searchKeyword"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -16522,6 +16541,13 @@ func (ec *executionContext) unmarshalInputProductFilter(ctx context.Context, obj
 				return &it, err
 			}
 			it.StarRatings = graphql.OmittableOf(data)
+		case "searchKeyword":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("searchKeyword"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.SearchKeyword = graphql.OmittableOf(data)
 		}
 	}
 

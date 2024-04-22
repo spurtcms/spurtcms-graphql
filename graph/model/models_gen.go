@@ -205,8 +205,8 @@ type FieldValue struct {
 }
 
 type LoginDetails struct {
-	MemberProfileData MemberProfile  `json:"memberProfileData"`
-	Token             string         `json:"token"`
+	MemberProfileData MemberProfile `json:"memberProfileData"`
+	Token             string        `json:"token"`
 }
 
 type Member struct {
@@ -315,6 +315,7 @@ type ProductFilter struct {
 	CategoryName  graphql.Omittable[*string]  `json:"categoryName,omitempty"`
 	CategoryID    graphql.Omittable[*int]     `json:"categoryId,omitempty"`
 	StarRatings   graphql.Omittable[*float64] `json:"starRatings,omitempty"`
+	SearchKeyword graphql.Omittable[*string]  `json:"searchKeyword,omitempty"`
 }
 
 type ProductPricing struct {

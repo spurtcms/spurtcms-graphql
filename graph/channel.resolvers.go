@@ -20,13 +20,13 @@ func (r *mutationResolver) VerifyMemberOtp(ctx context.Context, email string, ot
 }
 
 // MemberProfileUpdate is the resolver for the memberProfileUpdate field.
-func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID int) (bool, error) {
-	return MemberProfileUpdate(r.DB, ctx, profiledata, entryID)
+func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID *int, profileSlug *string) (bool, error) {
+	return MemberProfileUpdate(r.DB, ctx, profiledata, entryID, profileSlug)
 }
 
 // Memberclaimnow is the resolver for the memberclaimnow field.
-func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int) (bool, error) {
-	return Memberclaimnow(r.DB, ctx, input, entryID)
+func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData, entryID *int, profileSlug *string) (bool, error) {
+	return Memberclaimnow(r.DB, ctx, input, entryID, profileSlug)
 }
 
 // ProfileNameVerification is the resolver for the profileNameVerification field.
