@@ -60,6 +60,7 @@ type MutationResolver interface {
 	EcommerceAddToCart(ctx context.Context, productID *int, productSlug *string, quantity int) (bool, error)
 	EcommerceOrderPlacement(ctx context.Context, productID *int, productSlug *string) (bool, error)
 	RemoveProductFromCartlist(ctx context.Context, productID int) (bool, error)
+	RelatedProducts(ctx context.Context, limit int, offset int, productID *int, categoryID *int) (*model.EcommerceProducts, error)
 	TemplateMemberLogin(ctx context.Context, username *string, email *string, password string) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
@@ -512,6 +513,7 @@ extend type Mutation{
 	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
 	ecommerceOrderPlacement(productId: Int,productSlug: String): Boolean! @auth
 	removeProductFromCartlist(productId: Int!): Boolean! @auth
+	relatedProducts(limit: Int!,offset: Int!,productId: Int,categoryId: Int): EcommerceProducts! @auth
 }
 
 input ProductFilter{
@@ -839,6 +841,48 @@ func (ec *executionContext) field_Mutation_profileNameVerification_args(ctx cont
 		}
 	}
 	args["profileName"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_relatedProducts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["productId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productId"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["productId"] = arg2
+	var arg3 *int
+	if tmp, ok := rawArgs["categoryId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryId"] = arg3
 	return args, nil
 }
 
@@ -10514,6 +10558,87 @@ func (ec *executionContext) fieldContext_Mutation_removeProductFromCartlist(ctx 
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_relatedProducts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_relatedProducts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RelatedProducts(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["productId"].(*int), fc.Args["categoryId"].(*int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.EcommerceProducts); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.EcommerceProducts`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.EcommerceProducts)
+	fc.Result = res
+	return ec.marshalNEcommerceProducts2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceProducts(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_relatedProducts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "productList":
+				return ec.fieldContext_EcommerceProducts_productList(ctx, field)
+			case "count":
+				return ec.fieldContext_EcommerceProducts_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EcommerceProducts", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_relatedProducts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_templateMemberLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_templateMemberLogin(ctx, field)
 	if err != nil {
@@ -18228,6 +18353,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "removeProductFromCartlist":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_removeProductFromCartlist(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "relatedProducts":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_relatedProducts(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

@@ -108,3 +108,7 @@ func RemoveProductFromCartlist(db *gorm.DB,ctx context.Context, productID int) (
 	return controller.RemoveProductFromCartlist(db,ctx,productID)
 }
 
+func RelatedProducts(db *gorm.DB, ctx context.Context, limit, offset int, productID *int, categoryID *int) (*model.EcommerceProducts, error) {
+	return controller.RelatedProducts(db,ctx,limit, offset, productID,categoryID)
+}
+

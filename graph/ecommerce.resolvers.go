@@ -25,6 +25,11 @@ func (r *mutationResolver) RemoveProductFromCartlist(ctx context.Context, produc
 	return RemoveProductFromCartlist(r.DB, ctx, productID)
 }
 
+// RelatedProducts is the resolver for the relatedProducts field.
+func (r *mutationResolver) RelatedProducts(ctx context.Context, limit int, offset int, productID *int, categoryID *int) (*model.EcommerceProducts, error) {
+	return RelatedProducts(r.DB, ctx, limit, offset, productID, categoryID)
+}
+
 // EcommerceProductList is the resolver for the ecommerceProductList field.
 func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {
 	return EcommerceProductList(r.DB, ctx, limit, offset, filter, sort)

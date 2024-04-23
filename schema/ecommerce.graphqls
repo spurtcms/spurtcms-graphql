@@ -77,6 +77,7 @@ extend type Mutation{
 	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
 	ecommerceOrderPlacement(productId: Int,productSlug: String): Boolean! @auth
 	removeProductFromCartlist(productId: Int!): Boolean! @auth
+	relatedProducts(limit: Int!,offset: Int!,productId: Int,categoryId: Int): EcommerceProducts! @auth
 }
 
 input ProductFilter{
