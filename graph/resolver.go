@@ -104,3 +104,7 @@ func UpdateChannelEntryViewCount(db *gorm.DB,ctx context.Context,entryId *int,sl
 	return controller.UpdateChannelEntryViewCount(db,ctx,entryId,slug)
 }
 
+func RemoveProductFromCartlist(db *gorm.DB,ctx context.Context, productID int) (bool, error) {
+	return controller.RemoveProductFromCartlist(db,ctx,productID)
+}
+

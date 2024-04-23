@@ -39,7 +39,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 			err = errors.New("failed to send unauthorized login attempt mail to admin")
 
-			c.AbortWithError(http.StatusUnauthorized, err)
+			c.AbortWithError(http.StatusInternalServerError, err)
 
 			return false, err
 		}
@@ -50,7 +50,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 			err = errors.New("failed to send unauthorized login attempt mail to admin")
 
-			c.AbortWithError(http.StatusUnauthorized, err)
+			c.AbortWithError(http.StatusInternalServerError, err)
 
 			return false, err
 		}
@@ -63,15 +63,13 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 			err = errors.New("failed to send unauthorized login attempt mail to admin")
 
-			c.AbortWithError(http.StatusUnauthorized, err)
+			c.AbortWithError(http.StatusInternalServerError, err)
 
 			return false, err
 
 		}
 
-		c.AbortWithError(http.StatusUnauthorized, errors.New("unauthorized access"))
-
-		return false, err
+		return false, errors.New("your email is not yet registered in our owndesk platform")
 
 	}
 

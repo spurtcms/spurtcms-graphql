@@ -20,6 +20,11 @@ func (r *mutationResolver) EcommerceOrderPlacement(ctx context.Context, productI
 	panic(fmt.Errorf("not implemented: EcommerceOrderPlacement - ecommerceOrderPlacement"))
 }
 
+// RemoveProductFromCartlist is the resolver for the removeProductFromCartlist field.
+func (r *mutationResolver) RemoveProductFromCartlist(ctx context.Context, productID int) (bool, error) {
+	return RemoveProductFromCartlist(r.DB, ctx, productID)
+}
+
 // EcommerceProductList is the resolver for the ecommerceProductList field.
 func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {
 	return EcommerceProductList(r.DB, ctx, limit, offset, filter, sort)

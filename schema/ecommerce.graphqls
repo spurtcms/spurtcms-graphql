@@ -76,6 +76,7 @@ extend type Query{
 extend type Mutation{
 	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
 	ecommerceOrderPlacement(productId: Int,productSlug: String): Boolean! @auth
+	removeProductFromCartlist(productId: Int!): Boolean! @auth
 }
 
 input ProductFilter{
