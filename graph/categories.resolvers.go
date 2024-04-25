@@ -10,8 +10,8 @@ import (
 )
 
 // CategoriesList is the resolver for the categoriesList field.
-func (r *queryResolver) CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, hierarchyLevel *int, checkEntriesPresence *int) (*model.CategoriesList, error) {
-	return CategoriesList(r.DB, ctx, limit, offset, categoryGroupID, hierarchyLevel, checkEntriesPresence)
+func (r *queryResolver) CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, categoryGroupSlug *string, hierarchyLevel *int, checkEntriesPresence *int) (*model.CategoriesList, error) {
+	return CategoriesList(r.DB, ctx, limit, offset, categoryGroupID, categoryGroupSlug, hierarchyLevel, checkEntriesPresence)
 }
 
 // Query returns QueryResolver implementation.

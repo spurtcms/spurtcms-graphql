@@ -33,5 +33,5 @@ type CategoriesList{
 }
 
 extend type Query{
-    categoriesList(limit: Int,offset: Int,categoryGroupId: Int,hierarchyLevel: Int, checkEntriesPresence: Int): CategoriesList! @auth
+    categoriesList(limit: Int,offset: Int,categoryGroupId: Int,categoryGroupSlug: String,hierarchyLevel: Int, checkEntriesPresence: Int): CategoriesList! @auth
 }

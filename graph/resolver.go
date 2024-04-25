@@ -56,8 +56,8 @@ func PagesAndPageGroupsUnderSpace(db *gorm.DB, ctx context.Context, spaceID int)
 	return controller.PagesAndPageGroupsBySpaceId(db, ctx, spaceID)
 }
 
-func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel, checkEntriesPresence *int) (*model.CategoriesList, error) {
-	return controller.CategoriesList(db, ctx, limit, offset, categoryGroupId, hierarchyLevel, checkEntriesPresence)
+func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId *int, categoryGroupSlug *string, hierarchyLevel, checkEntriesPresence *int) (*model.CategoriesList, error) {
+	return controller.CategoriesList(db, ctx, limit, offset, categoryGroupId, categoryGroupSlug, hierarchyLevel, checkEntriesPresence)
 }
 
 func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelID *int, categoryID *int, channelEntryID *int, slug,profileSlug *string) (*model.ChannelEntries, error) {
@@ -108,7 +108,4 @@ func RemoveProductFromCartlist(db *gorm.DB,ctx context.Context, productID int) (
 	return controller.RemoveProductFromCartlist(db,ctx,productID)
 }
 
-func RelatedProducts(db *gorm.DB, ctx context.Context, limit, offset int, productID *int, categoryID *int) (*model.EcommerceProducts, error) {
-	return controller.RelatedProducts(db,ctx,limit, offset, productID,categoryID)
-}
 

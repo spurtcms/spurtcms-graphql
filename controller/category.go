@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel, checkEntriesPresence *int) (*model.CategoriesList, error) {
+func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId *int, categoryGroupSlug *string, hierarchyLevel, checkEntriesPresence *int) (*model.CategoriesList, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -30,6 +30,36 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 		category_string = `WHERE id = ` + strconv.Itoa(*categoryGroupId)
 
 		selectGroupRemove = `AND id != ` + strconv.Itoa(*categoryGroupId)
+
+	}else if categoryGroupSlug!=nil{
+
+		slugStrings := strings.Split(*categoryGroupSlug, "-")
+
+		var finalSlug_string string
+
+		if len(slugStrings) > 1 {
+
+			for index, slugparts := range slugStrings {
+
+				if index == len(slugStrings)-1 {
+
+					finalSlug_string += slugparts
+
+				} else {
+
+					finalSlug_string += slugparts + " "
+				}
+			}
+
+		}else{
+
+			finalSlug_string = *categoryGroupSlug
+		}
+
+		category_string = `WHERE id = (select id from tbl_categories where is_deleted = 0 and category_slug = '`+finalSlug_string+`')`
+
+		selectGroupRemove = `AND id != (select id from tbl_categories where is_deleted = 0 and category_slug = '`+finalSlug_string+`')` 
+
 	}
 
 	hierarchy_string := ""

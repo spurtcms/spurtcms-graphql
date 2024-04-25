@@ -11,6 +11,7 @@ type EcommerceProduct{
 	id:                        Int!
 	categoriesId:              Int!
 	productName:               String!
+	productSlug:               String!
 	productDescription:        String!
 	productImagePath:          String!
 	productVideoPath:          String!
@@ -28,7 +29,8 @@ type EcommerceProduct{
 	defaultPrice:              Int! 
 	discountPrice:             Int
 	specialPrice:              Int
-	ecommerceCart:             EcommerceCart
+	productImageArray:         [String!]
+	ecommerceCart:             EcommerceCart 
 } 
 
 type ProductPricing{
@@ -64,20 +66,42 @@ type CartSummary{
 	shippingAmount:   Int!
 	totalTax:         LargeInt!
 	totalCost:        LargeInt!
-	totalQuantity:    Int! 
+	totalQuantity:    Int!
+}
+
+type EcommerceOrder{
+	id:                Int!
+	orderId:           String!
+	customerId:        Int!
+	Status:            String!
+	shippingAddress:   String!
+	is_deleted:        Int!
+	createdOn:         Time!
+	modifiedOn:        Time
+	price:             Int!
+	tax:               Int!
+	totalCost:         Int!
+	productId:         Int!
+	quantity:          Int!
+	OrderProducts:     [EcommerceProduct!]!
+}
+
+type EcommerceOrders{
+	ordersList:      [EcommerceOrder!]!
+	count:           Int!
 }
 
 extend type Query{
-    ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! @auth
-	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct! @auth
+    ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
+	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct!
 	ecommerceCartList(limit: Int!,offset: Int!):EcommerceCartDetails! @auth
+	ecommerceProductOrdersList(limit: Int!,offset: Int!,filter: orderFilter,sort: orderSort): EcommerceOrders! @auth
 }
 
 extend type Mutation{
 	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
 	ecommerceOrderPlacement(productId: Int,productSlug: String): Boolean! @auth
 	removeProductFromCartlist(productId: Int!): Boolean! @auth
-	relatedProducts(limit: Int!,offset: Int!,productId: Int,categoryId: Int): EcommerceProducts! @auth
 }
 
 input ProductFilter{
@@ -91,6 +115,23 @@ input ProductFilter{
 }
 
 input ProductSort{
+	price:        Int
+	date:         Int
+}
+
+input orderFilter{
+	status:                String
+	startingPrice:         Int
+	endingPrice:           Int
+	startingDate:          Time
+	endingDate:            Time
+	categoryName:          String
+	categoryId:            Int
+	starRatings:           Float
+	searchKeyword:         String
+}
+
+input orderSort{
 	price:        Int
 	date:         Int
 }
