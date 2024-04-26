@@ -30,7 +30,8 @@ type EcommerceProduct{
 	discountPrice:             Int
 	specialPrice:              Int
 	productImageArray:         [String!]
-	ecommerceCart:             EcommerceCart 
+	ecommerceCart:             EcommerceCart
+	orderDetails:              ProductOrderDetails
 } 
 
 type ProductPricing{
@@ -73,34 +74,34 @@ type EcommerceOrder{
 	id:                Int!
 	orderId:           String!
 	customerId:        Int!
-	Status:            String!
+	status:            String!
 	shippingAddress:   String!
-	is_deleted:        Int!
+	isDeleted:         Int!
 	createdOn:         Time!
 	modifiedOn:        Time
 	price:             Int!
 	tax:               Int!
 	totalCost:         Int!
-	productId:         Int!
-	quantity:          Int!
-	OrderProducts:     [EcommerceProduct!]!
 }
 
-type EcommerceOrders{
-	ordersList:      [EcommerceOrder!]!
-	count:           Int!
+type ProductOrderDetails{
+	id:            Int!
+	orderId:       Int!
+	productId:     Int!
+	quantity:      Int!
+	status:        String!
 }
 
 extend type Query{
     ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
 	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct!
 	ecommerceCartList(limit: Int!,offset: Int!):EcommerceCartDetails! @auth
-	ecommerceProductOrdersList(limit: Int!,offset: Int!,filter: orderFilter,sort: orderSort): EcommerceOrders! @auth
+	ecommerceProductOrdersList(limit: Int!,offset: Int!,filter: orderFilter,sort: orderSort): EcommerceProducts! @auth
 }
 
 extend type Mutation{
 	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
-	ecommerceOrderPlacement(productId: Int,productSlug: String): Boolean! @auth
+	ecommerceOrderPlacement(shippingAddress: String!,orderProducts: [orderProduct!]!): Boolean! @auth
 	removeProductFromCartlist(productId: Int!): Boolean! @auth
 }
 
@@ -134,4 +135,13 @@ input orderFilter{
 input orderSort{
 	price:        Int
 	date:         Int
+}
+
+input orderProduct{
+	productId:       Int!
+	quantity:        Int!
+	defaultPrice:    Int!
+	discountPrice:   Int
+	specialPrice:    Int
+	tax:             Int!
 }

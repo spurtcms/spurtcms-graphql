@@ -354,3 +354,31 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username,email *strin
 
 	return token, err
 }
+
+func MemberProfileDetails(db *gorm.DB,ctx context.Context) (*model.MemberProfile, error) {
+	
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberid := c.GetInt("memberid")
+
+	if memberid == 0 {
+
+		err := errors.New("unauthorized access")
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return &model.MemberProfile{}, err
+
+	}
+
+	var memberProfile model.MemberProfile
+
+	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id = ?",memberid).First(&memberProfile).Error;err!=nil{
+
+		c.AbortWithError(http.StatusUnprocessableEntity, err)
+
+		return &model.MemberProfile{},err
+	}
+
+	return &memberProfile,nil
+}

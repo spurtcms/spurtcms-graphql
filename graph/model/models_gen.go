@@ -146,9 +146,6 @@ type EcommerceOrder struct {
 	Price           int                `json:"price"`
 	Tax             int                `json:"tax"`
 	TotalCost       int                `json:"totalCost"`
-	ProductID       int                `json:"productId"`
-	Quantity        int                `json:"quantity"`
-	OrderProducts   []EcommerceProduct `json:"OrderProducts"`
 }
 
 type EcommerceOrders struct {
@@ -180,6 +177,7 @@ type EcommerceProduct struct {
 	SpecialPrice       *int           `json:"specialPrice,omitempty" gorm:"column:special_price"`
 	ProductImageArray  []string       `json:"productImageArray,omitempty" gorm:"-"`
 	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ProductID"`
+	OrderDetails       *ProductOrderDetails `json:"orderDetails,omitempty" gorm:"foreignKey:ProductID"`
 }
 
 type EcommerceProducts struct {
@@ -342,6 +340,14 @@ type ProductFilter struct {
 	SearchKeyword graphql.Omittable[*string]  `json:"searchKeyword,omitempty"`
 }
 
+type ProductOrderDetails struct {
+	ID        int    `json:"id"`
+	OrderID   int    `json:"orderId"`
+	ProductID int    `json:"productId"`
+	Quantity  int    `json:"quantity"`
+	Status    string `json:"status" gorm:"column:status"`
+}
+
 type ProductPricing struct {
 	ID        int       `json:"id"`
 	PriceID   int       `json:"priceId"`
@@ -425,6 +431,15 @@ type OrderFilter struct {
 	SearchKeyword graphql.Omittable[*string]    `json:"searchKeyword,omitempty"`
 }
 
+type OrderProduct struct {
+	ProductID     int                     `json:"productId"`
+	Quantity      int                     `json:"quantity"`
+	DefaultPrice  int                     `json:"defaultPrice"`
+	DiscountPrice graphql.Omittable[*int] `json:"discountPrice,omitempty"`
+	SpecialPrice  graphql.Omittable[*int] `json:"specialPrice,omitempty"`
+	Tax           int                     `json:"tax"`
+}
+
 type OrderSort struct {
 	Price graphql.Omittable[*int] `json:"price,omitempty"`
 	Date  graphql.Omittable[*int] `json:"date,omitempty"`
@@ -433,4 +448,9 @@ type OrderSort struct {
 func (EcommerceCart) TableName() string {
 
     return "tbl_ecom_carts" // Specify the actual table name in your database
+}
+
+func (ProductOrderDetails) TableName() string {
+
+    return "tbl_ecom_product_order_details" // Specify the actual table name in your database
 }

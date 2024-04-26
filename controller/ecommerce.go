@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	// "log"
 	"net/http"
 	"spurtcms-graphql/graph/model"
 	"strconv"
@@ -273,7 +272,7 @@ func EcommerceAddToCart(db *gorm.DB, ctx context.Context, productID *int, produc
 
 	if count != 0 {
 
-		query = query.Where("is_deleted = 0 and customer_id = ? and product_id = ?", customer_id, productId).UpdateColumns(map[string]interface{}{"quantity": cart.Quantity, "modified_on": currentTime})
+		query = query.Where("is_deleted = 0 and customer_id = ? and product_id = ?", customer_id, productId).UpdateColumns(map[string]interface{}{"quantity": gorm.Expr("quantity + ?",cart.Quantity), "modified_on": currentTime})
 
 	} else {
 

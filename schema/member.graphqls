@@ -31,6 +31,10 @@ type MemberGroup{
 	modifiedBy:   Int 
 }
 
+extend type Query{
+    memberProfileDetails: MemberProfile! @auth
+}
+
 extend type Mutation{
     templateMemberLogin(username: String,email: String,password: String!): String! 
     memberRegister(input: MemberDetails!): Boolean!

@@ -108,4 +108,8 @@ func RemoveProductFromCartlist(db *gorm.DB,ctx context.Context, productID int) (
 	return controller.RemoveProductFromCartlist(db,ctx,productID)
 }
 
+func MemberProfileDetails(db *gorm.DB,ctx context.Context) (*model.MemberProfile, error) {
+	return controller.MemberProfileDetails(db,ctx)
+}
+
 
