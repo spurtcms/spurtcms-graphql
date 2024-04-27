@@ -375,7 +375,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 }
 
-func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (*model.Channel, error) {
+func ChannelDetail(db *gorm.DB, ctx context.Context, channelID *int, channelSlug *string) (*model.Channel, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -383,7 +383,7 @@ func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (*model.Chan
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
-	channel, err := channelAuth.GetGraphqlChannelDetails(channelID)
+	channel, err := channelAuth.GetGraphqlChannelDetails(channelID,channelSlug)
 
 	if err != nil {
 

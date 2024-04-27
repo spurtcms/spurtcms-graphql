@@ -143,16 +143,15 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	go SendMail(mail_data, html_content, channel)
 
-	if <-channel == nil {
-
-		return true, nil
-
-	} else {
+	if <-channel != nil {
 
 		c.AbortWithError(http.StatusServiceUnavailable, <-channel)
 
 		return false, <-channel
-	}
+		
+	} 
+
+	return true, nil
 }
 
 func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails, error) {

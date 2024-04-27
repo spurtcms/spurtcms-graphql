@@ -40,8 +40,8 @@ func MemberUpdate(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 	return controller.UpdateMember(db, ctx, memberdata)
 }
 
-func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (*model.Channel, error) {
-	return controller.ChannelDetail(db, ctx, channelID)
+func ChannelDetail(db *gorm.DB, ctx context.Context, channelID *int, channelSlug *string) (*model.Channel, error) {
+	return controller.ChannelDetail(db, ctx, channelID,channelSlug)
 }
 
 func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoryId *int) (*model.SpaceDetails, error) {

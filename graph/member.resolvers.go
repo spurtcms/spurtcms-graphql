@@ -26,5 +26,5 @@ func (r *mutationResolver) MemberUpdate(ctx context.Context, memberdata model.Me
 
 // MemberProfileDetails is the resolver for the memberProfileDetails field.
 func (r *queryResolver) MemberProfileDetails(ctx context.Context) (*model.MemberProfile, error) {
-	return MemberProfileDetails(r.DB,ctx)
+	return MemberProfileDetails(r.DB, ctx)
 }

@@ -162,7 +162,7 @@ type LoginDetails{
 
 extend type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
-	channelDetail(channelId: Int!): Channel! @auth
+	channelDetail(channelId: Int,channelSlug: String): Channel! @auth
     channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String): ChannelEntriesDetails! @auth
 	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int,profileSlug: String): ChannelEntries! @auth
 }

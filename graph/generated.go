@@ -67,7 +67,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, categoryGroupSlug *string, hierarchyLevel *int, checkEntriesPresence *int) (*model.CategoriesList, error)
 	ChannelList(ctx context.Context, limit int, offset int) (*model.ChannelDetails, error)
-	ChannelDetail(ctx context.Context, channelID int) (*model.Channel, error)
+	ChannelDetail(ctx context.Context, channelID *int, channelSlug *string) (*model.Channel, error)
 	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (*model.ChannelEntriesDetails, error)
 	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int, profileSlug *string) (*model.ChannelEntries, error)
 	EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error)
@@ -411,7 +411,7 @@ type LoginDetails{
 
 extend type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
-	channelDetail(channelId: Int!): Channel! @auth
+	channelDetail(channelId: Int,channelSlug: String): Channel! @auth
     channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String): ChannelEntriesDetails! @auth
 	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int,profileSlug: String): ChannelEntries! @auth
 }
@@ -1093,15 +1093,24 @@ func (ec *executionContext) field_Query_categoriesList_args(ctx context.Context,
 func (ec *executionContext) field_Query_channelDetail_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
+	var arg0 *int
 	if tmp, ok := rawArgs["channelId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelId"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["channelId"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["channelSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelSlug"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["channelSlug"] = arg1
 	return args, nil
 }
 
@@ -13168,7 +13177,7 @@ func (ec *executionContext) _Query_channelDetail(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ChannelDetail(rctx, fc.Args["channelId"].(int))
+			return ec.resolvers.Query().ChannelDetail(rctx, fc.Args["channelId"].(*int), fc.Args["channelSlug"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {

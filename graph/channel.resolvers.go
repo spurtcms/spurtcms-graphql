@@ -45,8 +45,8 @@ func (r *queryResolver) ChannelList(ctx context.Context, limit int, offset int) 
 }
 
 // ChannelDetail is the resolver for the channelDetail field.
-func (r *queryResolver) ChannelDetail(ctx context.Context, channelID int) (*model.Channel, error) {
-	return ChannelDetail(r.DB, ctx, channelID)
+func (r *queryResolver) ChannelDetail(ctx context.Context, channelID *int, channelSlug *string) (*model.Channel, error) {
+	return ChannelDetail(r.DB, ctx, channelID, channelSlug)
 }
 
 // ChannelEntriesList is the resolver for the channelEntriesList field.
