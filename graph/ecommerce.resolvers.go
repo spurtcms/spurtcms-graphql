@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"spurtcms-graphql/graph/model"
 )
 
@@ -16,8 +15,8 @@ func (r *mutationResolver) EcommerceAddToCart(ctx context.Context, productID *in
 }
 
 // EcommerceOrderPlacement is the resolver for the ecommerceOrderPlacement field.
-func (r *mutationResolver) EcommerceOrderPlacement(ctx context.Context, shippingAddress string, orderProducts []model.OrderProduct) (bool, error) {
-	panic(fmt.Errorf("not implemented: EcommerceOrderPlacement - ecommerceOrderPlacement"))
+func (r *mutationResolver) EcommerceOrderPlacement(ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error) {
+	return EcommerceOrderPlacement(r.DB, ctx, paymentMode, shippingAddress, orderProducts, orderSummary)
 }
 
 // RemoveProductFromCartlist is the resolver for the removeProductFromCartlist field.
@@ -42,5 +41,10 @@ func (r *queryResolver) EcommerceCartList(ctx context.Context, limit int, offset
 
 // EcommerceProductOrdersList is the resolver for the ecommerceProductOrdersList field.
 func (r *queryResolver) EcommerceProductOrdersList(ctx context.Context, limit int, offset int, filter *model.OrderFilter, sort *model.OrderSort) (*model.EcommerceProducts, error) {
-	panic(fmt.Errorf("not implemented: EcommerceProductOrdersList - ecommerceProductOrdersList"))
+	return EcommerceProductOrdersList(r.DB, ctx, limit, offset, filter, sort)
+}
+
+// EcommerceProductOrderDetails is the resolver for the ecommerceProductOrderDetails field.
+func (r *queryResolver) EcommerceProductOrderDetails(ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error) {
+	return EcommerceProductOrderDetails(r.DB, ctx, productID, productSlug)
 }

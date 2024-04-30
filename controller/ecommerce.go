@@ -3,6 +3,9 @@ package controller
 import (
 	"context"
 	"errors"
+	"log"
+
+	// "log"
 	"net/http"
 	"spurtcms-graphql/graph/model"
 	"strconv"
@@ -113,7 +116,7 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 
 	var final_ecomProducts []model.EcommerceProduct
 
-	for _,product := range ecom_products{
+	for _, product := range ecom_products {
 
 		if product.ProductImagePath != "" {
 
@@ -137,7 +140,7 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 			product.ProductVideoPath = modified_path
 		}
 
-		final_ecomProducts = append(final_ecomProducts,product)
+		final_ecomProducts = append(final_ecomProducts, product)
 	}
 
 	return &model.EcommerceProducts{ProductList: final_ecomProducts, Count: int(count)}, nil
@@ -272,7 +275,7 @@ func EcommerceAddToCart(db *gorm.DB, ctx context.Context, productID *int, produc
 
 	if count != 0 {
 
-		query = query.Where("is_deleted = 0 and customer_id = ? and product_id = ?", customer_id, productId).UpdateColumns(map[string]interface{}{"quantity": gorm.Expr("quantity + ?",cart.Quantity), "modified_on": currentTime})
+		query = query.Where("is_deleted = 0 and customer_id = ? and product_id = ?", customer_id, productId).UpdateColumns(map[string]interface{}{"quantity": gorm.Expr("quantity + ?", cart.Quantity), "modified_on": currentTime})
 
 	} else {
 
@@ -436,6 +439,300 @@ func RemoveProductFromCartlist(db *gorm.DB, ctx context.Context, productID int) 
 	if err := db.Table("tbl_ecom_carts").Where("tbl_ecom_carts.is_deleted = 0 and tbl_ecom_carts.product_id = ? and tbl_ecom_carts.customer_id = (?)", productID, subquery).UpdateColumns(map[string]interface{}{"is_deleted": 1, "deleted_on": currentTime}).Error; err != nil {
 
 		c.AbortWithError(500, err)
+
+		return false, err
+	}
+
+	return true, nil
+}
+
+func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.OrderFilter, sort *model.OrderSort) (*model.EcommerceProducts, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberid := c.GetInt("memberid")
+
+	if memberid == 0 {
+
+		err := errors.New("unauthorized access")
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return &model.EcommerceProducts{}, err
+
+	}
+
+	var orderedProducts []model.EcommerceProduct
+
+	var count int64
+
+	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_customers c on c.id = o.customer_id").Joins("inner join tbl_ecom_order_statuses s on s.order_id = o.id").Where("p.is_deleted = 0 and o.is_deleted = 0 and c.member_id=?", memberid)
+
+	if filter != nil {
+
+		if filter.Status.IsSet() {
+
+			query = query.Where("s.status = ?", filter.Status.Value())
+		}
+
+		if filter.StartingPrice.IsSet() && filter.EndingPrice.IsSet() {
+
+			query = query.Where("d.price between ? and ?", filter.StartingPrice.Value(), filter.EndingPrice.Value())
+
+		} else if filter.StartingPrice.IsSet() {
+
+			query = query.Where("d.price >= ?", filter.StartingPrice.Value())
+
+		} else if filter.EndingPrice.IsSet() {
+
+			query = query.Where("d.price <= ?", filter.EndingPrice.Value())
+
+		}
+
+		if filter.SearchKeyword.IsSet() {
+
+			query = query.Where("LOWER(TRIM(p.product_name)) ILIKE LOWER(TRIM(?))", "%"+*filter.SearchKeyword.Value()+"%")
+		}
+
+		if filter.StartingDate.IsSet() && filter.EndingDate.IsSet() {
+
+			query = query.Where("o.created_on between ? and ?", filter.StartingDate.Value(), filter.EndingDate.Value())
+
+		} else if filter.StartingDate.IsSet() {
+
+			query = query.Where("o.created_on >= ?", filter.StartingDate.Value())
+
+		} else if filter.EndingDate.IsSet() {
+
+			query = query.Where("o.created_on <= ?", filter.EndingDate.Value())
+		}
+
+		if filter.OrderID.IsSet() {
+
+			query = query.Where("o.uuid = ?", filter.OrderID.Value())
+		}
+
+	}
+
+	if err := query.Count(&count).Error; err != nil {
+
+		return &model.EcommerceProducts{}, err
+	}
+
+	if sort != nil {
+
+		if sort.Date.IsSet() {
+
+			if *sort.Date.Value() == 1 {
+
+				query = query.Order("o.id desc")
+
+			} else if *sort.Date.Value() == 0 {
+
+				query = query.Order("o.id")
+
+			}
+
+		} else if sort.Price.IsSet() {
+
+			if *sort.Price.Value() == 1 {
+
+				query = query.Order("d.price desc")
+
+			} else if *sort.Price.Value() == 1 {
+
+				query = query.Order("d.price")
+
+			}
+
+		}
+
+	} else {
+
+		query = query.Order("o.id desc")
+	}
+
+	if err := query.Select("p.*").Preload("OrderDetails", func(db *gorm.DB) *gorm.DB {
+
+		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id")
+
+	}).Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
+
+		return &model.EcommerceProducts{}, err
+	}
+
+	return &model.EcommerceProducts{ProductList: orderedProducts, Count: int(count)}, nil
+}
+
+func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberid := c.GetInt("memberid")
+
+	if memberid == 0 {
+
+		err := errors.New("unauthorized access")
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return &model.EcommerceProduct{}, err
+
+	}
+
+	var orderedProduct model.EcommerceProduct
+
+	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_customers c on c.id = o.customer_id").Joins("inner join tbl_ecom_order_statuses s on s.order_id = o.id").Where("p.is_deleted = 0 and o.is_deleted = 0 and c.member_id=?", memberid)
+
+	if productID != nil {
+
+		query = query.Where("p.id = ?", *productID)
+
+	} else if productSlug != nil {
+
+		query = query.Where("p.product_slug = ?", *productSlug)
+	}
+
+	log.Println("chkk1")
+
+	if err := query.Select("p.*").Preload("OrderDetails", func(db *gorm.DB) *gorm.DB {
+
+		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id")
+
+	}).First(&orderedProduct).Error; err != nil {
+
+		return &model.EcommerceProduct{}, err
+	}
+
+	return &orderedProduct, nil
+}
+
+func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberid := c.GetInt("memberid")
+
+	if memberid == 0 {
+
+		err := errors.New("unauthorized access")
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return false, err
+
+	}
+
+	var customerId int
+
+	if err := db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?",memberid).Scan(&customerId).Error;err!=nil{
+
+		return false, err
+	}
+
+	currentTime := time.Now().In(TimeZone).Unix()
+
+	var orderplaced model.EcommerceOrder
+
+	orderId := "SP" + strconv.Itoa(int(currentTime))
+
+	orderplaced.OrderID = orderId
+
+	orderplaced.ShippingAddress = shippingAddress
+
+	orderplaced.CustomerID = customerId
+
+	orderplaced.Status = "placed"
+
+	orderplaced.IsDeleted = 0
+
+	orderplaced.CreatedOn, _ = time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+	var totalPrice, totalTax, totalCost int
+
+	if orderSummary != nil {
+
+		totalPrice, _ = strconv.Atoi(orderSummary.SubTotal)
+
+		totalTax, _ = strconv.Atoi(orderSummary.TotalTax)
+
+		totalCost, _ = strconv.Atoi(orderSummary.TotalCost)
+
+	} else {
+
+		for _, product := range orderProducts {
+
+			sum := product.Price * product.Quantity
+
+			totalPrice += sum
+
+			tax := product.Tax * product.Quantity
+
+			totalTax += tax
+
+		}
+
+		totalCost = totalPrice + totalTax
+	}
+
+	orderplaced.Price = totalPrice
+
+	orderplaced.Tax = totalTax
+
+	orderplaced.TotalCost = totalCost
+
+	if err := db.Table("tbl_ecom_product_orders").Create(&orderplaced).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	var createorder model.EcommerceOrder
+
+	if err := db.Table("tbl_ecom_product_orders").Where("uuid = ?", orderId).First(&createorder).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	for _, value := range orderProducts {
+
+		if err := db.Table("tbl_ecom_product_order_details").Create(map[string]interface{}{"product_id": value.ProductID, "order_id": createorder.ID, "quantity": value.Quantity, "price": value.Price, "tax": value.Tax}).Error; err != nil {
+
+			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return false, err
+		}
+	}
+
+	var orderstatus model.OrderStatus
+
+	orderstatus.OrderID = createorder.ID
+
+	orderstatus.OrderStatus = "placed"
+
+	orderstatus.CreatedBy = customerId
+
+	orderstatus.CreatedOn, _ = time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+	if err := db.Table("tbl_ecom_order_statuses").Create(&orderstatus).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	var orderPayment model.OrderPayment
+
+	orderPayment.OrderID  = createorder.ID
+
+	orderPayment.PaymentMode = paymentMode
+
+	if err := db.Table("tbl_ecom_order_payments").Create(&orderPayment).Error;err!=nil{
+
+		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}

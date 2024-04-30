@@ -89,7 +89,24 @@ type ProductOrderDetails{
 	orderId:       Int!
 	productId:     Int!
 	quantity:      Int!
+	tax:           Int!
+	price:         Int!
 	status:        String!
+	paymentMode:   String!
+}
+
+type OrderStatus{
+	id:            Int!
+	orderId:       Int!
+	orderStatus:   String!
+	createdBy:     Int!
+	createdOn:     Time!
+}
+
+type orderPayment{
+	id:           Int!
+	orderId:      Int!
+	paymentMode:  String!   	  
 }
 
 extend type Query{
@@ -97,11 +114,12 @@ extend type Query{
 	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct!
 	ecommerceCartList(limit: Int!,offset: Int!):EcommerceCartDetails! @auth
 	ecommerceProductOrdersList(limit: Int!,offset: Int!,filter: orderFilter,sort: orderSort): EcommerceProducts! @auth
+	ecommerceProductOrderDetails(productId: Int,productSlug: String): EcommerceProduct! @auth
 }
 
 extend type Mutation{
 	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
-	ecommerceOrderPlacement(shippingAddress: String!,orderProducts: [orderProduct!]!): Boolean! @auth
+	ecommerceOrderPlacement(paymentMode: String!,shippingAddress: String!,orderProducts: [orderProduct!]!,orderSummary: OrderSummary): Boolean! @auth
 	removeProductFromCartlist(productId: Int!): Boolean! @auth
 }
 
@@ -124,12 +142,13 @@ input orderFilter{
 	status:                String
 	startingPrice:         Int
 	endingPrice:           Int
-	startingDate:          Time
-	endingDate:            Time
+	startingDate:          String
+	endingDate:            String
 	categoryName:          String
 	categoryId:            Int
 	starRatings:           Float
 	searchKeyword:         String
+	orderId:               String
 }
 
 input orderSort{
@@ -140,8 +159,15 @@ input orderSort{
 input orderProduct{
 	productId:       Int!
 	quantity:        Int!
-	defaultPrice:    Int!
-	discountPrice:   Int
-	specialPrice:    Int
+	price:           Int!
 	tax:             Int!
+	totalCost:       Int!
+}
+
+input OrderSummary{
+	subTotal:         LargeInt!
+	shippingAmount:   Int
+	totalTax:         LargeInt!
+	totalCost:        LargeInt!
+	totalQuantity:    Int!
 }

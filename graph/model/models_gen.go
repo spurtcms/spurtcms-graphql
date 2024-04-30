@@ -135,22 +135,17 @@ type EcommerceCartDetails struct {
 }
 
 type EcommerceOrder struct {
-	ID              int                `json:"id"`
-	OrderID         string             `json:"orderId"`
-	CustomerID      int                `json:"customerId"`
-	Status          string             `json:"Status"`
-	ShippingAddress string             `json:"shippingAddress"`
-	IsDeleted       int                `json:"is_deleted"`
-	CreatedOn       time.Time          `json:"createdOn"`
-	ModifiedOn      *time.Time         `json:"modifiedOn,omitempty"`
-	Price           int                `json:"price"`
-	Tax             int                `json:"tax"`
-	TotalCost       int                `json:"totalCost"`
-}
-
-type EcommerceOrders struct {
-	OrdersList []EcommerceOrder `json:"ordersList"`
-	Count      int              `json:"count"`
+	ID              int        `json:"id"`
+	OrderID         string     `json:"orderId" gorm:"column:uuid"`
+	CustomerID      int        `json:"customerId"`
+	Status          string     `json:"status"`
+	ShippingAddress string     `json:"shippingAddress"`
+	IsDeleted       int        `json:"isDeleted"`
+	CreatedOn       time.Time  `json:"createdOn"`
+	ModifiedOn      *time.Time `json:"modifiedOn,omitempty"`
+	Price           int        `json:"price"`
+	Tax             int        `json:"tax"`
+	TotalCost       int        `json:"totalCost"`
 }
 
 type EcommerceProduct struct {
@@ -300,6 +295,22 @@ type MemberProfile struct {
 type Mutation struct {
 }
 
+type OrderStatus struct {
+	ID          int       `json:"id"`
+	OrderID     int       `json:"orderId"`
+	OrderStatus string    `json:"orderStatus"`
+	CreatedBy   int       `json:"createdBy"`
+	CreatedOn   time.Time `json:"createdOn"`
+}
+
+type OrderSummary struct {
+	SubTotal       string                  `json:"subTotal"`
+	ShippingAmount graphql.Omittable[*int] `json:"shippingAmount,omitempty"`
+	TotalTax       string                  `json:"totalTax"`
+	TotalCost      string                  `json:"totalCost"`
+	TotalQuantity  int                     `json:"totalQuantity"`
+}
+
 type Page struct {
 	ID          int        `json:"id"`
 	PageName    string     `json:"pageName"`
@@ -341,11 +352,14 @@ type ProductFilter struct {
 }
 
 type ProductOrderDetails struct {
-	ID        int    `json:"id"`
-	OrderID   int    `json:"orderId"`
-	ProductID int    `json:"productId"`
-	Quantity  int    `json:"quantity"`
-	Status    string `json:"status" gorm:"column:status"`
+	ID          int       `json:"id"`
+	OrderID     int       `json:"orderId"`
+	ProductID   int       `json:"productId"`
+	Quantity    int       `json:"quantity"`
+	Tax         int       `json:"tax"`
+	Price       int       `json:"price"`
+	Status      string    `json:"status" gorm:"column:status"`
+	PaymentMode string    `json:"paymentMode" gorm:"column:payment_mode"`
 }
 
 type ProductPricing struct {
@@ -420,24 +434,30 @@ type SubPage struct {
 }
 
 type OrderFilter struct {
-	Status        graphql.Omittable[*string]    `json:"status,omitempty"`
-	StartingPrice graphql.Omittable[*int]       `json:"startingPrice,omitempty"`
-	EndingPrice   graphql.Omittable[*int]       `json:"endingPrice,omitempty"`
-	StartingDate  graphql.Omittable[*time.Time] `json:"startingDate,omitempty"`
-	EndingDate    graphql.Omittable[*time.Time] `json:"endingDate,omitempty"`
-	CategoryName  graphql.Omittable[*string]    `json:"categoryName,omitempty"`
-	CategoryID    graphql.Omittable[*int]       `json:"categoryId,omitempty"`
-	StarRatings   graphql.Omittable[*float64]   `json:"starRatings,omitempty"`
-	SearchKeyword graphql.Omittable[*string]    `json:"searchKeyword,omitempty"`
+	Status        graphql.Omittable[*string]  `json:"status,omitempty"`
+	StartingPrice graphql.Omittable[*int]     `json:"startingPrice,omitempty"`
+	EndingPrice   graphql.Omittable[*int]     `json:"endingPrice,omitempty"`
+	StartingDate  graphql.Omittable[*string]  `json:"startingDate,omitempty"`
+	EndingDate    graphql.Omittable[*string]  `json:"endingDate,omitempty"`
+	CategoryName  graphql.Omittable[*string]  `json:"categoryName,omitempty"`
+	CategoryID    graphql.Omittable[*int]     `json:"categoryId,omitempty"`
+	StarRatings   graphql.Omittable[*float64] `json:"starRatings,omitempty"`
+	SearchKeyword graphql.Omittable[*string]  `json:"searchKeyword,omitempty"`
+	OrderID       graphql.Omittable[*string]  `json:"orderId,omitempty"`
+}
+
+type OrderPayment struct {
+	ID          int    `json:"id"`
+	OrderID     int    `json:"orderId"`
+	PaymentMode string `json:"paymentMode"`
 }
 
 type OrderProduct struct {
-	ProductID     int                     `json:"productId"`
-	Quantity      int                     `json:"quantity"`
-	DefaultPrice  int                     `json:"defaultPrice"`
-	DiscountPrice graphql.Omittable[*int] `json:"discountPrice,omitempty"`
-	SpecialPrice  graphql.Omittable[*int] `json:"specialPrice,omitempty"`
-	Tax           int                     `json:"tax"`
+	ProductID int `json:"productId"`
+	Quantity  int `json:"quantity"`
+	Price     int `json:"price"`
+	Tax       int `json:"tax"`
+	TotalCost int `json:"totalCost"`
 }
 
 type OrderSort struct {

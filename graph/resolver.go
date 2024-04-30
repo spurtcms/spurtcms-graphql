@@ -112,4 +112,14 @@ func MemberProfileDetails(db *gorm.DB,ctx context.Context) (*model.MemberProfile
 	return controller.MemberProfileDetails(db,ctx)
 }
 
+func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.OrderFilter, sort *model.OrderSort) (*model.EcommerceProducts, error) {
+	return controller.EcommerceProductOrdersList(db,ctx,limit,offset,filter,sort)
+}
 
+func EcommerceProductOrderDetails(db *gorm.DB,ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error) {
+	return controller.EcommerceProductOrderDetails(db,ctx,productID,productSlug)
+}
+
+func EcommerceOrderPlacement(db *gorm.DB,ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error) {
+	return controller.EcommerceOrderPlacement(db,ctx,paymentMode,shippingAddress,orderProducts,orderSummary)
+}
