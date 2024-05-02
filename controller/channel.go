@@ -1000,7 +1000,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	} else if profileSlug != nil {
 
-		profileSubQuery := db.Table("tbl_channel_entries").Select("tbl_channel_entries.id").Joins("inner join tbl_channel_entry_fields on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = any(string_to_array(tbl_channel_entry_fields.field_value,',')::integer[])").Where("tbl_channel_entries.is_deleted = 0  and tbl_member_profiles.claim_status = 1 and tbl_channel_entries.status = 1 and tbl_fields.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_fields.field_type_id = ? and tbl_member_profiles.profile_slug = ?", MemberFieldTypeId, profileSlug).Limit(1)
+		profileSubQuery := db.Table("tbl_channel_entries").Select("tbl_channel_entries.id").Joins("inner join tbl_channel_entry_fields on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = any(string_to_array(tbl_channel_entry_fields.field_value,',')::integer[])").Where("tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_fields.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_fields.field_type_id = ? and tbl_member_profiles.profile_slug = ?", MemberFieldTypeId, profileSlug).Limit(1)
 
 		if memberid > 0 {
 
