@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"os"
 	"spurtcms-graphql/controller"
@@ -43,9 +44,15 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	currentTime := time.Now().In(controller.TimeZone).Unix()
 
+	currentTime1 := time.Now().Unix()
+
+	log.Println("log",controller.TimeZone,currentTime,currentTime1)
+
 	memberid,groupid,err :=  auth.VerifyTokenWithExpiryTime(token,os.Getenv("JWT_SECRET"),currentTime)
-	
+
 	if err != nil {
+
+		log.Println("err",err)
 
 		c.AbortWithError(http.StatusUnauthorized,err)
 		

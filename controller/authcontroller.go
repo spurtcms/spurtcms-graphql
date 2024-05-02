@@ -372,7 +372,7 @@ func MemberProfileDetails(db *gorm.DB,ctx context.Context) (*model.MemberProfile
 
 	var memberProfile model.MemberProfile
 
-	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and member_id = ?",memberid).First(&memberProfile).Error;err!=nil{
+	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?",memberid).First(&memberProfile).Error;err!=nil{
 
 		c.AbortWithError(http.StatusUnprocessableEntity, err)
 
