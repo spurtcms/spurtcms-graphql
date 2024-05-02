@@ -987,7 +987,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	var memberProfile model.MemberProfile
 
-	query := db.Debug().Table("tbl_channel_entry_fields").Select("tbl_member_profiles.*").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_members on tbl_members.id = tbl_channel_entry_fields.field_value::integer").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = tbl_members.id").Where("tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_fields.field_type_id = ?", MemberFieldTypeId)
+	query := db.Debug().Table("tbl_channel_entry_fields").Select("tbl_member_profiles.*").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_members on tbl_members.id = tbl_channel_entry_fields.field_value::integer").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = tbl_members.id").Where("tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_fields.field_type_id = ?", MemberFieldTypeId)
 
 	if memberid > 0 {
 
