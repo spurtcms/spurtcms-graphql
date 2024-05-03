@@ -15,7 +15,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	memberid := c.GetInt("memberid")
+	// memberid := c.GetInt("memberid")
 
 	var categories []model.Category
 
@@ -126,17 +126,17 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 				Query := db.Table("tbl_channel_entries").Select("tbl_channel_entries.categories_id").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1").Where(`` + strconv.Itoa(category.ID) + `= any(string_to_array(tbl_channel_entries.categories_id,',')::integer[])`)
 
-				if memberid > 0 {
+				// if memberid > 0 {
 
-					innerSubQuery := db.Table("tbl_channel_entries").Select("tbl_channel_entries.id").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1").Where(`` + strconv.Itoa(category.ID) + `= any(string_to_array(tbl_channel_entries.categories_id,',')::integer[])`)
+				// 	innerSubQuery := db.Table("tbl_channel_entries").Select("tbl_channel_entries.id").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1").Where(`` + strconv.Itoa(category.ID) + `= any(string_to_array(tbl_channel_entries.categories_id,',')::integer[])`)
 
-					subquery := db.Table("tbl_access_control_pages").Select("tbl_access_control_pages.entry_id").Joins("inner join tbl_access_control_user_groups on tbl_access_control_user_groups.id = tbl_access_control_pages.access_control_user_group_id").
-						Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_groups.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id")
+				// 	subquery := db.Table("tbl_access_control_pages").Select("tbl_access_control_pages.entry_id").Joins("inner join tbl_access_control_user_groups on tbl_access_control_user_groups.id = tbl_access_control_pages.access_control_user_group_id").
+				// 		Joins("inner join tbl_member_groups on tbl_member_groups.id = tbl_access_control_user_groups.member_group_id").Joins("inner join tbl_members on tbl_members.member_group_id = tbl_member_groups.id")
 
-					subquery = subquery.Where("tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_groups.is_deleted = 0 and tbl_members.id = ?", memberid).Where("tbl_access_control_pages.entry_id in (?)", innerSubQuery)
+				// 	subquery = subquery.Where("tbl_members.is_deleted = 0 and tbl_member_groups.is_deleted = 0 and tbl_access_control_pages.is_deleted = 0  and tbl_access_control_user_groups.is_deleted = 0 and tbl_members.id = ?", memberid).Where("tbl_access_control_pages.entry_id in (?)", innerSubQuery)
 
-					Query = Query.Where("tbl_channel_entries.id not in (?)", subquery)
-				}
+				// 	Query = Query.Where("tbl_channel_entries.id not in (?)", subquery)
+				// }
 
 				err := Query.Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1").Where(`` + strconv.Itoa(category.ID) + `= any(string_to_array(tbl_channel_entries.categories_id,',')::integer[])`).Find(&categoryIds).Error
 

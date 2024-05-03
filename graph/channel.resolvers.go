@@ -25,8 +25,8 @@ func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata 
 }
 
 // Memberclaimnow is the resolver for the memberclaimnow field.
-func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData, entryID *int, profileSlug *string) (bool, error) {
-	return Memberclaimnow(r.DB, ctx, input, entryID, profileSlug)
+func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData, profileID *int, profileSlug *string) (bool, error) {
+	return Memberclaimnow(r.DB, ctx, input, profileID, profileSlug)
 }
 
 // ProfileNameVerification is the resolver for the profileNameVerification field.
@@ -57,6 +57,11 @@ func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, 
 // ChannelEntryDetail is the resolver for the channelEntryDetail field.
 func (r *queryResolver) ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int, profileSlug *string) (*model.ChannelEntries, error) {
 	return ChannelEntryDetail(r.DB, ctx, channelID, categoryID, channelEntryID, slug, profileSlug)
+}
+
+// GetMemberProfileDetails is the resolver for the getMemberProfileDetails field.
+func (r *queryResolver) GetMemberProfileDetails(ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
+	return GetMemberProfileDetails(r.DB, ctx, id, profileSlug)
 }
 
 // Mutation returns MutationResolver implementation.

@@ -3,6 +3,8 @@ package controller
 import (
 	"bytes"
 	"context"
+
+	// "encoding/base64"
 	"errors"
 	"html/template"
 	"log"
@@ -25,7 +27,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	member_details, err := Mem.GraphqlMemberLogin(email)
 
-	if err != nil {
+	if gorm.ErrRecordNotFound == err {
 
 		adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
 
@@ -37,8 +39,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		if err != nil {
 
-			err = errors.New("failed to send unauthorized login attempt mail to admin")
-
 			c.AbortWithError(http.StatusInternalServerError, err)
 
 			return false, err
@@ -46,9 +46,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		var template_buffers bytes.Buffer
 
-		if err := tmpls.Execute(&template_buffers, map[string]interface{}{"adminDetails": adminDetails, "unauthorizedMail": email,"currentTime": time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM")}); err != nil {
-
-			err = errors.New("failed to send unauthorized login attempt mail to admin")
+		if err := tmpls.Execute(&template_buffers, map[string]interface{}{"adminDetails": adminDetails, "unauthorizedMail": email, "currentTime": time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM")}); err != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -61,16 +59,17 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		if <-channel != nil {
 
-			err = errors.New("failed to send unauthorized login attempt mail to admin")
+			c.AbortWithError(http.StatusInternalServerError, <-channel)
 
-			c.AbortWithError(http.StatusInternalServerError, err)
-
-			return false, err
+			return false, <-channel
 
 		}
 
-		return false, errors.New("your email is not yet registered in our owndesk platform")
+		return false, ErrInvalidMail
 
+	}else if err!=nil {
+
+		return false, err
 	}
 
 	conv_member := model.Member{
@@ -148,15 +147,15 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		c.AbortWithError(http.StatusServiceUnavailable, <-channel)
 
 		return false, <-channel
-		
-	} 
+
+	}
 
 	return true, nil
 }
 
 func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails, error) {
 
-	c,_ := ctx.Value(ContextKey).(*gin.Context)
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
@@ -171,10 +170,9 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	var memberProfileDetails model.MemberProfile
 
-	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Joins("INNER JOIN TBL_CHANNEL_ENTRY_FIELDS ON TBL_MEMBERS.ID::text = tbl_channel_entry_fields.field_value").Joins("inner join tbl_channel_entries on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").
-	          Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ? and tbl_member_profiles.claim_status = 1", MemberFieldTypeId, memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ? and tbl_member_profiles.claim_status = 1", memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
 
-		c.AbortWithError(http.StatusInternalServerError,err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return &model.LoginDetails{}, err
 	}
@@ -183,9 +181,9 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 }
 
-func MemberRegister(db *gorm.DB,ctx context.Context, input model.MemberDetails) (bool, error) {
+func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails) (bool, error) {
 
-	c,_:= ctx.Value(ContextKey).(*gin.Context)
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
@@ -199,7 +197,7 @@ func MemberRegister(db *gorm.DB,ctx context.Context, input model.MemberDetails) 
 
 		if err != nil {
 
-			c.AbortWithError(http.StatusInternalServerError,err)
+			c.AbortWithError(http.StatusInternalServerError, err)
 
 			return false, err
 		}
@@ -208,25 +206,25 @@ func MemberRegister(db *gorm.DB,ctx context.Context, input model.MemberDetails) 
 
 	var memberDetails member.MemberCreation
 
-	if input.Mobile.IsSet(){
+	if input.Mobile.IsSet() {
 
 		memberDetails.MobileNo = *input.Mobile.Value()
 	}
 
-	if imageName!="" && imagePath!=""{
+	if imageName != "" && imagePath != "" {
 
 		memberDetails.ProfileImage = imageName
 
 		memberDetails.ProfileImagePath = imagePath
 	}
 
-	if input.LastName.IsSet(){
+	if input.LastName.IsSet() {
 
 		memberDetails.LastName = *input.LastName.Value()
-		
+
 	}
 
-	if input.Username.IsSet(){
+	if input.Username.IsSet() {
 
 		memberDetails.Username = *input.Username.Value()
 
@@ -234,16 +232,16 @@ func MemberRegister(db *gorm.DB,ctx context.Context, input model.MemberDetails) 
 
 		if isMemberExists || err == nil {
 
-			err = errors.New("member already exists") 
-	
-			c.AbortWithError(http.StatusBadRequest,err)
-	
+			err = errors.New("member already exists")
+
+			c.AbortWithError(http.StatusBadRequest, err)
+
 			return isMemberExists, err
 		}
-	
+
 	}
 
-	if input.Email!=""{
+	if input.Email != "" {
 
 		memberDetails.Email = input.Email
 
@@ -251,10 +249,10 @@ func MemberRegister(db *gorm.DB,ctx context.Context, input model.MemberDetails) 
 
 		if isMemberExists || err == nil {
 
-			err = errors.New("member already exists") 
-	
-			c.AbortWithError(http.StatusBadRequest,err)
-	
+			err = errors.New("member already exists")
+
+			c.AbortWithError(http.StatusBadRequest, err)
+
 			return isMemberExists, err
 		}
 	}
@@ -267,7 +265,7 @@ func MemberRegister(db *gorm.DB,ctx context.Context, input model.MemberDetails) 
 
 	if !isRegistered || err != nil {
 
-		c.AbortWithError(http.StatusInternalServerError,err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return isRegistered, err
 	}
@@ -323,7 +321,7 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 }
 
-func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username,email *string, password string) (string, error) {
+func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string) (string, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -331,11 +329,11 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username,email *strin
 
 	var memberLogin member.MemberLogin
 
-	if username != nil{
+	if username != nil {
 
 		memberLogin.Username = *username
-		
-	}else if email != nil{
+
+	} else if email != nil {
 
 		memberLogin.Emailid = *email
 	}
@@ -346,7 +344,7 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username,email *strin
 
 	if err != nil {
 
-		c.AbortWithError(http.StatusUnauthorized,err)
+		c.AbortWithError(http.StatusUnauthorized, err)
 
 		log.Println(err)
 	}
@@ -354,8 +352,8 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username,email *strin
 	return token, err
 }
 
-func MemberProfileDetails(db *gorm.DB,ctx context.Context) (*model.MemberProfile, error) {
-	
+func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfile, error) {
+
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	memberid := c.GetInt("memberid")
@@ -372,12 +370,63 @@ func MemberProfileDetails(db *gorm.DB,ctx context.Context) (*model.MemberProfile
 
 	var memberProfile model.MemberProfile
 
-	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?",memberid).First(&memberProfile).Error;err!=nil{
+	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", memberid).First(&memberProfile).Error; err != nil {
 
 		c.AbortWithError(http.StatusUnprocessableEntity, err)
 
-		return &model.MemberProfile{},err
+		return &model.MemberProfile{}, err
 	}
 
-	return &memberProfile,nil
+	return &memberProfile, nil
+}
+
+func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	var memberProfile member.TblMemberProfile
+
+	query := db.Table("tbl_member_profiles").Where("is_deleted = 0")
+
+	if id != nil {
+
+		query = query.Where("member_id = ?", *id)
+
+	} else if profileSlug != nil {
+
+		query = query.Where("profile_slug = ?", *profileSlug)
+	}
+
+	if err := query.First(&memberProfile).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return &model.MemberProfile{}, err
+	}
+
+	MemberProfile := model.MemberProfile{
+		ID:              &memberProfile.Id,
+		MemberID:        &memberProfile.MemberId,
+		ProfileName:     &memberProfile.ProfileName,
+		ProfileSlug:     &memberProfile.ProfileSlug,
+		ProfilePage:     &memberProfile.ProfilePage,
+		MemberDetails:   &memberProfile.MemberDetails,
+		CompanyName:     &memberProfile.CompanyName,
+		CompanyLocation: &memberProfile.CompanyLocation,
+		CompanyLogo:     &memberProfile.About,
+		About:           &memberProfile.About,
+		SeoTitle:        &memberProfile.SeoTitle,
+		SeoDescription:  &memberProfile.SeoDescription,
+		SeoKeyword:      &memberProfile.SeoKeyword,
+		CreatedBy:       &memberProfile.CreatedBy,
+		CreatedOn:       &memberProfile.CreatedOn,
+		ModifiedOn:      &memberProfile.ModifiedOn,
+		ModifiedBy:      &memberProfile.ModifiedBy,
+		Linkedin:        &memberProfile.Linkedin,
+		Twitter:         &memberProfile.Twitter,
+		Website:         &memberProfile.Website,
+		ClaimStatus:     &memberProfile.ClaimStatus,
+	}
+
+	return &MemberProfile, nil
 }

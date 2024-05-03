@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/base64"
+	"errors"
 	"log"
 	"math/rand"
 	"net/smtp"
@@ -42,6 +43,11 @@ var(
 	SmtpPort,SmtpHost string
 	OwndeskChannelId int = 108
 	AdditionalData map[string]interface{}
+)
+
+var(
+	ErrInvalidMail = errors.New("your email is not yet registered in our owndesk platform")
+	ErrSendMail = errors.New("failed to send unauthorized login attempt mail to admin")
 )
 
 func init(){
@@ -91,9 +97,6 @@ func init(){
 	}
 
 	AdditionalData = map[string]interface{}{"emailImagePath": EmailImagePath}
-
-	log.Println("newbie",EmailImagePath)
-
 }
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
