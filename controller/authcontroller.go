@@ -3,7 +3,6 @@ package controller
 import (
 	"bytes"
 	"context"
-
 	// "encoding/base64"
 	"errors"
 	"html/template"
@@ -101,7 +100,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	otp := rand.Intn(900000) + 100000
 
-	current_time := time.Now().In(TimeZone)
+	current_time := time.Now().UTC()
 
 	otp_expiry_time := current_time.Add(5 * time.Minute).Format("2006-01-02 15:04:05")
 
@@ -159,7 +158,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
-	currentTime := time.Now().In(TimeZone).Unix()
+	currentTime := time.Now().UTC()
 
 	memberDetails, token, err := Mem.VerifyLoginOtp(email, otp, currentTime)
 
@@ -170,7 +169,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	var memberProfileDetails model.MemberProfile
 
-	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ? and tbl_member_profiles.claim_status = 1", memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 

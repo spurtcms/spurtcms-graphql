@@ -20,18 +20,18 @@ func (r *mutationResolver) VerifyMemberOtp(ctx context.Context, email string, ot
 }
 
 // MemberProfileUpdate is the resolver for the memberProfileUpdate field.
-func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID *int, profileSlug *string) (bool, error) {
-	return MemberProfileUpdate(r.DB, ctx, profiledata, entryID, profileSlug)
+func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error) {
+	return MemberProfileUpdate(r.DB, ctx, profiledata)
 }
 
 // Memberclaimnow is the resolver for the memberclaimnow field.
-func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData, profileID *int, profileSlug *string) (bool, error) {
-	return Memberclaimnow(r.DB, ctx, input, profileID, profileSlug)
+func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int, profileID *int, profileSlug *string) (bool, error) {
+	return Memberclaimnow(r.DB, ctx, input, entryID, profileID, profileSlug)
 }
 
 // ProfileNameVerification is the resolver for the profileNameVerification field.
-func (r *mutationResolver) ProfileNameVerification(ctx context.Context, profileName string) (bool, error) {
-	return VerifyProfileName(r.DB, ctx, profileName)
+func (r *mutationResolver) ProfileNameVerification(ctx context.Context, profileName string, profileSlug string) (bool, error) {
+	return VerifyProfileName(r.DB, ctx, profileName, profileSlug)
 }
 
 // UpdateChannelEntryViewCount is the resolver for the updateChannelEntryViewCount field.
@@ -50,8 +50,8 @@ func (r *queryResolver) ChannelDetail(ctx context.Context, channelID *int, chann
 }
 
 // ChannelEntriesList is the resolver for the channelEntriesList field.
-func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (*model.ChannelEntriesDetails, error) {
-	return ChannelEntriesList(r.DB, ctx, channelID, categoryID, limit, offset, title, categoryChildID, categorySlug, categoryChildSlug)
+func (r *queryResolver) ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string, requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
+	return ChannelEntriesList(r.DB, ctx, channelID, categoryID, limit, offset, title, categoryChildID, categorySlug, categoryChildSlug, requireData)
 }
 
 // ChannelEntryDetail is the resolver for the channelEntryDetail field.

@@ -388,6 +388,13 @@ type ProfileData struct {
 type Query struct {
 }
 
+type RequireData struct {
+	AuthorDetails    graphql.Omittable[*bool] `json:"authorDetails,omitempty"`
+	Categories       graphql.Omittable[*bool] `json:"categories,omitempty"`
+	MemberProfile    graphql.Omittable[*bool] `json:"memberProfile,omitempty"`
+	AdditionalFields graphql.Omittable[*bool] `json:"additionalFields,omitempty"`
+}
+
 type Section struct {
 	SectionID     *int       `json:"sectionId,omitempty"`
 	SectionName   string     `json:"sectionName"`

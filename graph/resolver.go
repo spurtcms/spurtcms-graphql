@@ -32,8 +32,8 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 	return controller.Channellist(db, ctx, limit, offset)
 }
 
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string) (*model.ChannelEntriesDetails, error) {
-	return controller.ChannelEntriesList(db, ctx, channelID, categoryId, limit, offset, title, categoryChildId, categorySlug, categoryChildSlug)
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string,reduireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
+	return controller.ChannelEntriesList(db, ctx, channelID, categoryId, limit, offset, title, categoryChildId, categorySlug, categoryChildSlug,reduireData)
 }
 
 func MemberUpdate(db *gorm.DB, ctx context.Context, memberdata model.MemberDetails) (bool, error) {
@@ -64,24 +64,24 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelID *int, catego
 	return controller.ChannelEntryDetail(db, ctx, channelEntryID, channelID, categoryID, slug,profileSlug)
 }
 
-func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId *int, profileSlug *string) (bool, error) {
-	return controller.MemberProfileUpdate(db, ctx, profiledata, entryId,profileSlug)
+func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData) (bool, error) {
+	return controller.MemberProfileUpdate(db, ctx, profiledata)
 }
 
 func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails,error) {
 	return controller.VerifyMemberOtp(db, ctx, email, otp)
 }
 
-func Memberclaimnow(db *gorm.DB, ctx context.Context, input model.ClaimData, profileId *int,profileSlug *string) (bool, error) {
-	return controller.Memberclaimnow(db, ctx, input, profileId,profileSlug)
+func Memberclaimnow(db *gorm.DB, ctx context.Context, input model.ClaimData,entryId int, profileId *int,profileSlug *string) (bool, error) {
+	return controller.Memberclaimnow(db, ctx, input, entryId, profileId,profileSlug)
 }
 
 func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {
 	return controller.EcommerceProductList(db, ctx, limit, offset, filter, sort)
 }
 
-func VerifyProfileName(db *gorm.DB,ctx context.Context, profileName string) (bool, error) {
-	return controller.VerifyProfileName(db,ctx,profileName)
+func VerifyProfileName(db *gorm.DB,ctx context.Context, profileName, profileSlug string) (bool, error) {
+	return controller.VerifyProfileName(db,ctx,profileName, profileSlug)
 }
 
 func TemplateMemberLogin(db *gorm.DB,ctx context.Context, username,email *string, password string) (string, error) {

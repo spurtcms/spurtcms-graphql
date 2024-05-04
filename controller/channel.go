@@ -4,13 +4,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"time"
+
+	// "encoding/json"
 	"errors"
 	"html/template"
 	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
 	"strconv"
-	"time"
+
+	// "time"
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
@@ -61,7 +65,7 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 }
 
 // this function provides the published channel entries list under a channel and channel entry details for a particular channeel entry by using its id
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string) (*model.ChannelEntriesDetails, error) {
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string, requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -77,7 +81,32 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	var err error
 
-	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, PathUrl, title, categoryChildId, categorySlug, categoryChildSlug)
+	var memberprofileflg, authorflg, categoriesflg, fieldsflg bool
+
+	if requireData != nil {
+
+		if requireData.MemberProfile.IsSet() {
+
+			memberprofileflg = *requireData.MemberProfile.Value()
+		}
+
+		if requireData.AuthorDetails.IsSet() {
+
+			authorflg = *requireData.AuthorDetails.Value()
+		}
+
+		if requireData.Categories.IsSet() {
+
+			categoriesflg = *requireData.Categories.Value()
+		}
+
+		if requireData.AdditionalFields.IsSet() {
+
+			fieldsflg = *requireData.AdditionalFields.Value()
+		}
+	}
+
+	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, PathUrl, title, categoryChildId, categorySlug, categoryChildSlug, authorflg, memberprofileflg, categoriesflg, fieldsflg)
 
 	if err != nil {
 
@@ -385,7 +414,7 @@ func ChannelDetail(db *gorm.DB, ctx context.Context, channelID *int, channelSlug
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 
-	channel, err := channelAuth.GetGraphqlChannelDetails(channelID,channelSlug)
+	channel, err := channelAuth.GetGraphqlChannelDetails(channelID, channelSlug)
 
 	if err != nil {
 
@@ -667,7 +696,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 }
 
-func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, profileId *int, profileSlug *string) (bool, error) {
+func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, entryId int, profileId *int, profileSlug *string) (bool, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -677,28 +706,33 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	var MemberProfile member.TblMemberProfile
 
-	profileQuery :=  db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Joins("INNER JOIN TBL_CHANNEL_ENTRY_FIELDS ON TBL_MEMBERS.ID::text = tbl_channel_entry_fields.field_value").Joins("inner join tbl_channel_entries on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").
-	Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_fields.field_type_id = ?" ,MemberFieldTypeId)
+	profileQuery := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0")
 
-	if profileId!=nil{
+	if profileId != nil {
 
-		profileQuery = profileQuery.Where("tbl_member_profiles.id= ?",*profileId)
+		profileQuery = profileQuery.Where("tbl_member_profiles.id= ?", *profileId)
 
-	}else if profileSlug!=nil{
+	} else if profileSlug != nil {
 
-		profileQuery = profileQuery.Where("tbl_member_profiles.profile_slug= ?",*profileSlug)
+		profileQuery = profileQuery.Where("tbl_member_profiles.profile_slug= ?", *profileSlug)
 	}
 
 	if err := profileQuery.First(&MemberProfile).Error; err != nil {
 
-		c.AbortWithError(http.StatusInternalServerError,err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
 
+	if MemberProfile.ClaimStatus == 1 {
+
+		return false, ErrclaimAlready
+
+	}
+
 	var channelEntry channel.TblChannelEntries
 
-	if err := db.Table("tbl_channel_entries").Where("is_deleted = 0 and status = 1 and id = ?",).First(&channelEntry).Error;err!=nil{
+	if err := db.Debug().Table("tbl_channel_entries").Where("is_deleted = 0 and status = 1 and id = ?", entryId).First(&channelEntry).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -707,11 +741,10 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	var AuthorDetails teams.TblUser
 
-	if err := db.Table("tbl_users").Where("tbl_users.is_deleted = 0 and tbl_users.id = ?", channelEntry.CreatedBy).First(&AuthorDetails).Error; err != nil {
+	if err := db.Table("tbl_users").Select("tbl_users.*").Where("tbl_users.is_deleted = 0 and tbl_channels.is_deleted = 0 and tbl_channels.id = ?", OwndeskChannelId).Joins("inner join tbl_channels on tbl_channels.created_by = tbl_users.id").First(&AuthorDetails).Error; err != nil {
 
 		return false, err
 	}
-
 
 	data := map[string]interface{}{"claimData": profileData, "authorDetails": AuthorDetails, "entry": channelEntry, "additionalData": AdditionalData, "link": PathUrl + "member/updatemember?id=" + strconv.Itoa(MemberProfile.MemberId)}
 
@@ -747,11 +780,13 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	} else {
 
+		c.AbortWithError(http.StatusInternalServerError, <-verify_chan)
+
 		return false, nil
 	}
 }
 
-func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId *int, profileSlug *string) (bool, error) {
+func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData) (bool, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -759,43 +794,11 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	memberid := c.GetInt("memberid")
 
-	if token == SpecialToken || token == "" || memberid == 0 {
+	if token == "" || memberid == 0 {
 
 		c.AbortWithStatus(http.StatusUnauthorized)
 
 		return false, errors.New("login required")
-	}
-
-	var memberProfile model.MemberProfile
-
-	query := db.Debug().Table("tbl_channel_entry_fields").Select("tbl_member_profiles.*").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_members on tbl_members.id = tbl_channel_entry_fields.field_value::integer").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = tbl_members.id").Where("tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_fields.field_type_id = ?", MemberFieldTypeId)
-
-	if memberid > 0 {
-
-		query = query.Where("tbl_member_profiles.member_id = ?", memberid)
-	}
-
-	if entryId != nil {
-
-		query = query.Where("tbl_channel_entry_fields.channel_entry_id = ?", entryId)
-
-	} else if profileSlug != nil {
-
-		profileSubQuery := db.Table("tbl_channel_entries").Select("tbl_channel_entries.id").Joins("inner join tbl_channel_entry_fields on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_member_profiles on tbl_member_profiles.member_id = any(string_to_array(tbl_channel_entry_fields.field_value,',')::integer[])").Where("tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_fields.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_fields.field_type_id = ? and tbl_member_profiles.profile_slug = ?", MemberFieldTypeId, profileSlug).Limit(1)
-
-		if memberid > 0 {
-
-			profileSubQuery = profileSubQuery.Where("tbl_member_profiles.member_id = ?", memberid)
-		}
-
-		query = query.Where("tbl_channel_entry_fields.channel_entry_id = (?)", profileSubQuery)
-	}
-
-	if err := query.Find(&memberProfile).Error; err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
-
-		return false, err
 	}
 
 	var jsonData map[string]interface{}
@@ -826,7 +829,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		ModifiedOn:    &currentTime,
 	}
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", memberProfile.MemberID).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn}).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn,"modified_by": memberid}).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -836,20 +839,27 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 	return true, nil
 }
 
-func VerifyProfileName(db *gorm.DB, ctx context.Context, profileName string) (bool, error) {
+func VerifyProfileName(db *gorm.DB, ctx context.Context, profileName, profileSlug string) (bool, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	if profileName == "" {
+	if profileName == ""{
 
-		return false, errors.New("empty values not allowed")
+		c.AbortWithError(422,ErrEmptyProfileName)
+
+		return false, ErrEmptyProfileName
+	}
+
+	if profileSlug==""{
+
+		c.AbortWithError(422,ErrEmptyProfileSlug)
+
+		return false, ErrEmptyProfileSlug
 	}
 
 	var count int64
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_member_profiles.profile_name = ?", profileName).Count(&count).Error; err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and profile_name = ? and profile_slug = ?", profileName,profileSlug).Count(&count).Error; err != nil {
 
 		return false, err
 	}

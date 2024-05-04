@@ -163,7 +163,7 @@ type LoginDetails{
 extend type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int,channelSlug: String): Channel! @auth
-    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String): ChannelEntriesDetails! @auth
+    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String,requireData: RequireData): ChannelEntriesDetails! @auth
 	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int,profileSlug: String): ChannelEntries! @auth
 	getMemberProfileDetails(id: Int,profileSlug: String): MemberProfile! @auth
 }
@@ -171,9 +171,9 @@ extend type Query{
 extend type Mutation{
     memberLogin(email: String!): Boolean!
 	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
-	memberProfileUpdate(profiledata: ProfileData!,entryId: Int,profileSlug: String):Boolean! @auth
-	memberclaimnow(input: ClaimData!,profileId: Int,profileSlug: String): Boolean! @auth
-	profileNameVerification(profileName: String!): Boolean! @auth
+	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
+	memberclaimnow(input: ClaimData!,entryId: Int!,profileId: Int,profileSlug: String): Boolean! @auth
+	profileNameVerification(profileName: String!,profileSlug: String!): Boolean! @auth
 	updateChannelEntryViewCount(entryId: Int,slug: String): Boolean! @auth
 }
 
@@ -189,4 +189,11 @@ input ClaimData{
 	workMail:        String!
     companyNumber:   LargeInt!
 	personName:      String!
+}
+
+input RequireData{
+	authorDetails:    Boolean
+	categories:       Boolean
+	memberProfile:    Boolean
+	additionalFields: Boolean
 }

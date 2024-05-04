@@ -53,9 +53,9 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	MemberLogin(ctx context.Context, email string) (bool, error)
 	VerifyMemberOtp(ctx context.Context, email string, otp int) (*model.LoginDetails, error)
-	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData, entryID *int, profileSlug *string) (bool, error)
-	Memberclaimnow(ctx context.Context, input model.ClaimData, profileID *int, profileSlug *string) (bool, error)
-	ProfileNameVerification(ctx context.Context, profileName string) (bool, error)
+	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error)
+	Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int, profileID *int, profileSlug *string) (bool, error)
+	ProfileNameVerification(ctx context.Context, profileName string, profileSlug string) (bool, error)
 	UpdateChannelEntryViewCount(ctx context.Context, entryID *int, slug *string) (bool, error)
 	EcommerceAddToCart(ctx context.Context, productID *int, productSlug *string, quantity int) (bool, error)
 	EcommerceOrderPlacement(ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error)
@@ -68,7 +68,7 @@ type QueryResolver interface {
 	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, categoryGroupSlug *string, hierarchyLevel *int, checkEntriesPresence *int) (*model.CategoriesList, error)
 	ChannelList(ctx context.Context, limit int, offset int) (*model.ChannelDetails, error)
 	ChannelDetail(ctx context.Context, channelID *int, channelSlug *string) (*model.Channel, error)
-	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string) (*model.ChannelEntriesDetails, error)
+	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string, requireData *model.RequireData) (*model.ChannelEntriesDetails, error)
 	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int, profileSlug *string) (*model.ChannelEntries, error)
 	GetMemberProfileDetails(ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error)
 	EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error)
@@ -113,6 +113,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputProductFilter,
 		ec.unmarshalInputProductSort,
 		ec.unmarshalInputProfileData,
+		ec.unmarshalInputRequireData,
 		ec.unmarshalInputorderFilter,
 		ec.unmarshalInputorderProduct,
 		ec.unmarshalInputorderSort,
@@ -415,7 +416,7 @@ type LoginDetails{
 extend type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int,channelSlug: String): Channel! @auth
-    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String): ChannelEntriesDetails! @auth
+    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String,requireData: RequireData): ChannelEntriesDetails! @auth
 	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int,profileSlug: String): ChannelEntries! @auth
 	getMemberProfileDetails(id: Int,profileSlug: String): MemberProfile! @auth
 }
@@ -423,9 +424,9 @@ extend type Query{
 extend type Mutation{
     memberLogin(email: String!): Boolean!
 	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
-	memberProfileUpdate(profiledata: ProfileData!,entryId: Int,profileSlug: String):Boolean! @auth
-	memberclaimnow(input: ClaimData!,profileId: Int,profileSlug: String): Boolean! @auth
-	profileNameVerification(profileName: String!): Boolean! @auth
+	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
+	memberclaimnow(input: ClaimData!,entryId: Int!,profileId: Int,profileSlug: String): Boolean! @auth
+	profileNameVerification(profileName: String!,profileSlug: String!): Boolean! @auth
 	updateChannelEntryViewCount(entryId: Int,slug: String): Boolean! @auth
 }
 
@@ -441,6 +442,13 @@ input ClaimData{
 	workMail:        String!
     companyNumber:   LargeInt!
 	personName:      String!
+}
+
+input RequireData{
+	authorDetails:    Boolean
+	categories:       Boolean
+	memberProfile:    Boolean
+	additionalFields: Boolean
 }`, BuiltIn: false},
 	{Name: "../schema/ecommerce.graphqls", Input: `# GraphQL schema example
 #
@@ -853,24 +861,6 @@ func (ec *executionContext) field_Mutation_memberProfileUpdate_args(ctx context.
 		}
 	}
 	args["profiledata"] = arg0
-	var arg1 *int
-	if tmp, ok := rawArgs["entryId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entryId"))
-		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["entryId"] = arg1
-	var arg2 *string
-	if tmp, ok := rawArgs["profileSlug"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileSlug"))
-		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["profileSlug"] = arg2
 	return args, nil
 }
 
@@ -916,24 +906,33 @@ func (ec *executionContext) field_Mutation_memberclaimnow_args(ctx context.Conte
 		}
 	}
 	args["input"] = arg0
-	var arg1 *int
+	var arg1 int
+	if tmp, ok := rawArgs["entryId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entryId"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["entryId"] = arg1
+	var arg2 *int
 	if tmp, ok := rawArgs["profileId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileId"))
-		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["profileId"] = arg1
-	var arg2 *string
+	args["profileId"] = arg2
+	var arg3 *string
 	if tmp, ok := rawArgs["profileSlug"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileSlug"))
-		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["profileSlug"] = arg2
+	args["profileSlug"] = arg3
 	return args, nil
 }
 
@@ -949,6 +948,15 @@ func (ec *executionContext) field_Mutation_profileNameVerification_args(ctx cont
 		}
 	}
 	args["profileName"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["profileSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileSlug"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["profileSlug"] = arg1
 	return args, nil
 }
 
@@ -1237,6 +1245,15 @@ func (ec *executionContext) field_Query_channelEntriesList_args(ctx context.Cont
 		}
 	}
 	args["categoryChildSlug"] = arg7
+	var arg8 *model.RequireData
+	if tmp, ok := rawArgs["requireData"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requireData"))
+		arg8, err = ec.unmarshalORequireData2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐRequireData(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["requireData"] = arg8
 	return args, nil
 }
 
@@ -10859,7 +10876,7 @@ func (ec *executionContext) _Mutation_memberProfileUpdate(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData), fc.Args["entryId"].(*int), fc.Args["profileSlug"].(*string))
+			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -10934,7 +10951,7 @@ func (ec *executionContext) _Mutation_memberclaimnow(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().Memberclaimnow(rctx, fc.Args["input"].(model.ClaimData), fc.Args["profileId"].(*int), fc.Args["profileSlug"].(*string))
+			return ec.resolvers.Mutation().Memberclaimnow(rctx, fc.Args["input"].(model.ClaimData), fc.Args["entryId"].(int), fc.Args["profileId"].(*int), fc.Args["profileSlug"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -11009,7 +11026,7 @@ func (ec *executionContext) _Mutation_profileNameVerification(ctx context.Contex
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ProfileNameVerification(rctx, fc.Args["profileName"].(string))
+			return ec.resolvers.Mutation().ProfileNameVerification(rctx, fc.Args["profileName"].(string), fc.Args["profileSlug"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -13728,7 +13745,7 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["categoryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["title"].(*string), fc.Args["categoryChildId"].(*int), fc.Args["categorySlug"].(*string), fc.Args["categoryChildSlug"].(*string))
+			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["categoryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["title"].(*string), fc.Args["categoryChildId"].(*int), fc.Args["categorySlug"].(*string), fc.Args["categoryChildSlug"].(*string), fc.Args["requireData"].(*model.RequireData))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -18741,6 +18758,54 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 	return &it, nil
 }
 
+func (ec *executionContext) unmarshalInputRequireData(ctx context.Context, obj interface{}) (*model.RequireData, error) {
+	var it model.RequireData
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"authorDetails", "categories", "memberProfile", "additionalFields"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "authorDetails":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authorDetails"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.AuthorDetails = graphql.OmittableOf(data)
+		case "categories":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categories"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Categories = graphql.OmittableOf(data)
+		case "memberProfile":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memberProfile"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.MemberProfile = graphql.OmittableOf(data)
+		case "additionalFields":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("additionalFields"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.AdditionalFields = graphql.OmittableOf(data)
+		}
+	}
+
+	return &it, nil
+}
+
 func (ec *executionContext) unmarshalInputorderFilter(ctx context.Context, obj interface{}) (*model.OrderFilter, error) {
 	var it model.OrderFilter
 	asMap := map[string]interface{}{}
@@ -23262,6 +23327,14 @@ func (ec *executionContext) unmarshalOProductSort2ᚖspurtcmsᚑgraphqlᚋgraph�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputProductSort(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalORequireData2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐRequireData(ctx context.Context, v interface{}) (*model.RequireData, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputRequireData(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
