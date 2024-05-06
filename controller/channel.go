@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"log"
 	"time"
 
 	// "encoding/json"
@@ -109,6 +110,13 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, PathUrl, title, categoryChildId, categorySlug, categoryChildSlug, authorflg, memberprofileflg, categoriesflg, fieldsflg)
 
 	if err != nil {
+
+		if err == errors.New("entries based on category is not found"){
+
+			c.AbortWithError(404,err)
+
+			return &model.ChannelEntriesDetails{}, err
+		}
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -829,7 +837,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		ModifiedOn:    &currentTime,
 	}
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn,"modified_by": memberid}).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn, "modified_by": memberid}).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -843,23 +851,23 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileName, profileSlu
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	if profileName == ""{
+	if profileName == "" {
 
-		c.AbortWithError(422,ErrEmptyProfileName)
+		c.AbortWithError(422, ErrEmptyProfileName)
 
 		return false, ErrEmptyProfileName
 	}
 
-	if profileSlug==""{
+	if profileSlug == "" {
 
-		c.AbortWithError(422,ErrEmptyProfileSlug)
+		c.AbortWithError(422, ErrEmptyProfileSlug)
 
 		return false, ErrEmptyProfileSlug
 	}
 
 	var count int64
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and profile_name = ? and profile_slug = ?", profileName,profileSlug).Count(&count).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and profile_name = ? and profile_slug = ?", profileName, profileSlug).Count(&count).Error; err != nil {
 
 		return false, err
 	}

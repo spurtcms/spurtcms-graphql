@@ -155,7 +155,8 @@ type EcommerceProduct struct {
 	ProductSlug        string         `json:"productSlug"`
 	ProductDescription string         `json:"productDescription"`
 	ProductImagePath   string         `json:"productImagePath"`
-	ProductVideoPath   string         `json:"productVideoPath"`
+	ProductYoutubePath *string        `json:"productYoutubePath,omitempty"`
+	ProductVimeoPath   *string        `json:"productVimeoPath,omitempty"`
 	Sku                string         `json:"sku"`
 	Tax                int            `json:"tax"`
 	Totalcost          int            `json:"totalcost"`
@@ -352,14 +353,15 @@ type ProductFilter struct {
 }
 
 type ProductOrderDetails struct {
-	ID          int       `json:"id"`
-	OrderID     int       `json:"orderId"`
-	ProductID   int       `json:"productId"`
-	Quantity    int       `json:"quantity"`
-	Tax         int       `json:"tax"`
-	Price       int       `json:"price"`
-	Status      string    `json:"status" gorm:"column:status"`
-	PaymentMode string    `json:"paymentMode" gorm:"column:payment_mode"`
+	ID            int       `json:"id"`
+	OrderID       int       `json:"orderId"`
+	ProductID     int       `json:"productId"`
+	Quantity      int       `json:"quantity"`
+	Tax           int       `json:"tax"`
+	Price         int       `json:"price"`
+	Status        string    `json:"status" gorm:"column:status"`
+	PaymentMode   string    `json:"paymentMode" gorm:"column:payment_mode"`
+	OrderUniqueID string    `json:"orderUniqueId" gorm:"column:uuid"`
 }
 
 type ProductPricing struct {

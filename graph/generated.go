@@ -466,7 +466,8 @@ type EcommerceProduct{
 	productSlug:               String!
 	productDescription:        String!
 	productImagePath:          String!
-	productVideoPath:          String!
+	productYoutubePath:            String
+	productVimeoPath:          String
 	sku:                       String!
 	tax:                       Int!
 	totalcost:                 Int!
@@ -545,6 +546,7 @@ type ProductOrderDetails{
 	price:         Int!
 	status:        String!
 	paymentMode:   String!
+	orderUniqueId: String!
 }
 
 type OrderStatus{
@@ -5506,8 +5508,10 @@ func (ec *executionContext) fieldContext_EcommerceCartDetails_cartList(ctx conte
 				return ec.fieldContext_EcommerceProduct_productDescription(ctx, field)
 			case "productImagePath":
 				return ec.fieldContext_EcommerceProduct_productImagePath(ctx, field)
-			case "productVideoPath":
-				return ec.fieldContext_EcommerceProduct_productVideoPath(ctx, field)
+			case "productYoutubePath":
+				return ec.fieldContext_EcommerceProduct_productYoutubePath(ctx, field)
+			case "productVimeoPath":
+				return ec.fieldContext_EcommerceProduct_productVimeoPath(ctx, field)
 			case "sku":
 				return ec.fieldContext_EcommerceProduct_sku(ctx, field)
 			case "tax":
@@ -6394,8 +6398,8 @@ func (ec *executionContext) fieldContext_EcommerceProduct_productImagePath(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _EcommerceProduct_productVideoPath(ctx context.Context, field graphql.CollectedField, obj *model.EcommerceProduct) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EcommerceProduct_productVideoPath(ctx, field)
+func (ec *executionContext) _EcommerceProduct_productYoutubePath(ctx context.Context, field graphql.CollectedField, obj *model.EcommerceProduct) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EcommerceProduct_productYoutubePath(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6408,24 +6412,62 @@ func (ec *executionContext) _EcommerceProduct_productVideoPath(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ProductVideoPath, nil
+		return obj.ProductYoutubePath, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EcommerceProduct_productVideoPath(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EcommerceProduct_productYoutubePath(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EcommerceProduct",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EcommerceProduct_productVimeoPath(ctx context.Context, field graphql.CollectedField, obj *model.EcommerceProduct) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EcommerceProduct_productVimeoPath(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProductVimeoPath, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EcommerceProduct_productVimeoPath(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EcommerceProduct",
 		Field:      field,
@@ -7188,6 +7230,8 @@ func (ec *executionContext) fieldContext_EcommerceProduct_orderDetails(ctx conte
 				return ec.fieldContext_ProductOrderDetails_status(ctx, field)
 			case "paymentMode":
 				return ec.fieldContext_ProductOrderDetails_paymentMode(ctx, field)
+			case "orderUniqueId":
+				return ec.fieldContext_ProductOrderDetails_orderUniqueId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductOrderDetails", field.Name)
 		},
@@ -7246,8 +7290,10 @@ func (ec *executionContext) fieldContext_EcommerceProducts_productList(ctx conte
 				return ec.fieldContext_EcommerceProduct_productDescription(ctx, field)
 			case "productImagePath":
 				return ec.fieldContext_EcommerceProduct_productImagePath(ctx, field)
-			case "productVideoPath":
-				return ec.fieldContext_EcommerceProduct_productVideoPath(ctx, field)
+			case "productYoutubePath":
+				return ec.fieldContext_EcommerceProduct_productYoutubePath(ctx, field)
+			case "productVimeoPath":
+				return ec.fieldContext_EcommerceProduct_productVimeoPath(ctx, field)
 			case "sku":
 				return ec.fieldContext_EcommerceProduct_sku(ctx, field)
 			case "tax":
@@ -13119,6 +13165,50 @@ func (ec *executionContext) fieldContext_ProductOrderDetails_paymentMode(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _ProductOrderDetails_orderUniqueId(ctx context.Context, field graphql.CollectedField, obj *model.ProductOrderDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ProductOrderDetails_orderUniqueId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OrderUniqueID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ProductOrderDetails_orderUniqueId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ProductOrderDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ProductPricing_id(ctx context.Context, field graphql.CollectedField, obj *model.ProductPricing) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ProductPricing_id(ctx, field)
 	if err != nil {
@@ -14185,8 +14275,10 @@ func (ec *executionContext) fieldContext_Query_ecommerceProductDetails(ctx conte
 				return ec.fieldContext_EcommerceProduct_productDescription(ctx, field)
 			case "productImagePath":
 				return ec.fieldContext_EcommerceProduct_productImagePath(ctx, field)
-			case "productVideoPath":
-				return ec.fieldContext_EcommerceProduct_productVideoPath(ctx, field)
+			case "productYoutubePath":
+				return ec.fieldContext_EcommerceProduct_productYoutubePath(ctx, field)
+			case "productVimeoPath":
+				return ec.fieldContext_EcommerceProduct_productVimeoPath(ctx, field)
 			case "sku":
 				return ec.fieldContext_EcommerceProduct_sku(ctx, field)
 			case "tax":
@@ -14474,8 +14566,10 @@ func (ec *executionContext) fieldContext_Query_ecommerceProductOrderDetails(ctx 
 				return ec.fieldContext_EcommerceProduct_productDescription(ctx, field)
 			case "productImagePath":
 				return ec.fieldContext_EcommerceProduct_productImagePath(ctx, field)
-			case "productVideoPath":
-				return ec.fieldContext_EcommerceProduct_productVideoPath(ctx, field)
+			case "productYoutubePath":
+				return ec.fieldContext_EcommerceProduct_productYoutubePath(ctx, field)
+			case "productVimeoPath":
+				return ec.fieldContext_EcommerceProduct_productVimeoPath(ctx, field)
 			case "sku":
 				return ec.fieldContext_EcommerceProduct_sku(ctx, field)
 			case "tax":
@@ -19858,11 +19952,10 @@ func (ec *executionContext) _EcommerceProduct(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "productVideoPath":
-			out.Values[i] = ec._EcommerceProduct_productVideoPath(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
+		case "productYoutubePath":
+			out.Values[i] = ec._EcommerceProduct_productYoutubePath(ctx, field, obj)
+		case "productVimeoPath":
+			out.Values[i] = ec._EcommerceProduct_productVimeoPath(ctx, field, obj)
 		case "sku":
 			out.Values[i] = ec._EcommerceProduct_sku(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -20930,6 +21023,11 @@ func (ec *executionContext) _ProductOrderDetails(ctx context.Context, sel ast.Se
 			}
 		case "paymentMode":
 			out.Values[i] = ec._ProductOrderDetails_paymentMode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "orderUniqueId":
+			out.Values[i] = ec._ProductOrderDetails_orderUniqueId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

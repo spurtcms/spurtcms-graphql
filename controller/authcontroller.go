@@ -3,6 +3,8 @@ package controller
 import (
 	"bytes"
 	"context"
+	"strings"
+
 	// "encoding/base64"
 	"errors"
 	"html/template"
@@ -403,6 +405,13 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 		return &model.MemberProfile{}, err
 	}
 
+	var profileLogo string
+
+	if memberProfile.CompanyLogo!=""{
+
+		profileLogo = PathUrl + strings.TrimPrefix(memberProfile.CompanyLogo,"/")
+	}
+
 	MemberProfile := model.MemberProfile{
 		ID:              &memberProfile.Id,
 		MemberID:        &memberProfile.MemberId,
@@ -412,7 +421,7 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 		MemberDetails:   &memberProfile.MemberDetails,
 		CompanyName:     &memberProfile.CompanyName,
 		CompanyLocation: &memberProfile.CompanyLocation,
-		CompanyLogo:     &memberProfile.About,
+		CompanyLogo:     &profileLogo,
 		About:           &memberProfile.About,
 		SeoTitle:        &memberProfile.SeoTitle,
 		SeoDescription:  &memberProfile.SeoDescription,

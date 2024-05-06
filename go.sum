@@ -97,8 +97,6 @@ github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/sergi/go-diff v1.3.1 h1:xkr+Oxo4BOQKmkn/B9eMK0g5Kg/983T9DqqPHwYqD+8=
 github.com/sosodev/duration v1.2.0 h1:pqK/FLSjsAADWY74SyWDCjOcd5l7H8GSnnOGEB9A1Us=
 github.com/sosodev/duration v1.2.0/go.mod h1:RQIBBX0+fMLc/D9+Jb/fwvVmo0eZvDDEERAikUR6SDg=
-github.com/spurtcms/pkgcontent v1.1.8 h1:lhisgKbCxPDelv+ztffqGVR0LQZP7z6iAfhxVSKZrB4=
-github.com/spurtcms/pkgcontent v1.1.8/go.mod h1:UliZZ3AyTJRDHw2l6Q4ZbD65UgEZGFgk3Cmpf1LIM60=
 github.com/spurtcms/pkgcontent v1.1.9 h1:Fgb/s02qnLUwE+D2bG/jTaBz6awT4z3A+bGCTvHH3zg=
 github.com/spurtcms/pkgcontent v1.1.9/go.mod h1:shKDFlbV9dhwnVLJiT0siWWfFg+nz3/IJ5+h/tB0gQI=
 github.com/spurtcms/pkgcore v1.0.72 h1:VRBOj8qoa4/CEsb9KVuD7Y//pQR1TtvtwD5uDiBbMJ8=

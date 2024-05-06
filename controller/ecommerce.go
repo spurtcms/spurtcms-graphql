@@ -3,8 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"log"
-
 	// "log"
 	"net/http"
 	"spurtcms-graphql/graph/model"
@@ -133,11 +131,18 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 
 		}
 
-		if product.ProductVideoPath != "" {
+		if *product.ProductYoutubePath != "" {
 
-			modified_path := PathUrl + strings.TrimPrefix(product.ProductVideoPath, "/")
+			modified_path := PathUrl + strings.TrimPrefix(*product.ProductYoutubePath, "/")
 
-			product.ProductVideoPath = modified_path
+			product.ProductYoutubePath = &modified_path
+		}
+
+		if *product.ProductVimeoPath != "" {
+
+			modified_path := PathUrl + strings.TrimPrefix(*product.ProductVimeoPath, "/")
+
+			product.ProductVimeoPath = &modified_path
 		}
 
 		final_ecomProducts = append(final_ecomProducts, product)
@@ -187,12 +192,12 @@ func EcommerceProductDetails(db *gorm.DB, ctx context.Context, productId *int, p
 
 	}
 
-	if productdtl.ProductVideoPath != "" {
+	// if productdtl.ProductVideoPath != "" {
 
-		modified_path := PathUrl + strings.TrimPrefix(productdtl.ProductVideoPath, "/")
+	// 	modified_path := PathUrl + strings.TrimPrefix(productdtl.ProductVideoPath, "/")
 
-		productdtl.ProductVideoPath = modified_path
-	}
+	// 	productdtl.ProductVideoPath = modified_path
+	// }
 
 	return &productdtl, nil
 
@@ -369,11 +374,18 @@ func EcommerceCartList(db *gorm.DB, ctx context.Context, limit, offset int) (*mo
 
 		}
 
-		if cartProduct.ProductVideoPath != "" {
+		if *cartProduct.ProductYoutubePath != "" {
 
-			modified_path := PathUrl + strings.TrimPrefix(cartProduct.ProductVideoPath, "/")
+			modified_path := PathUrl + strings.TrimPrefix(*cartProduct.ProductYoutubePath, "/")
 
-			cartProduct.ProductVideoPath = modified_path
+			cartProduct.ProductYoutubePath = &modified_path
+		}
+
+		if *cartProduct.ProductVimeoPath != "" {
+
+			modified_path := PathUrl + strings.TrimPrefix(*cartProduct.ProductVimeoPath, "/")
+
+			cartProduct.ProductVimeoPath = &modified_path
 		}
 
 		var priceByQuantity int64
@@ -468,50 +480,89 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_customers c on c.id = o.customer_id").Joins("inner join tbl_ecom_order_statuses s on s.order_id = o.id").Where("p.is_deleted = 0 and o.is_deleted = 0 and c.member_id=?", memberid)
 
+	var status, searchKeyword, orderId, startingDate, endingDate string
+
+	var startingPrice, endingPrice int
+
 	if filter != nil {
 
 		if filter.Status.IsSet() {
 
-			query = query.Where("s.status = ?", filter.Status.Value())
+			status = *filter.Status.Value()
 		}
 
-		if filter.StartingPrice.IsSet() && filter.EndingPrice.IsSet() {
+		if filter.StartingPrice.IsSet() {
 
-			query = query.Where("d.price between ? and ?", filter.StartingPrice.Value(), filter.EndingPrice.Value())
+			startingPrice = *filter.StartingPrice.Value()
+		}
 
-		} else if filter.StartingPrice.IsSet() {
+		if filter.EndingPrice.IsSet() {
 
-			query = query.Where("d.price >= ?", filter.StartingPrice.Value())
-
-		} else if filter.EndingPrice.IsSet() {
-
-			query = query.Where("d.price <= ?", filter.EndingPrice.Value())
-
+			endingPrice = *filter.EndingPrice.Value()
 		}
 
 		if filter.SearchKeyword.IsSet() {
 
-			query = query.Where("LOWER(TRIM(p.product_name)) ILIKE LOWER(TRIM(?))", "%"+*filter.SearchKeyword.Value()+"%")
+			searchKeyword = *filter.SearchKeyword.Value()
 		}
 
-		if filter.StartingDate.IsSet() && filter.EndingDate.IsSet() {
+		if filter.StartingDate.IsSet() {
 
-			query = query.Where("o.created_on between ? and ?", filter.StartingDate.Value(), filter.EndingDate.Value())
+			startingDate = *filter.StartingDate.Value()
+		}
 
-		} else if filter.StartingDate.IsSet() {
+		if filter.EndingDate.IsSet() {
 
-			query = query.Where("o.created_on >= ?", filter.StartingDate.Value())
-
-		} else if filter.EndingDate.IsSet() {
-
-			query = query.Where("o.created_on <= ?", filter.EndingDate.Value())
+			endingDate = *filter.EndingDate.Value()
 		}
 
 		if filter.OrderID.IsSet() {
 
-			query = query.Where("o.uuid = ?", filter.OrderID.Value())
+			orderId = *filter.OrderID.Value()
 		}
 
+	}
+
+	if status!="" {
+
+		query = query.Where("s.status = ?", filter.Status.Value())
+	}
+
+	if startingPrice!=0 && endingPrice!=0 {
+
+		query = query.Where("d.price between ? and ?", filter.StartingPrice.Value(), filter.EndingPrice.Value())
+
+	} else if startingPrice!=0 {
+
+		query = query.Where("d.price >= ?", filter.StartingPrice.Value())
+
+	} else if endingPrice!=0 {
+
+		query = query.Where("d.price <= ?", filter.EndingPrice.Value())
+
+	}
+
+	if searchKeyword!="" {
+
+		query = query.Where("LOWER(TRIM(p.product_name)) ILIKE LOWER(TRIM(?))", "%"+*filter.SearchKeyword.Value()+"%")
+	}
+
+	if startingDate!="" && endingDate!="" {
+
+		query = query.Where("o.created_on between ? and ?", filter.StartingDate.Value(), filter.EndingDate.Value())
+
+	} else if startingDate!="" {
+
+		query = query.Where("o.created_on >= ?", filter.StartingDate.Value())
+
+	} else if endingDate!="" {
+
+		query = query.Where("o.created_on <= ?", filter.EndingDate.Value())
+	}
+
+	if orderId!="" {
+
+		query = query.Where("o.uuid = ?", filter.OrderID.Value())
 	}
 
 	if err := query.Count(&count).Error; err != nil {
@@ -521,7 +572,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	if sort != nil {
 
-		if sort.Date.IsSet() {
+		if sort.Date.IsSet() && *sort.Date.Value()!=-1 {
 
 			if *sort.Date.Value() == 1 {
 
@@ -533,13 +584,15 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 			}
 
-		} else if sort.Price.IsSet() {
+		}
+
+		if sort.Price.IsSet() && *sort.Price.Value()!=-1 {
 
 			if *sort.Price.Value() == 1 {
 
 				query = query.Order("d.price desc")
 
-			} else if *sort.Price.Value() == 1 {
+			} else if *sort.Price.Value() == 0 {
 
 				query = query.Order("d.price")
 
@@ -547,14 +600,14 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 		}
 
-	} else {
+	}else{
 
 		query = query.Order("o.id desc")
 	}
 
 	if err := query.Select("p.*").Preload("OrderDetails", func(db *gorm.DB) *gorm.DB {
 
-		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id")
+		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode,o.uuid").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id")
 
 	}).Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
 
@@ -593,11 +646,9 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 		query = query.Where("p.product_slug = ?", *productSlug)
 	}
 
-	log.Println("chkk1")
-
 	if err := query.Select("p.*").Preload("OrderDetails", func(db *gorm.DB) *gorm.DB {
 
-		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id")
+		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode,o.uuid").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id")
 
 	}).First(&orderedProduct).Error; err != nil {
 
@@ -625,7 +676,7 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	var customerId int
 
-	if err := db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?",memberid).Scan(&customerId).Error;err!=nil{
+	if err := db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?", memberid).Scan(&customerId).Error; err != nil {
 
 		return false, err
 	}
@@ -726,11 +777,11 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	var orderPayment model.OrderPayment
 
-	orderPayment.OrderID  = createorder.ID
+	orderPayment.OrderID = createorder.ID
 
 	orderPayment.PaymentMode = paymentMode
 
-	if err := db.Table("tbl_ecom_order_payments").Create(&orderPayment).Error;err!=nil{
+	if err := db.Table("tbl_ecom_order_payments").Create(&orderPayment).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 

@@ -14,7 +14,8 @@ type EcommerceProduct{
 	productSlug:               String!
 	productDescription:        String!
 	productImagePath:          String!
-	productVideoPath:          String!
+	productYoutubePath:            String
+	productVimeoPath:          String
 	sku:                       String!
 	tax:                       Int!
 	totalcost:                 Int!
@@ -93,6 +94,7 @@ type ProductOrderDetails{
 	price:         Int!
 	status:        String!
 	paymentMode:   String!
+	orderUniqueId: String!
 }
 
 type OrderStatus{
