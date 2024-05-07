@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
-	// "log"
+	
 	"net/http"
 	"spurtcms-graphql/graph/model"
 	"strconv"
@@ -525,7 +525,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	if status!="" {
 
-		query = query.Where("s.status = ?", filter.Status.Value())
+		query = query.Where("s.order_status = ?", filter.Status.Value())
 	}
 
 	if startingPrice!=0 && endingPrice!=0 {
@@ -572,7 +572,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	if sort != nil {
 
-		if sort.Date.IsSet() && *sort.Date.Value()!=-1 {
+		if sort.Date.Value()!= nil && *sort.Date.Value()!= -1 {
 
 			if *sort.Date.Value() == 1 {
 
@@ -586,7 +586,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 		}
 
-		if sort.Price.IsSet() && *sort.Price.Value()!=-1 {
+		if sort.Price.Value()!=nil && *sort.Price.Value()!=-1 {
 
 			if *sort.Price.Value() == 1 {
 
@@ -614,7 +614,43 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 		return &model.EcommerceProducts{}, err
 	}
 
-	return &model.EcommerceProducts{ProductList: orderedProducts, Count: int(count)}, nil
+	var final_OrderedProductList []model.EcommerceProduct
+
+	for _,product :=  range orderedProducts{
+
+		if product.ProductImagePath != "" {
+
+			imagePaths := strings.Split(product.ProductImagePath, ",")
+
+			for index, path := range imagePaths {
+
+				modified_path := PathUrl + strings.TrimPrefix(path, "/")
+
+				imagePaths[index] = modified_path
+			}
+
+			product.ProductImageArray = imagePaths
+
+		}
+
+		if product.ProductYoutubePath != nil {
+
+			modified_path := PathUrl + strings.TrimPrefix(*product.ProductYoutubePath, "/")
+
+			product.ProductYoutubePath = &modified_path
+		}
+
+		if product.ProductVimeoPath != nil {
+
+			modified_path := PathUrl + strings.TrimPrefix(*product.ProductVimeoPath, "/")
+
+			product.ProductVimeoPath = &modified_path
+		}
+
+		final_OrderedProductList = append(final_OrderedProductList, product)
+	}
+
+	return &model.EcommerceProducts{ProductList: final_OrderedProductList, Count: int(count)}, nil
 }
 
 func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error) {
@@ -655,6 +691,35 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 		return &model.EcommerceProduct{}, err
 	}
 
+	if orderedProduct.ProductImagePath != "" {
+
+		imagePaths := strings.Split(orderedProduct.ProductImagePath, ",")
+
+		for index, path := range imagePaths {
+
+			modified_path := PathUrl + strings.TrimPrefix(path, "/")
+
+			imagePaths[index] = modified_path
+		}
+
+		orderedProduct.ProductImageArray = imagePaths
+
+	}
+
+	if orderedProduct.ProductYoutubePath != nil {
+
+		modified_path := PathUrl + strings.TrimPrefix(*orderedProduct.ProductYoutubePath, "/")
+
+		orderedProduct.ProductYoutubePath = &modified_path
+	}
+
+	if orderedProduct.ProductVimeoPath != nil {
+
+		modified_path := PathUrl + strings.TrimPrefix(*orderedProduct.ProductVimeoPath, "/")
+
+		orderedProduct.ProductVimeoPath = &modified_path
+	}
+
 	return &orderedProduct, nil
 }
 
@@ -674,6 +739,8 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	}
 
+	currentTime,_ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
 	var customerId int
 
 	if err := db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?", memberid).Scan(&customerId).Error; err != nil {
@@ -681,11 +748,11 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 		return false, err
 	}
 
-	currentTime := time.Now().In(TimeZone).Unix()
+	unixTime := time.Now().Unix()
 
 	var orderplaced model.EcommerceOrder
 
-	orderId := "SP" + strconv.Itoa(int(currentTime))
+	orderId := "SP" + strconv.Itoa(int(unixTime))
 
 	orderplaced.OrderID = orderId
 
@@ -697,7 +764,7 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	orderplaced.IsDeleted = 0
 
-	orderplaced.CreatedOn, _ = time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+	orderplaced.CreatedOn = currentTime
 
 	var totalPrice, totalTax, totalCost int
 
@@ -748,6 +815,8 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 		return false, err
 	}
 
+	var orderedProductIds []int
+
 	for _, value := range orderProducts {
 
 		if err := db.Table("tbl_ecom_product_order_details").Create(map[string]interface{}{"product_id": value.ProductID, "order_id": createorder.ID, "quantity": value.Quantity, "price": value.Price, "tax": value.Tax}).Error; err != nil {
@@ -756,6 +825,8 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 			return false, err
 		}
+
+		orderedProductIds = append(orderedProductIds, value.ProductID)
 	}
 
 	var orderstatus model.OrderStatus
@@ -766,7 +837,7 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	orderstatus.CreatedBy = customerId
 
-	orderstatus.CreatedOn, _ = time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+	orderstatus.CreatedOn =  currentTime
 
 	if err := db.Table("tbl_ecom_order_statuses").Create(&orderstatus).Error; err != nil {
 
@@ -785,6 +856,13 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
+		return false, err
+	}
+
+	if err := db.Table("tbl_ecom_carts").Where("is_deleted = 0 and product_id in (?)",orderedProductIds).UpdateColumns(map[string]interface{}{"is_deleted": 1,"deleted_on": currentTime}).Error;err!=nil{
+
+	    c.AbortWithError(http.StatusInternalServerError, err)
+		
 		return false, err
 	}
 

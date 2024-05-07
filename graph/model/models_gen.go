@@ -408,6 +408,32 @@ type Section struct {
 	OrderIndex    int        `json:"orderIndex"`
 }
 
+type ShippingAddress struct {
+	ID           int    `json:"id"`
+	OrderID      int    `json:"orderId"`
+	PersonName   string `json:"personName"`
+	MobileNumber string `json:"mobileNumber"`
+	Email        string `json:"email"`
+	HouseNumber  string `json:"houseNumber"`
+	Area         string `json:"area"`
+	City         string `json:"city"`
+	State        string `json:"state"`
+	Country      string `json:"country"`
+}
+
+type ShippingDetails struct {
+	ID           int    `json:"id"`
+	OrderID      int    `json:"orderId"`
+	PersonName   string `json:"personName"`
+	MobileNumber string `json:"mobileNumber"`
+	Email        string `json:"email"`
+	HouseNumber  string `json:"houseNumber"`
+	Area         string `json:"area"`
+	City         string `json:"city"`
+	State        string `json:"state"`
+	Country      string `json:"country"`
+}
+
 type Space struct {
 	ID               int        `json:"id"`
 	SpaceName        string     `json:"spaceName"`

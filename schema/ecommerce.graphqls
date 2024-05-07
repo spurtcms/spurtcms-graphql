@@ -111,6 +111,19 @@ type orderPayment{
 	paymentMode:  String!   	  
 }
 
+type ShippingDetails{
+	id:            Int!
+	orderId:       Int!
+	personName:    String!
+	mobileNumber:  String!
+	email:         String!
+	houseNumber:   String!
+	area:          String!
+	city:          String!
+	state:         String!
+	country:       String!
+}
+
 extend type Query{
     ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
 	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct!
@@ -172,4 +185,17 @@ input OrderSummary{
 	totalTax:         LargeInt!
 	totalCost:        LargeInt!
 	totalQuantity:    Int!
+}
+
+input ShippingAddress{
+	id:            Int!
+	orderId:       Int!
+	personName:    String!
+	mobileNumber:  String!
+	email:         String!
+	houseNumber:   String!
+	area:          String!
+	city:          String!
+	state:         String!
+	country:       String!
 }
