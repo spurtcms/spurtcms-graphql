@@ -6,8 +6,8 @@ require (
 	github.com/99designs/gqlgen v0.17.45
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
-	github.com/spurtcms/pkgcontent v1.1.9
-	github.com/spurtcms/pkgcore v1.0.72
+	github.com/spurtcms/pkgcontent v1.1.11
+	github.com/spurtcms/pkgcore v1.0.73
 	github.com/vektah/gqlparser/v2 v2.5.11
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
