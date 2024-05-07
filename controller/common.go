@@ -99,7 +99,21 @@ func init(){
 		Instagram:  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons5.png","/"),
 	}
 
-	AdditionalData = map[string]interface{}{"emailImagePath": EmailImagePath}
+	SocialMediaLinks := struct{
+		Linkedin    string
+		Twitter     string
+		Facebook    string
+		Instagram   string
+		Youtube     string
+	}{
+		Linkedin: os.Getenv("LINKEDIN"),
+		Twitter: os.Getenv("TWITTER"),
+		Facebook: os.Getenv("FACEBOOK"),
+		Instagram: os.Getenv("INSTAGRAM"),
+		Youtube: os.Getenv("YOUTUBE"),
+	}
+
+	AdditionalData = map[string]interface{}{"emailImagePath": EmailImagePath,"socialMediaLinks": SocialMediaLinks}
 }
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
