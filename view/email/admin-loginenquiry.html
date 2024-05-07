@@ -21,6 +21,11 @@
 </head>
 
 <body>
+        <div style="text-align: center;padding: 16px 0;">
+            <img src="{{.additionalData.emailImagePath.Owndesk}}" alt="logo" style="width: 106px;
+            height: 66px;">
+        </div>
+
     <h3>
         Dear {{.adminDetails.FirstName}} {{.adminDetails.LastName}},
     </h3>
@@ -37,9 +42,32 @@
     <p>As the individual is a potential lead for us, this could indicate interest in our platform. It might be worth
         reaching out to them to assist with registration or to provide further information about our services.</p>
 
-    <p>Best Regards,</p>
+    <p style="font-size: 14px; line-height: normal; color: #000000;margin:0 0 0  0 ;">
+        <strong>Best Regards,</strong></p>
 
-    <p>OwnDesk Team</p>
+    <p style="font-size: 14px; line-height: 24px; color: #000000;margin:0 0  16px 0 ;">OwnDesk Team</p>
+
+    <div style="margin-bottom: 1rem; border-top: 1px solid #EEEEEE ; padding-top: 16px;text-align: center;">
+        <a href="https://www.facebook.com/owndesk.work"
+            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+            <img src="{{.additionalData.emailImagePath.Facebook}}" alt="" style="width: auto;max-width: 100%;">
+        </a>
+        <a href="https://www.linkedin.com/company/owndesk-in"
+            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+            <img src="{{.additionalData.emailImagePath.LinkedIn}}" alt="" style="width: auto;max-width: 100%;">
+        </a>
+        <a href="https://twitter.com/owndeskwork"
+            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+            <img src="{{.additionalData.emailImagePath.Twitter}}" alt="" style="width: auto;max-width: 100%;">
+        </a>
+        <a href="https://www.youtube.com/@owndeskwork"
+            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+            <img src="{{.additionalData.emailImagePath.Youtube}}" alt="" style="width: auto;max-width: 100%;">
+        </a>
+        <a href="https://www.instagram.com/owndeskwork/"
+            style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
+            <img src="{{.additionalData.emailImagePath.Instagram}}" alt="" style="width: auto;max-width: 100%;">
+        </a>
 
 </body>
 

@@ -47,7 +47,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		var template_buffers bytes.Buffer
 
-		if err := tmpls.Execute(&template_buffers, map[string]interface{}{"adminDetails": adminDetails, "unauthorizedMail": email, "currentTime": time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM")}); err != nil {
+		if err := tmpls.Execute(&template_buffers, map[string]interface{}{"adminDetails": adminDetails, "unauthorizedMail": email,"additionalData": AdditionalData, "currentTime": time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM")}); err != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -102,11 +102,11 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	otp := rand.Intn(900000) + 100000
 
-	current_time := time.Now().UTC()
+	current_time := time.Now()
 
-	otp_expiry_time := current_time.Add(5 * time.Minute).Format("2006-01-02 15:04:05")
+	otp_expiry_time := current_time.UTC().Add(5 * time.Minute).Format("2006-01-02 15:04:05")
 
-	mail_expiry_time := current_time.Add(5 * time.Minute).Format("02 Jan 2006 03:04 PM")
+	mail_expiry_time := current_time.In(TimeZone).Add(5 * time.Minute).Format("02 Jan 2006 03:04 PM")
 
 	err = Mem.StoreGraphqlMemberOtp(otp, conv_member.ID, otp_expiry_time)
 
@@ -383,8 +383,6 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
-
 	var memberProfile member.TblMemberProfile
 
 	query := db.Table("tbl_member_profiles").Where("is_deleted = 0")
@@ -399,8 +397,6 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 	}
 
 	if err := query.First(&memberProfile).Error; err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return &model.MemberProfile{}, err
 	}

@@ -4,17 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"time"
-
-	// "encoding/json"
 	"errors"
 	"html/template"
 	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
 	"strconv"
-
-	// "time"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
@@ -110,16 +106,8 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 	if err != nil {
 
-		if err == errors.New("entries based on category is not found"){
-
-			c.AbortWithError(404,err)
-
-			return &model.ChannelEntriesDetails{}, err
-		}
-
-		c.AbortWithError(http.StatusInternalServerError, err)
-
 		return &model.ChannelEntriesDetails{}, err
+
 	}
 
 	conv_channelEntries := make([]model.ChannelEntries, len(channelEntries))
