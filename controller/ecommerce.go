@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
-	
+
 	"net/http"
 	"spurtcms-graphql/graph/model"
 	"strconv"
@@ -26,69 +26,106 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 
 	listQuery := db.Debug().Table("tbl_ecom_products").Select("tbl_ecom_products.*, rp.price AS discount_price ,rs.price AS special_price").Joins("inner join tbl_categories on tbl_categories.id = ANY(STRING_TO_ARRAY(tbl_ecom_products.categories_id," + "','" + ")::INTEGER[])").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rp on rp.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rs on rs.product_id = tbl_ecom_products.id").Where("tbl_ecom_products.is_deleted = 0 and tbl_ecom_products.is_active = 1")
 
+	var (
+		categoryName, releaseDate, searchKeyword string
+
+		categoryId, startingPrice, endingPrice int
+	)
+
 	if filter != nil {
 
 		if filter.CategoryName.IsSet() {
 
-			listQuery = listQuery.Where("tbl_categories.category_name = ?", filter.CategoryName.Value())
+			categoryName = *filter.CategoryName.Value()
+		}
 
-		} else if filter.CategoryID.IsSet() {
+		if filter.CategoryID.IsSet() {
 
-			listQuery = listQuery.Where("tbl_categories.id = ?", filter.CategoryID.Value())
-
+			categoryId = *filter.CategoryID.Value()
 		}
 
 		if filter.ReleaseDate.IsSet() {
 
-			listQuery = listQuery.Where("tbl_ecom_products.created_on >= ?", filter.ReleaseDate.Value())
-
+			releaseDate = *filter.ReleaseDate.Value()
 		}
 
-		if filter.StartingPrice.IsSet() && !filter.EndingPrice.IsSet() {
+		if filter.StartingPrice.IsSet() {
 
-			listQuery = listQuery.Where("tbl_ecom_products.product_price >= ?", filter.StartingPrice.Value())
+			startingPrice = *filter.StartingPrice.Value()
+		}
 
-		} else if !filter.StartingPrice.IsSet() && filter.EndingPrice.IsSet() {
+		if !filter.EndingPrice.IsSet() {
 
-			listQuery = listQuery.Where("tbl_ecom_products.product_price <= ?", filter.EndingPrice.Value())
-
-		} else if filter.StartingPrice.IsSet() && filter.EndingPrice.IsSet() {
-
-			listQuery = listQuery.Where("tbl_ecom_products.product_price between (?) and (?)", filter.StartingPrice.Value(), filter.EndingPrice.Value())
+			endingPrice = *filter.EndingPrice.Value()
 		}
 
 		if filter.SearchKeyword.IsSet() {
 
-			listQuery = listQuery.Where("LOWER(TRIM(tbl_ecom_products.product_name)) ILIKE LOWER(TRIM(?))", "%"+*filter.SearchKeyword.Value()+"%")
+			searchKeyword = *filter.SearchKeyword.Value()
 		}
+	}
+
+	if categoryName!=""{
+
+		listQuery = listQuery.Where("tbl_categories.category_name = ?", categoryName)
+
+	} else if categoryId !=0 {
+
+		listQuery = listQuery.Where("tbl_categories.id = ?", categoryId)
+	}
+
+	if releaseDate!="" {
+
+		listQuery = listQuery.Where("tbl_ecom_products.created_on >= ?", releaseDate)
+	}
+
+	if startingPrice!=0 && endingPrice!=0 {
+
+		listQuery = listQuery.Where("tbl_ecom_products.product_price between (?) and (?)", startingPrice, endingPrice)
+
+	} else if startingPrice!=0 {
+
+		listQuery = listQuery.Where("tbl_ecom_products.product_price >= ?", startingPrice)
+
+	} else if endingPrice!=0 {
+
+		listQuery = listQuery.Where("tbl_ecom_products.product_price <= ?", endingPrice)
+	}
+
+	if searchKeyword!="" {
+
+		listQuery = listQuery.Where("LOWER(TRIM(tbl_ecom_products.product_name)) ILIKE LOWER(TRIM(?))", "%"+searchKeyword+"%")
 	}
 
 	if sort != nil {
 
-		if sort.Date.IsSet() && !sort.Price.IsSet() {
+		if sort.Date.Value() != nil && *sort.Date.Value() != -1 {
 
 			if *sort.Date.Value() == 1 {
 
 				listQuery = listQuery.Order("tbl_ecom_products.id desc")
 
-			} else {
+			} else if *sort.Date.Value() == 0 {
 
 				listQuery = listQuery.Order("tbl_ecom_products.id ")
 			}
 
-		} else if sort.Price.IsSet() && !sort.Date.IsSet() {
+		}
+
+		if sort.Price.Value() != nil && *sort.Price.Value() != -1 {
 
 			if *sort.Price.Value() == 1 {
 
 				listQuery = listQuery.Order("tbl_ecom_products.product_price desc")
 
-			} else {
+			} else if *sort.Price.Value() == 0 {
 
 				listQuery = listQuery.Order("tbl_ecom_products.product_price")
 
 			}
 
 		}
+
 	} else {
 
 		listQuery = listQuery.Order("tbl_ecom_products.id desc")
@@ -131,14 +168,14 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 
 		}
 
-		if *product.ProductYoutubePath != "" {
+		if product.ProductYoutubePath != nil {
 
 			modified_path := PathUrl + strings.TrimPrefix(*product.ProductYoutubePath, "/")
 
 			product.ProductYoutubePath = &modified_path
 		}
 
-		if *product.ProductVimeoPath != "" {
+		if product.ProductVimeoPath != nil {
 
 			modified_path := PathUrl + strings.TrimPrefix(*product.ProductVimeoPath, "/")
 
@@ -523,44 +560,44 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	}
 
-	if status!="" {
+	if status != "" {
 
 		query = query.Where("s.order_status = ?", filter.Status.Value())
 	}
 
-	if startingPrice!=0 && endingPrice!=0 {
+	if startingPrice != 0 && endingPrice != 0 {
 
 		query = query.Where("d.price between ? and ?", filter.StartingPrice.Value(), filter.EndingPrice.Value())
 
-	} else if startingPrice!=0 {
+	} else if startingPrice != 0 {
 
 		query = query.Where("d.price >= ?", filter.StartingPrice.Value())
 
-	} else if endingPrice!=0 {
+	} else if endingPrice != 0 {
 
 		query = query.Where("d.price <= ?", filter.EndingPrice.Value())
 
 	}
 
-	if searchKeyword!="" {
+	if searchKeyword != "" {
 
 		query = query.Where("LOWER(TRIM(p.product_name)) ILIKE LOWER(TRIM(?))", "%"+*filter.SearchKeyword.Value()+"%")
 	}
 
-	if startingDate!="" && endingDate!="" {
+	if startingDate != "" && endingDate != "" {
 
 		query = query.Where("o.created_on between ? and ?", filter.StartingDate.Value(), filter.EndingDate.Value())
 
-	} else if startingDate!="" {
+	} else if startingDate != "" {
 
 		query = query.Where("o.created_on >= ?", filter.StartingDate.Value())
 
-	} else if endingDate!="" {
+	} else if endingDate != "" {
 
 		query = query.Where("o.created_on <= ?", filter.EndingDate.Value())
 	}
 
-	if orderId!="" {
+	if orderId != "" {
 
 		query = query.Where("o.uuid = ?", filter.OrderID.Value())
 	}
@@ -572,7 +609,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	if sort != nil {
 
-		if sort.Date.Value()!= nil && *sort.Date.Value()!= -1 {
+		if sort.Date.Value() != nil && *sort.Date.Value() != -1 {
 
 			if *sort.Date.Value() == 1 {
 
@@ -586,7 +623,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 		}
 
-		if sort.Price.Value()!=nil && *sort.Price.Value()!=-1 {
+		if sort.Price.Value() != nil && *sort.Price.Value() != -1 {
 
 			if *sort.Price.Value() == 1 {
 
@@ -600,7 +637,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 		}
 
-	}else{
+	} else {
 
 		query = query.Order("o.id desc")
 	}
@@ -616,7 +653,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	var final_OrderedProductList []model.EcommerceProduct
 
-	for _,product :=  range orderedProducts{
+	for _, product := range orderedProducts {
 
 		if product.ProductImagePath != "" {
 
@@ -739,7 +776,7 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	}
 
-	currentTime,_ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
 	var customerId int
 
@@ -837,7 +874,7 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	orderstatus.CreatedBy = customerId
 
-	orderstatus.CreatedOn =  currentTime
+	orderstatus.CreatedOn = currentTime
 
 	if err := db.Table("tbl_ecom_order_statuses").Create(&orderstatus).Error; err != nil {
 
@@ -859,10 +896,10 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 		return false, err
 	}
 
-	if err := db.Table("tbl_ecom_carts").Where("is_deleted = 0 and product_id in (?)",orderedProductIds).UpdateColumns(map[string]interface{}{"is_deleted": 1,"deleted_on": currentTime}).Error;err!=nil{
+	if err := db.Table("tbl_ecom_carts").Where("is_deleted = 0 and product_id in (?) and customer_id = ?",orderedProductIds,customerId).UpdateColumns(map[string]interface{}{"is_deleted": 1, "deleted_on": currentTime}).Error; err != nil {
 
-	    c.AbortWithError(http.StatusInternalServerError, err)
-		
+		c.AbortWithError(http.StatusInternalServerError, err)
+
 		return false, err
 	}
 
