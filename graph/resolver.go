@@ -127,3 +127,7 @@ func EcommerceOrderPlacement(db *gorm.DB,ctx context.Context, paymentMode string
 func GetMemberProfileDetails(db *gorm.DB,ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
 	return controller.GetMemberProfileDetails(db,ctx,id,profileSlug)
 }
+
+func EcommerceCustomerDetails(db *gorm.DB,ctx context.Context) (*model.CustomerDetails, error) {
+	return controller.EcommerceCustomerDetails(db,ctx)
+}

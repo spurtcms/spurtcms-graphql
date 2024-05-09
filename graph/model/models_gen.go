@@ -353,15 +353,16 @@ type ProductFilter struct {
 }
 
 type ProductOrderDetails struct {
-	ID            int       `json:"id"`
-	OrderID       int       `json:"orderId"`
-	ProductID     int       `json:"productId"`
-	Quantity      int       `json:"quantity"`
-	Tax           int       `json:"tax"`
-	Price         int       `json:"price"`
-	Status        string    `json:"status" gorm:"column:status"`
-	PaymentMode   string    `json:"paymentMode" gorm:"column:payment_mode"`
-	OrderUniqueID string    `json:"orderUniqueId" gorm:"column:uuid"`
+	ID              int    `json:"id"`
+	OrderID         int    `json:"orderId"`
+	ProductID       int    `json:"productId"`
+	Quantity        int    `json:"quantity"`
+	Tax             int    `json:"tax"`
+	Price           int    `json:"price"`
+	Status        string   `json:"status" gorm:"column:status"`
+	PaymentMode   string   `json:"paymentMode" gorm:"column:payment_mode"`
+	OrderUniqueID string   `json:"orderUniqueId" gorm:"column:uuid"`
+	ShippingDetails string `json:"shippingDetails" gorm:"column:shipping_address"`
 }
 
 type ProductPricing struct {
@@ -408,32 +409,6 @@ type Section struct {
 	OrderIndex    int        `json:"orderIndex"`
 }
 
-type ShippingAddress struct {
-	ID           int    `json:"id"`
-	OrderID      int    `json:"orderId"`
-	PersonName   string `json:"personName"`
-	MobileNumber string `json:"mobileNumber"`
-	Email        string `json:"email"`
-	HouseNumber  string `json:"houseNumber"`
-	Area         string `json:"area"`
-	City         string `json:"city"`
-	State        string `json:"state"`
-	Country      string `json:"country"`
-}
-
-type ShippingDetails struct {
-	ID           int    `json:"id"`
-	OrderID      int    `json:"orderId"`
-	PersonName   string `json:"personName"`
-	MobileNumber string `json:"mobileNumber"`
-	Email        string `json:"email"`
-	HouseNumber  string `json:"houseNumber"`
-	Area         string `json:"area"`
-	City         string `json:"city"`
-	State        string `json:"state"`
-	Country      string `json:"country"`
-}
-
 type Space struct {
 	ID               int        `json:"id"`
 	SpaceName        string     `json:"spaceName"`
@@ -468,6 +443,29 @@ type SubPage struct {
 	ModifiedBy  *int       `json:"modifiedBy,omitempty"`
 }
 
+type CustomerDetails struct {
+	ID               int        `json:"id"`
+	FirstName        string     `json:"firstName"`
+	LastName         *string    `json:"lastName,omitempty"`
+	MobileNo         string     `json:"mobileNo"`
+	Email            string     `json:"email"`
+	Username         string     `json:"username"`
+	IsActive         int        `json:"isActive"`
+	ProfileImage     *string    `json:"profileImage,omitempty"`
+	ProfileImagePath *string    `json:"profileImagePath,omitempty"`
+	CreatedOn        time.Time  `json:"createdOn"`
+	CreatedBy        int        `json:"createdBy"`
+	ModifiedOn       *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy       *int       `json:"modifiedBy,omitempty"`
+	HouseNo          *string    `json:"houseNo,omitempty" gorm:"-"`
+	Area             *string    `json:"Area,omitempty" gorm:"-"`
+	City             *string    `json:"city,omitempty"`
+	State            *string    `json:"state,omitempty"`
+	Country          *string    `json:"country,omitempty"`
+	ZipCode          *string    `json:"zipCode,omitempty"`
+	StreetAddress    *string    `json:"streetAddrees,omitempty"`
+}
+
 type OrderFilter struct {
 	Status        graphql.Omittable[*string]  `json:"status,omitempty"`
 	StartingPrice graphql.Omittable[*int]     `json:"startingPrice,omitempty"`
@@ -479,6 +477,8 @@ type OrderFilter struct {
 	StarRatings   graphql.Omittable[*float64] `json:"starRatings,omitempty"`
 	SearchKeyword graphql.Omittable[*string]  `json:"searchKeyword,omitempty"`
 	OrderID       graphql.Omittable[*string]  `json:"orderId,omitempty"`
+	UpcomingOrders graphql.Omittable[*int]     `json:"upcomingOrders,omitempty"`
+	OrderHistory   graphql.Omittable[*int]     `json:"orderHistory,omitempty"`
 }
 
 type OrderPayment struct {
