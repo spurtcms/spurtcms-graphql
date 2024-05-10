@@ -182,15 +182,20 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 }
 
-func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails) (bool, error) {
+func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails, ecomModule *int) (bool, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
-	var imageName, imagePath string
+	var (
 
-	var err error
+		imageName, imagePath string
+
+		err error
+
+		ecomMod int = *ecomModule
+	)
 
 	if input.ProfileImage.IsSet() {
 
@@ -235,9 +240,28 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails)
 
 			err = errors.New("member already exists")
 
-			c.AbortWithError(http.StatusBadRequest, err)
+			c.AbortWithError(422, err)
 
 			return isMemberExists, err
+		}
+
+		if ecomMod ==1{
+
+			var count int64
+
+			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and username = ?",*input.Username.Value()).Count(&count).Error;err!=nil{
+
+				return false,err
+			}
+
+			if count > 0{
+
+				err = errors.New("customer already exists")
+
+			    c.AbortWithError(422, err)
+
+			    return false, err
+			}
 		}
 
 	}
@@ -256,6 +280,26 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails)
 
 			return isMemberExists, err
 		}
+
+		if ecomMod ==1{
+
+			var count int64
+
+			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and email = ?",input.Email).Count(&count).Error;err!=nil{
+
+				return false,err
+			}
+
+			if count > 0{
+
+				err = errors.New("customer already exists")
+
+			    c.AbortWithError(422, err)
+
+			    return false, err
+			}
+		}
+
 	}
 
 	memberDetails.FirstName = input.FirstName
@@ -271,7 +315,32 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails)
 		return isRegistered, err
 	}
 
-	return isRegistered, nil
+	if isRegistered && ecomMod == 1{
+
+		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+		var ecomCustomer = model.CustomerDetails{
+			FirstName:        memberDetails.FirstName,
+			LastName:         &memberDetails.LastName,
+			Username:         memberDetails.Email,
+			MobileNo:         memberDetails.MobileNo,
+			Email:            input.Email,
+			IsActive:         memberDetails.IsActive,
+			ProfileImage:     &memberDetails.ProfileImage,
+			ProfileImagePath: &memberDetails.ProfileImagePath,
+			CreatedOn:        createdOn,
+			Password:         HashingPassword(memberDetails.Password),
+		}
+
+		if err := db.Table("tbl_ecom_customers").Create(&ecomCustomer).Error;err!=nil{
+
+			c.AbortWithError(http.StatusInternalServerError, err)
+	
+			return isRegistered, err
+		}
+	}
+
+	return true, nil
 
 }
 

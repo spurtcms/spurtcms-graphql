@@ -119,6 +119,7 @@ type customerDetails{
 	mobileNo:         String!
 	email:            String!
 	username:         String!
+	password:         String!
 	isActive:         Int!
 	profileImage:     String
 	profileImagePath: String
@@ -133,6 +134,7 @@ type customerDetails{
 	country:          String
 	zipCode:          String
 	streetAddress:    String
+	memberId:         Int
 }
 
 extend type Query{
@@ -148,6 +150,7 @@ extend type Mutation{
 	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
 	ecommerceOrderPlacement(paymentMode: String!,shippingAddress: String!,orderProducts: [orderProduct!]!,orderSummary: OrderSummary): Boolean! @auth
 	removeProductFromCartlist(productId: Int!): Boolean! @auth
+	customerProfileUpdate(customerDetails: customerInput!): Boolean! @auth
 }
 
 input ProductFilter{
@@ -199,4 +202,22 @@ input OrderSummary{
 	totalTax:         LargeInt!
 	totalCost:        LargeInt!
 	totalQuantity:    Int!
+}
+
+input customerInput{
+	firstName:        String
+	lastName:         String
+	mobileNo:         String
+	email:            String
+	username:         String
+	password:         String
+	isActive:         Int
+	profileImage:     String
+	houseNo:          String
+	Area:             String
+	city:             String
+	state:            String
+	country:          String
+	zipCode:          String
+	streetAddress:    String
 }

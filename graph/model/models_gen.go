@@ -450,6 +450,7 @@ type CustomerDetails struct {
 	MobileNo         string     `json:"mobileNo"`
 	Email            string     `json:"email"`
 	Username         string     `json:"username"`
+	Password         string     `json:"password"`
 	IsActive         int        `json:"isActive"`
 	ProfileImage     *string    `json:"profileImage,omitempty"`
 	ProfileImagePath *string    `json:"profileImagePath,omitempty"`
@@ -464,6 +465,25 @@ type CustomerDetails struct {
 	Country          *string    `json:"country,omitempty"`
 	ZipCode          *string    `json:"zipCode,omitempty"`
 	StreetAddress    *string    `json:"streetAddrees,omitempty"`
+	MemberID         *int       `json:"memberId,omitempty"`
+}
+
+type CustomerInput struct {
+	FirstName     graphql.Omittable[*string] `json:"firstName,omitempty"`
+	LastName      graphql.Omittable[*string] `json:"lastName,omitempty"`
+	MobileNo      graphql.Omittable[*string] `json:"mobileNo,omitempty"`
+	Email         graphql.Omittable[*string] `json:"email,omitempty"`
+	Username      graphql.Omittable[*string] `json:"username,omitempty"`
+	Password      graphql.Omittable[*string] `json:"password,omitempty"`
+	IsActive      graphql.Omittable[*int]    `json:"isActive,omitempty"`
+	ProfileImage  graphql.Omittable[*string] `json:"profileImage,omitempty"`
+	HouseNo       graphql.Omittable[*string] `json:"houseNo,omitempty"`
+	Area          graphql.Omittable[*string] `json:"Area,omitempty"`
+	City          graphql.Omittable[*string] `json:"city,omitempty"`
+	State         graphql.Omittable[*string] `json:"state,omitempty"`
+	Country       graphql.Omittable[*string] `json:"country,omitempty"`
+	ZipCode       graphql.Omittable[*string] `json:"zipCode,omitempty"`
+	StreetAddress graphql.Omittable[*string] `json:"streetAddress,omitempty"`
 }
 
 type OrderFilter struct {

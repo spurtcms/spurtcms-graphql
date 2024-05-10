@@ -229,12 +229,19 @@ func EcommerceProductDetails(db *gorm.DB, ctx context.Context, productId *int, p
 
 	}
 
-	// if productdtl.ProductVideoPath != "" {
+	if productdtl.ProductYoutubePath != nil {
 
-	// 	modified_path := PathUrl + strings.TrimPrefix(productdtl.ProductVideoPath, "/")
+		modified_path := PathUrl + strings.TrimPrefix(*productdtl.ProductYoutubePath, "/")
 
-	// 	productdtl.ProductVideoPath = modified_path
-	// }
+		productdtl.ProductYoutubePath = &modified_path
+	}
+
+	if productdtl.ProductVimeoPath != nil {
+
+		modified_path := PathUrl + strings.TrimPrefix(*productdtl.ProductVimeoPath, "/")
+
+		productdtl.ProductVimeoPath = &modified_path
+	}
 
 	return &productdtl, nil
 
@@ -939,7 +946,6 @@ func EcommerceCustomerDetails(db *gorm.DB, ctx context.Context) (*model.Customer
 		c.AbortWithError(http.StatusUnauthorized, err)
 
 		return &model.CustomerDetails{}, err
-
 	}
 
 	var customerDetails model.CustomerDetails
@@ -980,4 +986,80 @@ func EcommerceCustomerDetails(db *gorm.DB, ctx context.Context) (*model.Customer
 	}
 
 	return &customerDetails, nil
+}
+
+func CustomerProfileUpdate(db *gorm.DB,ctx context.Context, customerInput model.CustomerInput) (bool, error) {
+
+	c,_ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberid := c.GetInt("memberid")
+
+	if memberid == 0 {
+
+		err := errors.New("unauthorized access")
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return false, err
+
+	}
+
+	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+	var customerDetails model.CustomerDetails
+
+	customerDetails.FirstName = *customerInput.FirstName.Value()
+
+	customerDetails.LastName =  customerInput.LastName.Value()
+
+	customerDetails.MobileNo = *customerInput.MobileNo.Value()
+
+	customerDetails.Email = *customerInput.Email.Value()
+
+	customerDetails.Username = *customerInput.Username.Value()
+
+	customerDetails.IsActive = *customerInput.IsActive.Value()
+
+	customerDetails.StreetAddress = customerInput.StreetAddress.Value()
+
+	customerDetails.City = customerInput.City.Value()
+
+	customerDetails.Country = customerInput.Country.Value()
+
+	customerDetails.State = customerInput.State.Value()
+
+	customerDetails.Password = *customerInput.Password.Value()
+
+	customerDetails.CreatedOn = currentTime
+
+	customerDetails.MemberID = &memberid
+
+	var customerFetchData model.CustomerDetails
+
+	if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and memberid = ?",memberid).First(&customerFetchData).Error;err!=nil{
+
+		if err == gorm.ErrRecordNotFound{
+
+			if err := db.Table("tbl_ecom_cusromers").Create(&customerDetails).Error;err!=nil{
+
+				return false ,err
+			}
+
+		}else{
+
+			return false, err
+		}
+	}
+
+	customerDetails.ID = customerFetchData.ID
+
+	if customerFetchData.StreetAddress!=nil && customerFetchData.City!=nil && customerFetchData.State !=nil && customerFetchData.Country!=nil{
+
+		if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and  member_id = ? and id = ?",memberid,customerDetails.ID).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName,"last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo,"is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username,"street_address": customerDetails.StreetAddress, "city":customerDetails.City, "state": customerDetails.State, "country": customerDetails.Country,"modified_on": currentTime}).Error;err!=nil{
+
+			return false, err
+		}
+	}
+
+	return true,nil
 }

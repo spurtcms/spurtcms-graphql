@@ -60,8 +60,9 @@ type MutationResolver interface {
 	EcommerceAddToCart(ctx context.Context, productID *int, productSlug *string, quantity int) (bool, error)
 	EcommerceOrderPlacement(ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error)
 	RemoveProductFromCartlist(ctx context.Context, productID int) (bool, error)
+	CustomerProfileUpdate(ctx context.Context, customerDetails model.CustomerInput) (bool, error)
 	TemplateMemberLogin(ctx context.Context, username *string, email *string, password string) (string, error)
-	MemberRegister(ctx context.Context, input model.MemberDetails) (bool, error)
+	MemberRegister(ctx context.Context, input model.MemberDetails, ecomModule *int) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
 }
 type QueryResolver interface {
@@ -115,6 +116,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputProductSort,
 		ec.unmarshalInputProfileData,
 		ec.unmarshalInputRequireData,
+		ec.unmarshalInputcustomerInput,
 		ec.unmarshalInputorderFilter,
 		ec.unmarshalInputorderProduct,
 		ec.unmarshalInputorderSort,
@@ -572,6 +574,7 @@ type customerDetails{
 	mobileNo:         String!
 	email:            String!
 	username:         String!
+	password:         String!
 	isActive:         Int!
 	profileImage:     String
 	profileImagePath: String
@@ -586,6 +589,7 @@ type customerDetails{
 	country:          String
 	zipCode:          String
 	streetAddress:    String
+	memberId:         Int
 }
 
 extend type Query{
@@ -601,6 +605,7 @@ extend type Mutation{
 	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
 	ecommerceOrderPlacement(paymentMode: String!,shippingAddress: String!,orderProducts: [orderProduct!]!,orderSummary: OrderSummary): Boolean! @auth
 	removeProductFromCartlist(productId: Int!): Boolean! @auth
+	customerProfileUpdate(customerDetails: customerInput!): Boolean! @auth
 }
 
 input ProductFilter{
@@ -653,6 +658,24 @@ input OrderSummary{
 	totalCost:        LargeInt!
 	totalQuantity:    Int!
 }
+
+input customerInput{
+	firstName:        String
+	lastName:         String
+	mobileNo:         String
+	email:            String
+	username:         String
+	password:         String
+	isActive:         Int
+	profileImage:     String
+	houseNo:          String
+	Area:             String
+	city:             String
+	state:            String
+	country:          String
+	zipCode:          String
+	streetAddress:    String
+}
 `, BuiltIn: false},
 	{Name: "../schema/member.graphqls", Input: `# GraphQL schema example
 #
@@ -693,7 +716,7 @@ extend type Query{
 
 extend type Mutation{
     templateMemberLogin(username: String,email: String,password: String!): String! 
-    memberRegister(input: MemberDetails!): Boolean!
+    memberRegister(input: MemberDetails!,ecomModule: Int): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
 }
 
@@ -788,6 +811,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_customerProfileUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CustomerInput
+	if tmp, ok := rawArgs["customerDetails"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customerDetails"))
+		arg0, err = ec.unmarshalNcustomerInput2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCustomerInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["customerDetails"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_ecommerceAddToCart_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -906,6 +944,15 @@ func (ec *executionContext) field_Mutation_memberRegister_args(ctx context.Conte
 		}
 	}
 	args["input"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["ecomModule"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ecomModule"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ecomModule"] = arg1
 	return args, nil
 }
 
@@ -11462,6 +11509,81 @@ func (ec *executionContext) fieldContext_Mutation_removeProductFromCartlist(ctx 
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_customerProfileUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_customerProfileUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CustomerProfileUpdate(rctx, fc.Args["customerDetails"].(model.CustomerInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_customerProfileUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_customerProfileUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_templateMemberLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_templateMemberLogin(ctx, field)
 	if err != nil {
@@ -11531,7 +11653,7 @@ func (ec *executionContext) _Mutation_memberRegister(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MemberRegister(rctx, fc.Args["input"].(model.MemberDetails))
+		return ec.resolvers.Mutation().MemberRegister(rctx, fc.Args["input"].(model.MemberDetails), fc.Args["ecomModule"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -14767,6 +14889,8 @@ func (ec *executionContext) fieldContext_Query_ecommerceCustomerDetails(ctx cont
 				return ec.fieldContext_customerDetails_email(ctx, field)
 			case "username":
 				return ec.fieldContext_customerDetails_username(ctx, field)
+			case "password":
+				return ec.fieldContext_customerDetails_password(ctx, field)
 			case "isActive":
 				return ec.fieldContext_customerDetails_isActive(ctx, field)
 			case "profileImage":
@@ -14795,6 +14919,8 @@ func (ec *executionContext) fieldContext_Query_ecommerceCustomerDetails(ctx cont
 				return ec.fieldContext_customerDetails_zipCode(ctx, field)
 			case "streetAddress":
 				return ec.fieldContext_customerDetails_streetAddress(ctx, field)
+			case "memberId":
+				return ec.fieldContext_customerDetails_memberId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type customerDetails", field.Name)
 		},
@@ -18813,6 +18939,50 @@ func (ec *executionContext) fieldContext_customerDetails_username(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _customerDetails_password(ctx context.Context, field graphql.CollectedField, obj *model.CustomerDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_customerDetails_password(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Password, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_customerDetails_password(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "customerDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _customerDetails_isActive(ctx context.Context, field graphql.CollectedField, obj *model.CustomerDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_customerDetails_isActive(ctx, field)
 	if err != nil {
@@ -19396,6 +19566,47 @@ func (ec *executionContext) fieldContext_customerDetails_streetAddress(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _customerDetails_memberId(ctx context.Context, field graphql.CollectedField, obj *model.CustomerDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_customerDetails_memberId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MemberID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_customerDetails_memberId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "customerDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _orderPayment_id(ctx context.Context, field graphql.CollectedField, obj *model.OrderPayment) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_orderPayment_id(ctx, field)
 	if err != nil {
@@ -19918,6 +20129,131 @@ func (ec *executionContext) unmarshalInputRequireData(ctx context.Context, obj i
 				return &it, err
 			}
 			it.AdditionalFields = graphql.OmittableOf(data)
+		}
+	}
+
+	return &it, nil
+}
+
+func (ec *executionContext) unmarshalInputcustomerInput(ctx context.Context, obj interface{}) (*model.CustomerInput, error) {
+	var it model.CustomerInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"firstName", "lastName", "mobileNo", "email", "username", "password", "isActive", "profileImage", "houseNo", "Area", "city", "state", "country", "zipCode", "streetAddress"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "firstName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.FirstName = graphql.OmittableOf(data)
+		case "lastName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.LastName = graphql.OmittableOf(data)
+		case "mobileNo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mobileNo"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.MobileNo = graphql.OmittableOf(data)
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Email = graphql.OmittableOf(data)
+		case "username":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Username = graphql.OmittableOf(data)
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Password = graphql.OmittableOf(data)
+		case "isActive":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.IsActive = graphql.OmittableOf(data)
+		case "profileImage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileImage"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.ProfileImage = graphql.OmittableOf(data)
+		case "houseNo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("houseNo"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.HouseNo = graphql.OmittableOf(data)
+		case "Area":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Area"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Area = graphql.OmittableOf(data)
+		case "city":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("city"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.City = graphql.OmittableOf(data)
+		case "state":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.State = graphql.OmittableOf(data)
+		case "country":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Country = graphql.OmittableOf(data)
+		case "zipCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("zipCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.ZipCode = graphql.OmittableOf(data)
+		case "streetAddress":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("streetAddress"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.StreetAddress = graphql.OmittableOf(data)
 		}
 	}
 
@@ -21715,6 +22051,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "customerProfileUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_customerProfileUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "templateMemberLogin":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_templateMemberLogin(ctx, field)
@@ -23213,6 +23556,11 @@ func (ec *executionContext) _customerDetails(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "password":
+			out.Values[i] = ec._customerDetails_password(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "isActive":
 			out.Values[i] = ec._customerDetails_isActive(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -23250,6 +23598,8 @@ func (ec *executionContext) _customerDetails(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._customerDetails_zipCode(ctx, field, obj)
 		case "streetAddress":
 			out.Values[i] = ec._customerDetails_streetAddress(ctx, field, obj)
+		case "memberId":
+			out.Values[i] = ec._customerDetails_memberId(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -24314,6 +24664,11 @@ func (ec *executionContext) marshalNcustomerDetails2ᚖspurtcmsᚑgraphqlᚋgrap
 		return graphql.Null
 	}
 	return ec._customerDetails(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNcustomerInput2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCustomerInput(ctx context.Context, v interface{}) (model.CustomerInput, error) {
+	res, err := ec.unmarshalInputcustomerInput(ctx, v)
+	return *res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNorderProduct2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐOrderProduct(ctx context.Context, v interface{}) (model.OrderProduct, error) {

@@ -24,8 +24,8 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 	return controller.MemberLogin(db, ctx, email)
 }
 
-func MemberRegister(db *gorm.DB,ctx context.Context,input model.MemberDetails) (bool, error) {
-	return controller.MemberRegister(db,ctx,input)
+func MemberRegister(db *gorm.DB,ctx context.Context,input model.MemberDetails, ecomModule *int) (bool, error) {
+	return controller.MemberRegister(db,ctx,input, ecomModule)
 }
 
 func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.ChannelDetails, error) {
@@ -130,4 +130,8 @@ func GetMemberProfileDetails(db *gorm.DB,ctx context.Context, id *int, profileSl
 
 func EcommerceCustomerDetails(db *gorm.DB,ctx context.Context) (*model.CustomerDetails, error) {
 	return controller.EcommerceCustomerDetails(db,ctx)
+}
+
+func CustomerProfileUpdate(db *gorm.DB,ctx context.Context, customerDetails model.CustomerInput) (bool, error) {
+	return controller.CustomerProfileUpdate(db,ctx,customerDetails)
 }

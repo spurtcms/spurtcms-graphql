@@ -24,6 +24,11 @@ func (r *mutationResolver) RemoveProductFromCartlist(ctx context.Context, produc
 	return RemoveProductFromCartlist(r.DB, ctx, productID)
 }
 
+// CustomerProfileUpdate is the resolver for the customerProfileUpdate field.
+func (r *mutationResolver) CustomerProfileUpdate(ctx context.Context, customerDetails model.CustomerInput) (bool, error) {
+	return CustomerProfileUpdate(r.DB, ctx, customerDetails)
+}
+
 // EcommerceProductList is the resolver for the ecommerceProductList field.
 func (r *queryResolver) EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {
 	return EcommerceProductList(r.DB, ctx, limit, offset, filter, sort)
