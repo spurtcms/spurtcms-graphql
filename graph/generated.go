@@ -487,7 +487,7 @@ type EcommerceProduct{
 	specialPrice:              Int
 	productImageArray:         [String!]
 	ecommerceCart:             EcommerceCart
-	orderDetails:              ProductOrderDetails
+	orderDetails:              [ProductOrderDetails]
 } 
 
 type ProductPricing{
@@ -581,6 +581,8 @@ type customerDetails{
 	createdOn:        Time!
 	createdBy:        Int!
 	modifiedOn:       Time
+	IsDeleted:        Int
+	DeletedOn:        Time
 	modifiedBy:       Int
 	houseNo:          String
 	Area:             String
@@ -668,8 +670,6 @@ input customerInput{
 	password:         String
 	isActive:         Int
 	profileImage:     String
-	houseNo:          String
-	Area:             String
 	city:             String
 	state:            String
 	country:          String
@@ -7276,9 +7276,9 @@ func (ec *executionContext) _EcommerceProduct_orderDetails(ctx context.Context, 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.ProductOrderDetails)
+	res := resTmp.([]*model.ProductOrderDetails)
 	fc.Result = res
-	return ec.marshalOProductOrderDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductOrderDetails(ctx, field.Selections, res)
+	return ec.marshalOProductOrderDetails2ᚕᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductOrderDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EcommerceProduct_orderDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -14903,6 +14903,10 @@ func (ec *executionContext) fieldContext_Query_ecommerceCustomerDetails(ctx cont
 				return ec.fieldContext_customerDetails_createdBy(ctx, field)
 			case "modifiedOn":
 				return ec.fieldContext_customerDetails_modifiedOn(ctx, field)
+			case "IsDeleted":
+				return ec.fieldContext_customerDetails_IsDeleted(ctx, field)
+			case "DeletedOn":
+				return ec.fieldContext_customerDetails_DeletedOn(ctx, field)
 			case "modifiedBy":
 				return ec.fieldContext_customerDetails_modifiedBy(ctx, field)
 			case "houseNo":
@@ -19238,6 +19242,88 @@ func (ec *executionContext) fieldContext_customerDetails_modifiedOn(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _customerDetails_IsDeleted(ctx context.Context, field graphql.CollectedField, obj *model.CustomerDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_customerDetails_IsDeleted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDeleted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_customerDetails_IsDeleted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "customerDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _customerDetails_DeletedOn(ctx context.Context, field graphql.CollectedField, obj *model.CustomerDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_customerDetails_DeletedOn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedOn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_customerDetails_DeletedOn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "customerDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _customerDetails_modifiedBy(ctx context.Context, field graphql.CollectedField, obj *model.CustomerDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_customerDetails_modifiedBy(ctx, field)
 	if err != nil {
@@ -20142,7 +20228,7 @@ func (ec *executionContext) unmarshalInputcustomerInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"firstName", "lastName", "mobileNo", "email", "username", "password", "isActive", "profileImage", "houseNo", "Area", "city", "state", "country", "zipCode", "streetAddress"}
+	fieldsInOrder := [...]string{"firstName", "lastName", "mobileNo", "email", "username", "password", "isActive", "profileImage", "city", "state", "country", "zipCode", "streetAddress"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20205,20 +20291,6 @@ func (ec *executionContext) unmarshalInputcustomerInput(ctx context.Context, obj
 				return &it, err
 			}
 			it.ProfileImage = graphql.OmittableOf(data)
-		case "houseNo":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("houseNo"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return &it, err
-			}
-			it.HouseNo = graphql.OmittableOf(data)
-		case "Area":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Area"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return &it, err
-			}
-			it.Area = graphql.OmittableOf(data)
 		case "city":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("city"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -23582,6 +23654,10 @@ func (ec *executionContext) _customerDetails(ctx context.Context, sel ast.Select
 			}
 		case "modifiedOn":
 			out.Values[i] = ec._customerDetails_modifiedOn(ctx, field, obj)
+		case "IsDeleted":
+			out.Values[i] = ec._customerDetails_IsDeleted(ctx, field, obj)
+		case "DeletedOn":
+			out.Values[i] = ec._customerDetails_DeletedOn(ctx, field, obj)
 		case "modifiedBy":
 			out.Values[i] = ec._customerDetails_modifiedBy(ctx, field, obj)
 		case "houseNo":
@@ -24943,6 +25019,47 @@ func (ec *executionContext) unmarshalOProductFilter2ᚖspurtcmsᚑgraphqlᚋgrap
 	}
 	res, err := ec.unmarshalInputProductFilter(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOProductOrderDetails2ᚕᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductOrderDetails(ctx context.Context, sel ast.SelectionSet, v []*model.ProductOrderDetails) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOProductOrderDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductOrderDetails(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) marshalOProductOrderDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐProductOrderDetails(ctx context.Context, sel ast.SelectionSet, v *model.ProductOrderDetails) graphql.Marshaler {

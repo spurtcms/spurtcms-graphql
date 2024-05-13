@@ -126,6 +126,8 @@ type customerDetails{
 	createdOn:        Time!
 	createdBy:        Int!
 	modifiedOn:       Time
+	IsDeleted:        Int
+	DeletedOn:        Time
 	modifiedBy:       Int
 	houseNo:          String
 	Area:             String
@@ -213,8 +215,6 @@ input customerInput{
 	password:         String
 	isActive:         Int
 	profileImage:     String
-	houseNo:          String
-	Area:             String
 	city:             String
 	state:            String
 	country:          String

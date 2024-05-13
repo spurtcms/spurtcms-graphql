@@ -168,20 +168,6 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 
 		}
 
-		if product.ProductYoutubePath != nil {
-
-			modified_path := PathUrl + strings.TrimPrefix(*product.ProductYoutubePath, "/")
-
-			product.ProductYoutubePath = &modified_path
-		}
-
-		if product.ProductVimeoPath != nil {
-
-			modified_path := PathUrl + strings.TrimPrefix(*product.ProductVimeoPath, "/")
-
-			product.ProductVimeoPath = &modified_path
-		}
-
 		final_ecomProducts = append(final_ecomProducts, product)
 	}
 
@@ -227,20 +213,6 @@ func EcommerceProductDetails(db *gorm.DB, ctx context.Context, productId *int, p
 
 		productdtl.ProductImageArray = imagePaths
 
-	}
-
-	if productdtl.ProductYoutubePath != nil {
-
-		modified_path := PathUrl + strings.TrimPrefix(*productdtl.ProductYoutubePath, "/")
-
-		productdtl.ProductYoutubePath = &modified_path
-	}
-
-	if productdtl.ProductVimeoPath != nil {
-
-		modified_path := PathUrl + strings.TrimPrefix(*productdtl.ProductVimeoPath, "/")
-
-		productdtl.ProductVimeoPath = &modified_path
 	}
 
 	return &productdtl, nil
@@ -522,7 +494,14 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	var count int64
 
-	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_customers c on c.id = o.customer_id").Where("p.is_deleted = 0 and o.is_deleted = 0 and c.member_id=?", memberid)
+	var customerId int
+
+	if err := db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?", memberid).Scan(&customerId).Error; err != nil {
+
+		return &model.EcommerceProducts{}, err
+	}
+
+	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Where("p.is_deleted = 0 and o.is_deleted = 0 and o.customer_id = ?", customerId)
 
 	var (
 		status, searchKeyword, orderId, startingDate, endingDate string
@@ -567,27 +546,27 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 			orderId = *filter.OrderID.Value()
 		}
 
-		if filter.OrderHistory.IsSet(){
+		if filter.OrderHistory.IsSet() {
 
 			orderHistory = *filter.OrderHistory.Value()
 		}
 
-		if filter.UpcomingOrders.IsSet(){
+		if filter.UpcomingOrders.IsSet() {
 
-            upcomingOrders = *filter.UpcomingOrders.Value()
+			upcomingOrders = *filter.UpcomingOrders.Value()
 		}
 
 	}
 
-	if upcomingOrders == 1{
+	if upcomingOrders == 1 {
 
 		query = query.Where("o.status in (?)", []string{"placed", "outofdelivery", "shipped"})
 
-	}else if orderHistory==1{
+	} else if orderHistory == 1 {
 
 		query = query.Where("o.status in (?)", []string{"delivered", "cancelled"})
 
-	}else if status != "" {
+	} else if status != "" {
 
 		query = query.Where("o.status = ?", status)
 	}
@@ -671,7 +650,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	if err := query.Select("p.*").Preload("OrderDetails", func(db *gorm.DB) *gorm.DB {
 
-		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode,o.uuid,o.shipping_address").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id")
+		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode,o.uuid,o.shipping_address").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id").Where("o.customer_id = ?", customerId)
 
 	}).Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
 
@@ -695,20 +674,6 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 			product.ProductImageArray = imagePaths
 
-		}
-
-		if product.ProductYoutubePath != nil {
-
-			modified_path := PathUrl + strings.TrimPrefix(*product.ProductYoutubePath, "/")
-
-			product.ProductYoutubePath = &modified_path
-		}
-
-		if product.ProductVimeoPath != nil {
-
-			modified_path := PathUrl + strings.TrimPrefix(*product.ProductVimeoPath, "/")
-
-			product.ProductVimeoPath = &modified_path
 		}
 
 		final_OrderedProductList = append(final_OrderedProductList, product)
@@ -768,20 +733,6 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 
 		orderedProduct.ProductImageArray = imagePaths
 
-	}
-
-	if orderedProduct.ProductYoutubePath != nil {
-
-		modified_path := PathUrl + strings.TrimPrefix(*orderedProduct.ProductYoutubePath, "/")
-
-		orderedProduct.ProductYoutubePath = &modified_path
-	}
-
-	if orderedProduct.ProductVimeoPath != nil {
-
-		modified_path := PathUrl + strings.TrimPrefix(*orderedProduct.ProductVimeoPath, "/")
-
-		orderedProduct.ProductVimeoPath = &modified_path
 	}
 
 	return &orderedProduct, nil
@@ -970,27 +921,27 @@ func EcommerceCustomerDetails(db *gorm.DB, ctx context.Context) (*model.Customer
 
 		var area string
 
-		for index,cut := range houseDetails{
+		for index, cut := range houseDetails {
 
-			if index == 1{
+			if index == 1 {
 
 				area = area + cut
 
-			}else if index >1{
+			} else if index > 1 {
 
 				area = area + "," + cut
 			}
 		}
-		
+
 		customerDetails.Area = &area
 	}
 
 	return &customerDetails, nil
 }
 
-func CustomerProfileUpdate(db *gorm.DB,ctx context.Context, customerInput model.CustomerInput) (bool, error) {
+func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model.CustomerInput) (bool, error) {
 
-	c,_ := ctx.Value(ContextKey).(*gin.Context)
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	memberid := c.GetInt("memberid")
 
@@ -1001,16 +952,18 @@ func CustomerProfileUpdate(db *gorm.DB,ctx context.Context, customerInput model.
 		c.AbortWithError(http.StatusUnauthorized, err)
 
 		return false, err
-
 	}
 
-	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+	if customerInput.FirstName.Value()==nil || customerInput.MobileNo.Value()==nil ||  customerInput.Email.Value()==nil || customerInput.Username.Value()==nil || customerInput.IsActive.Value()==nil{
+
+		return false,ErrMandatory
+	}
 
 	var customerDetails model.CustomerDetails
 
 	customerDetails.FirstName = *customerInput.FirstName.Value()
 
-	customerDetails.LastName =  customerInput.LastName.Value()
+	customerDetails.LastName = customerInput.LastName.Value()
 
 	customerDetails.MobileNo = *customerInput.MobileNo.Value()
 
@@ -1028,38 +981,36 @@ func CustomerProfileUpdate(db *gorm.DB,ctx context.Context, customerInput model.
 
 	customerDetails.State = customerInput.State.Value()
 
-	customerDetails.Password = *customerInput.Password.Value()
+	customerDetails.ZipCode = customerInput.ZipCode.Value()
 
-	customerDetails.CreatedOn = currentTime
+	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
-	customerDetails.MemberID = &memberid
+	customerDetails.ModifiedOn = &currentTime
 
-	var customerFetchData model.CustomerDetails
+	if customerInput.Password.Value() == nil || *customerInput.Password.Value() == "" {
 
-	if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and memberid = ?",memberid).First(&customerFetchData).Error;err!=nil{
+		if err := db.Debug().Table("tbl_ecom_customers").Omit("password").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName, "last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo, "is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username, "street_address": customerDetails.StreetAddress, "city": customerDetails.City, "state": customerDetails.State, "country": customerDetails.Country, "modified_on": customerDetails.ModifiedOn, "zip_code": customerDetails.ZipCode}).Error; err != nil {
 
-		if err == gorm.ErrRecordNotFound{
+			return false, err
+		}
 
-			if err := db.Table("tbl_ecom_cusromers").Create(&customerDetails).Error;err!=nil{
+		if err := db.Debug().Table("tbl_members").Omit("password").Where("is_deleted = 0 and id = ?", memberid).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName, "last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo, "is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username, "modified_on": customerDetails.ModifiedOn}).Error; err != nil {
 
-				return false ,err
-			}
+			return false, err
+		}
 
-		}else{
+	} else {
+
+		if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName, "last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo, "is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username, "street_address": customerDetails.StreetAddress, "city": customerDetails.City, "state": customerDetails.State, "country": customerDetails.Country, "modified_on": customerDetails.ModifiedOn, "password": customerDetails.Password, "zip_code": customerDetails.ZipCode}).Error; err != nil {
+
+			return false, err
+		}
+
+		if err := db.Table("tbl_members").Where("is_deleted = 0 and id = ?", memberid).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName, "last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo, "is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username, "modified_on": customerDetails.ModifiedOn, "password": customerDetails.Password}).Error; err != nil {
 
 			return false, err
 		}
 	}
 
-	customerDetails.ID = customerFetchData.ID
-
-	if customerFetchData.StreetAddress!=nil && customerFetchData.City!=nil && customerFetchData.State !=nil && customerFetchData.Country!=nil{
-
-		if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and  member_id = ? and id = ?",memberid,customerDetails.ID).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName,"last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo,"is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username,"street_address": customerDetails.StreetAddress, "city":customerDetails.City, "state": customerDetails.State, "country": customerDetails.Country,"modified_on": currentTime}).Error;err!=nil{
-
-			return false, err
-		}
-	}
-
-	return true,nil
+	return true, nil
 }

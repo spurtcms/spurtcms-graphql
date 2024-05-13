@@ -52,6 +52,7 @@ var(
 	ErrclaimAlready = errors.New("member profile is already claimed")
 	ErrEmptyProfileName = errors.New("profile name should not be empty")
 	ErrEmptyProfileSlug = errors.New("profile slug should not be empty")
+	ErrMandatory = errors.New("missing mandatory fields")
 )
 
 func init(){

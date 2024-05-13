@@ -458,6 +458,8 @@ type CustomerDetails struct {
 	CreatedBy        int        `json:"createdBy"`
 	ModifiedOn       *time.Time `json:"modifiedOn,omitempty"`
 	ModifiedBy       *int       `json:"modifiedBy,omitempty"`
+	IsDeleted        *int       `json:"IsDeleted,omitempty"`
+	DeletedOn        *time.Time `json:"DeletedOn,omitempty"`
 	HouseNo          *string    `json:"houseNo,omitempty" gorm:"-"`
 	Area             *string    `json:"Area,omitempty" gorm:"-"`
 	City             *string    `json:"city,omitempty"`
@@ -477,8 +479,6 @@ type CustomerInput struct {
 	Password      graphql.Omittable[*string] `json:"password,omitempty"`
 	IsActive      graphql.Omittable[*int]    `json:"isActive,omitempty"`
 	ProfileImage  graphql.Omittable[*string] `json:"profileImage,omitempty"`
-	HouseNo       graphql.Omittable[*string] `json:"houseNo,omitempty"`
-	Area          graphql.Omittable[*string] `json:"Area,omitempty"`
 	City          graphql.Omittable[*string] `json:"city,omitempty"`
 	State         graphql.Omittable[*string] `json:"state,omitempty"`
 	Country       graphql.Omittable[*string] `json:"country,omitempty"`
