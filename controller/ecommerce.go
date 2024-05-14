@@ -390,20 +390,6 @@ func EcommerceCartList(db *gorm.DB, ctx context.Context, limit, offset int) (*mo
 
 		}
 
-		if cartProduct.ProductYoutubePath != nil {
-
-			modified_path := PathUrl + strings.TrimPrefix(*cartProduct.ProductYoutubePath, "/")
-
-			cartProduct.ProductYoutubePath = &modified_path
-		}
-
-		if cartProduct.ProductVimeoPath != nil {
-
-			modified_path := PathUrl + strings.TrimPrefix(*cartProduct.ProductVimeoPath, "/")
-
-			cartProduct.ProductVimeoPath = &modified_path
-		}
-
 		var priceByQuantity int64
 
 		if cartProduct.SpecialPrice != nil {
@@ -501,7 +487,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 		return &model.EcommerceProducts{}, err
 	}
 
-	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Where("p.is_deleted = 0 and o.is_deleted = 0 and o.customer_id = ?", customerId)
+	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_order_payments op on op.order_id = o.id").Where("p.is_deleted = 0 and o.is_deleted = 0 and o.customer_id = ?", customerId)
 
 	var (
 		status, searchKeyword, orderId, startingDate, endingDate string
@@ -648,11 +634,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 		query = query.Order("o.id desc")
 	}
 
-	if err := query.Select("p.*").Preload("OrderDetails", func(db *gorm.DB) *gorm.DB {
-
-		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode,o.uuid,o.shipping_address").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id").Where("o.customer_id = ?", customerId)
-
-	}).Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
+	if err := query.Select("p.*,o.*,d.*,op.*").Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
 
 		return &model.EcommerceProducts{}, err
 	}
@@ -697,10 +679,17 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 		return &model.EcommerceProduct{}, err
 
 	}
+	
+	var customerId int
+
+	if err := db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?", memberid).Scan(&customerId).Error; err != nil {
+
+		return &model.EcommerceProduct{}, err
+	}
 
 	var orderedProduct model.EcommerceProduct
 
-	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_customers c on c.id = o.customer_id").Where("p.is_deleted = 0 and o.is_deleted = 0 and c.member_id=?", memberid)
+	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_order_payments op on op.order_id = o.id").Where("p.is_deleted = 0 and o.is_deleted = 0 and o.customer_id = ?", customerId)
 
 	if productID != nil {
 
@@ -711,11 +700,7 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 		query = query.Where("p.product_slug = ?", *productSlug)
 	}
 
-	if err := query.Select("p.*").Preload("OrderDetails", func(db *gorm.DB) *gorm.DB {
-
-		return db.Debug().Select("tbl_ecom_product_order_details.*,o.status,pm.payment_mode,o.uuid,o.shipping_address").Joins("inner join tbl_ecom_product_orders o on o.id = tbl_ecom_product_order_details.order_id").Joins("inner join tbl_ecom_order_payments pm on pm.order_id = o.id")
-
-	}).First(&orderedProduct).Error; err != nil {
+	if err := query.Select("p.*,o.*,d.*,op.*").First(&orderedProduct).Error; err != nil {
 
 		return &model.EcommerceProduct{}, err
 	}

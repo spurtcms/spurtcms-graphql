@@ -30,8 +30,8 @@ func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.Claim
 }
 
 // ProfileNameVerification is the resolver for the profileNameVerification field.
-func (r *mutationResolver) ProfileNameVerification(ctx context.Context, profileName string, profileSlug string) (bool, error) {
-	return VerifyProfileName(r.DB, ctx, profileName, profileSlug)
+func (r *mutationResolver) ProfileNameVerification(ctx context.Context, profileSlug string) (bool, error) {
+	return VerifyProfileName(r.DB, ctx, profileSlug)
 }
 
 // UpdateChannelEntryViewCount is the resolver for the updateChannelEntryViewCount field.

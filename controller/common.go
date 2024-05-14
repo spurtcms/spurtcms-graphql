@@ -50,8 +50,8 @@ var(
 	ErrInvalidMail = errors.New("your email is not yet registered in our owndesk platform")
 	ErrSendMail = errors.New("failed to send unauthorized login attempt mail to admin")
 	ErrclaimAlready = errors.New("member profile is already claimed")
-	ErrEmptyProfileName = errors.New("profile name should not be empty")
 	ErrEmptyProfileSlug = errors.New("profile slug should not be empty")
+	ErrProfileSlugExist = errors.New("profile slug already exists")
 	ErrMandatory = errors.New("missing mandatory fields")
 )
 

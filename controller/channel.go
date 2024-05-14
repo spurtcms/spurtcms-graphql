@@ -834,16 +834,9 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 	return true, nil
 }
 
-func VerifyProfileName(db *gorm.DB, ctx context.Context, profileName, profileSlug string) (bool, error) {
+func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string) (bool, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
-
-	if profileName == "" {
-
-		c.AbortWithError(422, ErrEmptyProfileName)
-
-		return false, ErrEmptyProfileName
-	}
 
 	if profileSlug == "" {
 
@@ -854,14 +847,14 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileName, profileSlu
 
 	var count int64
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and claim_status = 1 and profile_name = ? and profile_slug = ?", profileName, profileSlug).Count(&count).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and profile_slug = ?", profileSlug).Count(&count).Error; err != nil {
 
 		return false, err
 	}
 
 	if count > 0 {
 
-		return false, errors.New("profile name already exists")
+		return false, ErrProfileSlugExist
 	}
 
 	return true, nil

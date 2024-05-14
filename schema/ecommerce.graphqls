@@ -32,7 +32,16 @@ type EcommerceProduct{
 	specialPrice:              Int
 	productImageArray:         [String!]
 	ecommerceCart:             EcommerceCart
-	orderDetails:              ProductOrderDetails
+	orderId:                   Int
+	orderUniqueId:             String
+	orderQuantity:             Int
+	orderPrice:                Int
+	orderTax:                  Int
+	orderStatus:               String
+	orderCustomer:             Int
+	orderTime:                 Time
+	paymentMode:               String
+	shippingDetails:           String
 } 
 
 type ProductPricing{
@@ -83,19 +92,6 @@ type EcommerceOrder{
 	price:             Int!
 	tax:               Int!
 	totalCost:         Int!
-}
-
-type ProductOrderDetails{
-	id:              Int!
-	orderId:         Int!
-	productId:       Int!
-	quantity:        Int!
-	tax:             Int!
-	price:           Int!
-	status:          String!
-	paymentMode:     String!
-	orderUniqueId:   String!
-	shippingDetails: String!
 }
 
 type OrderStatus{

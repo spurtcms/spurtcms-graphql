@@ -173,7 +173,16 @@ type EcommerceProduct struct {
 	SpecialPrice       *int           `json:"specialPrice,omitempty" gorm:"column:special_price"`
 	ProductImageArray  []string       `json:"productImageArray,omitempty" gorm:"-"`
 	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ProductID"`
-	OrderDetails       *ProductOrderDetails `json:"orderDetails,omitempty" gorm:"foreignKey:ProductID"`
+	OrderID            *int           `json:"orderId,omitempty" gorm:"column:id;table:tbl_ecom_product_orders"`
+	OrderUniqueID      *string        `json:"orderUniqueId,omitempty" gorm:"column:uuid;table:tbl_ecom_product_orders"`
+	OrderStatus        *string        `json:"orderStatus,omitempty" gorm:"column:status;table:tbl_ecom_product_orders"`
+	OrderCustomer      *int           `json:"orderCustomer,omitempty" gorm:"column:customer_id;table:tbl_ecom_product_orders"`
+	OrderTime          *time.Time     `json:"orderTime,omitempty" gorm:"column:created_on;table:tbl_ecom_product_orders"`
+	ShippingDetails    *string        `json:"shippingDetails,omitempty" gorm:"column:shipping_address;table:tbl_ecom_product_orders"`
+	OrderQuantity      *int           `json:"orderQuantity,omitempty" gorm:"column:quantity;table:tbl_ecom_product_order_details"`
+	OrderPrice         *int           `json:"orderPrice,omitempty" gorm:"column:price;table:tbl_ecom_product_order_details"`
+	OrderTax           *int           `json:"orderTax,omitempty" gorm:"column:tax;table:tbl_ecom_product_order_details"`
+	PaymentMode        *string        `json:"paymentMode,omitempty" gorm:"column:payment_mode;table:tbl_ecom_order_payments"`
 }
 
 type EcommerceProducts struct {
@@ -352,19 +361,6 @@ type ProductFilter struct {
 	SearchKeyword graphql.Omittable[*string]  `json:"searchKeyword,omitempty"`
 }
 
-type ProductOrderDetails struct {
-	ID              int    `json:"id"`
-	OrderID         int    `json:"orderId"`
-	ProductID       int    `json:"productId"`
-	Quantity        int    `json:"quantity"`
-	Tax             int    `json:"tax"`
-	Price           int    `json:"price"`
-	Status        string   `json:"status" gorm:"column:status"`
-	PaymentMode   string   `json:"paymentMode" gorm:"column:payment_mode"`
-	OrderUniqueID string   `json:"orderUniqueId" gorm:"column:uuid"`
-	ShippingDetails string `json:"shippingDetails" gorm:"column:shipping_address"`
-}
-
 type ProductPricing struct {
 	ID        int       `json:"id"`
 	PriceID   int       `json:"priceId"`
@@ -525,7 +521,3 @@ func (EcommerceCart) TableName() string {
     return "tbl_ecom_carts" // Specify the actual table name in your database
 }
 
-func (ProductOrderDetails) TableName() string {
-
-    return "tbl_ecom_product_order_details" // Specify the actual table name in your database
-}
