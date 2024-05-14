@@ -84,7 +84,8 @@
             <tr>
                 <td style="padding:1.6875rem 0rem 1.1875rem;text-align: center;">
                     <a href="javascript:void(0)">
-                        <img src="{{.additionalData.EmailImagePath.Owndesk}}" alt="" style="width: 6.5625rem;height: 4.125rem;">
+                        <img src="{{.additionalData.emailImagePath.Owndesk}}" alt=""
+                            style="width: 6.5625rem;height: 4.125rem;">
                     </a>
                 </td>
             </tr>
@@ -93,11 +94,12 @@
                     <div style="margin-bottom: 1.25rem;">
                         <h3
                             style="margin-bottom: 1rem;color: #000000;font-size: 1.25rem;line-height: 1.6875rem;font-weight: bold;">
-                            Hi {{.member.FirstName}} {{.member.LastName}} !
+                            Dear {{.member.FirstName}} {{.member.LastName}} !
                         </h3>
                         <p style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;">
-                            Use the following one-time password (OTP) to sign in to your OwnDesk account. This OTP will
-                            be valid for 5 minutes till<span style="font-weight: bold;"> {{.expiryTime}}.</span>
+                            As requested, here is your One-Time Password (OTP) for logging into your OwnDesk account to
+                            manage the listing for <span style="font-weight: bold;"> {{.memberProfile.CompanyName}}
+                                :</span>
                         </p>
                     </div>
                 </td>
@@ -106,18 +108,35 @@
                 <td>
                     <div style="margin-bottom: 1.25rem;">
                         <h4 style="color: #000000;font-size: 1.25rem;font-weight: bold;line-height: 1.6875rem;">
-                            {{.otp}}
+                            OTP: {{.otp}}
                         </h4>
                     </div>
                 </td>
             </tr>
             <tr>
                 <td>
+
+                    <div style="margin-bottom: 1.25rem;">
+                        <p style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;">
+                            Please use this OTP within <strong>{{.expiryTime}}</strong> to complete the login process.
+                            If you do not log
+                            in within this time frame, you may request a new OTP.</p>
+                    </div>
+                    <div style="margin-bottom: 1.25rem;">
+                        <p style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;">
+                            If you encounter any issues or need assistance, feel free to reach out to our support team.
+                        </p>
+                    </div>
                     <div style="margin-bottom: 1.25rem;">
                         <p style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;">
                             If you didn’t initiate this action or if you think you received this email by mistake,
                             please contact <a href="javascript:void(0)"
-                                style="color: #3880FF;text-decoration: none;">support@owndeskaccounts.com</a>
+                                style="color: #3880FF;text-decoration: none;">hello@owndesk.in</a>
+                        </p>
+                    </div>
+                    <div style="margin-bottom: 1.25rem;">
+                        <p style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;">
+                            Thank you for using OwnDesk.
                         </p>
                     </div>
                 </td>
@@ -127,11 +146,11 @@
                     <div class="mb-5">
                         <h6
                             style="color: #000000;font-size: .875rem;line-height: 1.5rem;font-weight: normal;margin-bottom: .3125rem;">
-                            Regards,
+                            Best regards,
                         </h6>
                         <p style="margin-bottom: .3125rem;color: #000000;font-size: .875rem;font-weight: bold;">Owndesk
                             Team</p>
-                        <a href="javascript:void(0)"
+                        <a href="http://dev.owndesk.in"
                             style="color: #3880FF;font-size: .875rem;line-height: 1.5rem;font-weight: normal;text-decoration: none;">www.owndesk.in</a>
                     </div>
                 </td>
@@ -139,30 +158,35 @@
             <tr>
                 <td class="pt-5" style="text-align: center;">
                     <div style="margin-bottom: 1rem;">
-                        <a href="javascript:void(0)"
+                        <a href="{{.additionalData.socialMediaLinks.Facebook}}"
                             style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.Facebook}}" alt="" style="width: auto;max-width: 100%;">
+                            <img src="{{.additionalData.emailImagePath.Facebook}}" alt=""
+                                style="width: auto;max-width: 100%;">
                         </a>
-                        <a href="javascript:void(0)"
+                        <a href="{{.additionalData.socialMediaLinks.Linkedin}}"
                             style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.LinkedIn}}" alt="" style="width: auto;max-width: 100%;">
+                            <img src="{{.additionalData.emailImagePath.LinkedIn}}" alt=""
+                                style="width: auto;max-width: 100%;">
                         </a>
-                        <a href="javascript:void(0)"
+                        <a href="{{.additionalData.socialMediaLinks.Twitter}}"
                             style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.Twitter}}" alt="" style="width: auto;max-width: 100%;">
+                            <img src="{{.additionalData.emailImagePath.Twitter}}" alt=""
+                                style="width: auto;max-width: 100%;">
                         </a>
-                        <a href="javascript:void(0)"
+                        <a href="{{.additionalData.socialMediaLinks.Youtube}}"
                             style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.Youtube}}" alt="" style="width: auto;max-width: 100%;">
+                            <img src="{{.additionalData.emailImagePath.Youtube}}" alt=""
+                                style="width: auto;max-width: 100%;">
                         </a>
-                        <a href="javascript:void(0)"
+                        <a href="{{.additionalData.socialMediaLinks.Instagram}}"
                             style="display: inline-block;width: 1.5rem;height: 1.5rem;margin-right: .75rem;">
-                            <img src="{{.additionalData.EmailImagePath.Instagram}}" alt="" style="width: auto;max-width: 100%;">
+                            <img src="{{.additionalData.emailImagePath.Instagram}}" alt=""
+                                style="width: auto;max-width: 100%;">
                         </a>
                     </div>
                 </td>
             </tr>
-            <tr>
+            <!-- <tr>
                 <td style="text-align: center;">
                     <div>
                         <p
@@ -172,7 +196,7 @@
                             Unsubscribe Manage preferences</h6>
                     </div>
                 </td>
-            </tr>
+            </tr> -->
         </tbody>
     </table>
 </body>

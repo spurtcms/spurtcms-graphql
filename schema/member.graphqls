@@ -1,0 +1,55 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Member{
+    id:               Int! 
+    firstName:        String!
+    lastName:         String!
+    email:            String!
+    mobileNo:         String!
+    isActive:         Int!
+    profileImage:     String!
+    profileImagePath: String!
+    createdOn:        Time! 
+    createdBy:        Int!
+    modifiedOn:       Time 
+    modifiedBy:       Int       
+    memberGroupId:    Int!
+    group:            [MemberGroup!] 
+}
+
+type MemberGroup{
+	id:           Int! 
+	name:         String!
+	slug:         String!
+	description:  String!
+	isActive:     Int!
+	createdOn:    Time! 
+	createdBy:    Int!
+	modifiedOn:   Time 
+	modifiedBy:   Int 
+}
+
+extend type Query{
+    memberProfileDetails: MemberProfile! @auth
+}
+
+extend type Mutation{
+    templateMemberLogin(username: String,email: String,password: String!): String! 
+    memberRegister(input: MemberDetails!,ecomModule: Int): Boolean!
+    memberUpdate(memberdata: MemberDetails!): Boolean! @auth
+}
+
+input MemberDetails{
+    firstName:        String!
+    lastName:         String
+    mobile:           String
+    email:            String!
+    password:         String!
+    isActive:         Int
+    profileImage:     String
+    profileImagePath: String
+    username:         String
+    groupId:          Int 
+}

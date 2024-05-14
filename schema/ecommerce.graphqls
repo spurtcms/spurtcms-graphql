@@ -1,0 +1,223 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type EcommerceProducts{
+	productList:  [EcommerceProduct!]!
+	count:        Int!
+}
+
+type EcommerceProduct{
+	id:                        Int!
+	categoriesId:              Int!
+	productName:               String!
+	productSlug:               String!
+	productDescription:        String!
+	productImagePath:          String!
+	productYoutubePath:        String
+	productVimeoPath:          String
+	sku:                       String!
+	tax:                       Int!
+	totalcost:                 Int!
+	isActive:                  Int!
+	createdOn:                 Time!
+	createdBy:                 Int!
+	modifiedOn:                Time
+	modifiedBy:                Int
+	isDeleted:                 Int!
+	deletedBy:                 Int
+	deletedOn:                 Time
+	defaultPrice:              Int! 
+	discountPrice:             Int
+	specialPrice:              Int
+	productImageArray:         [String!]
+	ecommerceCart:             EcommerceCart
+	orderDetails:              ProductOrderDetails
+} 
+
+type ProductPricing{
+	id:          Int!
+	priceId:     Int!
+	sku:         String!
+	priority:    Int!
+	price:       Int!
+	startDtae:   Time!
+	endDate:     Time!
+	type:        String!
+}
+
+type EcommerceCart{
+	id:              Int!
+	productId:       Int!
+	customerId:      Int!
+	quantity:        Int!
+	createdOn:       Time!
+	modifiedOn:      Time
+	isDeleted:       Int!
+	deletedOn:       Time
+}
+
+type EcommerceCartDetails{
+	cartList:        [EcommerceProduct!]!
+	cartSummary:     CartSummary!
+	Count:           Int!
+}
+
+type CartSummary{
+	subTotal:         LargeInt!
+	shippingAmount:   Int!
+	totalTax:         LargeInt!
+	totalCost:        LargeInt!
+	totalQuantity:    Int!
+}
+
+type EcommerceOrder{
+	id:                Int!
+	orderId:           String!
+	customerId:        Int!
+	status:            String!
+	shippingAddress:   String!
+	isDeleted:         Int!
+	createdOn:         Time!
+	modifiedOn:        Time
+	price:             Int!
+	tax:               Int!
+	totalCost:         Int!
+}
+
+type ProductOrderDetails{
+	id:              Int!
+	orderId:         Int!
+	productId:       Int!
+	quantity:        Int!
+	tax:             Int!
+	price:           Int!
+	status:          String!
+	paymentMode:     String!
+	orderUniqueId:   String!
+	shippingDetails: String!
+}
+
+type OrderStatus{
+	id:            Int!
+	orderId:       Int!
+	orderStatus:   String!
+	createdBy:     Int!
+	createdOn:     Time!
+}
+
+type orderPayment{
+	id:           Int!
+	orderId:      Int!
+	paymentMode:  String!   	  
+}
+
+type customerDetails{
+	id:               Int!
+	firstName:        String!
+	lastName:         String
+	mobileNo:         String!
+	email:            String!
+	username:         String!
+	password:         String!
+	isActive:         Int!
+	profileImage:     String
+	profileImagePath: String
+	createdOn:        Time!
+	createdBy:        Int!
+	modifiedOn:       Time
+	IsDeleted:        Int
+	DeletedOn:        Time
+	modifiedBy:       Int
+	houseNo:          String
+	Area:             String
+	city:             String
+	state:            String
+	country:          String
+	zipCode:          String
+	streetAddress:    String
+	memberId:         Int
+}
+
+extend type Query{
+    ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
+	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct!
+	ecommerceCartList(limit: Int!,offset: Int!):EcommerceCartDetails! @auth
+	ecommerceProductOrdersList(limit: Int!,offset: Int!,filter: orderFilter,sort: orderSort): EcommerceProducts! @auth
+	ecommerceProductOrderDetails(productId: Int,productSlug: String): EcommerceProduct! @auth
+	ecommerceCustomerDetails: customerDetails! @auth
+}
+
+extend type Mutation{
+	ecommerceAddToCart(productId: Int,productSlug: String,quantity: Int!): Boolean! @auth
+	ecommerceOrderPlacement(paymentMode: String!,shippingAddress: String!,orderProducts: [orderProduct!]!,orderSummary: OrderSummary): Boolean! @auth
+	removeProductFromCartlist(productId: Int!): Boolean! @auth
+	customerProfileUpdate(customerDetails: customerInput!): Boolean! @auth
+}
+
+input ProductFilter{
+	releaseDate:           String
+	startingPrice:         Int
+	endingPrice:           Int
+	categoryName:          String
+	categoryId:            Int
+	starRatings:           Float
+	searchKeyword:         String
+}
+
+input ProductSort{
+	price:        Int
+	date:         Int
+}
+
+input orderFilter{
+	status:                String
+	startingPrice:         Int
+	endingPrice:           Int
+	startingDate:          String
+	endingDate:            String
+	categoryName:          String
+	categoryId:            Int
+	starRatings:           Float
+	searchKeyword:         String
+	orderId:               String
+	upcomingOrders:        Int
+	orderHistory:          Int
+}
+
+input orderSort{
+	price:        Int
+	date:         Int
+}
+
+input orderProduct{
+	productId:       Int!
+	quantity:        Int!
+	price:           Int!
+	tax:             Int!
+	totalCost:       Int!
+}
+
+input OrderSummary{
+	subTotal:         LargeInt!
+	shippingAmount:   Int
+	totalTax:         LargeInt!
+	totalCost:        LargeInt!
+	totalQuantity:    Int!
+}
+
+input customerInput{
+	firstName:        String
+	lastName:         String
+	mobileNo:         String
+	email:            String
+	username:         String
+	password:         String
+	isActive:         Int
+	profileImage:     String
+	city:             String
+	state:            String
+	country:          String
+	zipCode:          String
+	streetAddress:    String
+}

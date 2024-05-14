@@ -2,14 +2,17 @@ package middleware
 
 import (
 	"context"
-	"fmt"
-	"spurtcms-graphql/controller"
+	"errors"
+	"log"
+	"net/http"
 	"os"
+	"spurtcms-graphql/controller"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gin-gonic/gin"
 
-	"github.com/spurtcms/pkgcore/member"
+	"github.com/spurtcms/pkgcore/auth"
 )
 
 // Implement the AuthMiddleware function
@@ -23,7 +26,11 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	if token == "" {
 
-		return "", fmt.Errorf("Unauthorized")
+		err:= errors.New("unauthorized access")
+
+		c.AbortWithError(http.StatusUnauthorized,err)
+
+		return "", err
 
 	}
 
@@ -35,11 +42,21 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	}
 
-	memberid,groupid,err := member.VerifyToken(token,os.Getenv("JWT_SECRET"))
+	currentTime := time.Now().In(controller.TimeZone).Unix()
+
+	currentTime1 := time.Now().Unix()
+
+	log.Println("log",controller.TimeZone,currentTime,currentTime1)
+
+	memberid,groupid,err :=  auth.VerifyTokenWithExpiryTime(token,os.Getenv("JWT_SECRET"),currentTime)
 
 	if err != nil {
 
-		return nil, fmt.Errorf("Unauthorized: %v", err)
+		log.Println("err",err)
+
+		c.AbortWithError(http.StatusUnauthorized,err)
+		
+		return "", err 
 	}
 
 	c.Set("memberid",memberid)

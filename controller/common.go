@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/base64"
+	"errors"
 	"log"
 	"math/rand"
 	"net/smtp"
@@ -13,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spurtcms/pkgcore/auth"
 	"github.com/spurtcms/pkgcore/member"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	spurtcore "github.com/spurtcms/pkgcore"
@@ -39,7 +41,18 @@ var(
     MemberFieldTypeId = 14
 	PathUrl string
 	EmailImageUrlPrefix string
+	SmtpPort,SmtpHost string
+	OwndeskChannelId int = 108
 	AdditionalData map[string]interface{}
+)
+
+var(
+	ErrInvalidMail = errors.New("your email is not yet registered in our owndesk platform")
+	ErrSendMail = errors.New("failed to send unauthorized login attempt mail to admin")
+	ErrclaimAlready = errors.New("member profile is already claimed")
+	ErrEmptyProfileName = errors.New("profile name should not be empty")
+	ErrEmptyProfileSlug = errors.New("profile slug should not be empty")
+	ErrMandatory = errors.New("missing mandatory fields")
 )
 
 func init(){
@@ -66,6 +79,10 @@ func init(){
 		PathUrl = os.Getenv("LOCAL_URL")
 	}
 
+	SmtpHost = os.Getenv("SMTP_HOST")
+
+	SmtpPort = os.Getenv("SMTP_PORT")
+
 	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
 
 	EmailImagePath := struct{
@@ -84,10 +101,21 @@ func init(){
 		Instagram:  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons5.png","/"),
 	}
 
-	AdditionalData = map[string]interface{}{"emailImagePath": EmailImagePath}
+	SocialMediaLinks := struct{
+		Linkedin    string
+		Twitter     string
+		Facebook    string
+		Instagram   string
+		Youtube     string
+	}{
+		Linkedin: os.Getenv("LINKEDIN"),
+		Twitter: os.Getenv("TWITTER"),
+		Facebook: os.Getenv("FACEBOOK"),
+		Instagram: os.Getenv("INSTAGRAM"),
+		Youtube: os.Getenv("YOUTUBE"),
+	}
 
-	log.Println("newbie",EmailImagePath)
-
+	AdditionalData = map[string]interface{}{"emailImagePath": EmailImagePath,"socialMediaLinks": SocialMediaLinks}
 }
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
@@ -157,23 +185,19 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 	return imageName,storageDestination,nil
 }
 
-func SendMail(config MailConfig,html_content string,channel chan bool) {
+func SendMail(config MailConfig,html_content string,channel chan error) {
 
-	// Sender data.
+	// Sender data
 	from := config.MailUsername
 	password := config.MailPassword
 
-	// Receiver email address.
+	// Receiver email address
 	to := []string{
 		config.Email,
 	}
 
-	// smtp server configuration.
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
-
-	// Authentication.
-	auth := smtp.PlainAuth("", from, password, smtpHost)
+	// Authentication
+	auth := smtp.PlainAuth("", from, password, SmtpHost)
 
 	subject := "Subject:"+config.Subject+" \n"
 
@@ -181,17 +205,30 @@ func SendMail(config MailConfig,html_content string,channel chan bool) {
 
 	msg := []byte(subject + mime + html_content)
 
-	// Sending email.
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
+	// Sending email
+	err := smtp.SendMail(SmtpHost+":"+SmtpPort, auth, from, to, msg)
 
 	if err != nil {
 
 		log.Println(err)
 
-		channel <- false
+		channel <- err
 
 		return
 	}
 
-	channel <- true
+	channel <- nil
+}
+
+func HashingPassword(pass string) string {
+
+	passbyte, err := bcrypt.GenerateFromPassword([]byte(pass), 14)
+
+	if err != nil {
+
+		panic(err)
+
+	}
+
+	return string(passbyte)
 }

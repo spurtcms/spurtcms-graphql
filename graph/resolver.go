@@ -24,66 +24,114 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 	return controller.MemberLogin(db, ctx, email)
 }
 
-func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
-	return controller.MemberRegister(db, input)
+func MemberRegister(db *gorm.DB,ctx context.Context,input model.MemberDetails, ecomModule *int) (bool, error) {
+	return controller.MemberRegister(db,ctx,input, ecomModule)
 }
 
-func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (model.ChannelDetails, error) {
+func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.ChannelDetails, error) {
 	return controller.Channellist(db, ctx, limit, offset)
 }
 
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string) (model.ChannelEntriesDetails, error) {
-	return controller.ChannelEntriesList(db, ctx, channelID, categoryId, limit, offset, title, categoryChildId, categorySlug, categoryChildSlug)
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string,reduireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
+	return controller.ChannelEntriesList(db, ctx, channelID, categoryId, limit, offset, title, categoryChildId, categorySlug, categoryChildSlug,reduireData)
 }
 
 func MemberUpdate(db *gorm.DB, ctx context.Context, memberdata model.MemberDetails) (bool, error) {
 	return controller.UpdateMember(db, ctx, memberdata)
 }
 
-func ChannelDetail(db *gorm.DB, ctx context.Context, channelID int) (model.Channel, error) {
-	return controller.ChannelDetail(db, ctx, channelID)
+func ChannelDetail(db *gorm.DB, ctx context.Context, channelID *int, channelSlug *string) (*model.Channel, error) {
+	return controller.ChannelDetail(db, ctx, channelID,channelSlug)
 }
 
-func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoryId *int) (model.SpaceDetails, error) {
+func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoryId *int) (*model.SpaceDetails, error) {
 	return controller.SpaceList(db, ctx, limit, offset, categoryId)
 }
 
-func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (model.Space, error) {
+func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (*model.Space, error) {
 	return controller.SpaceDetails(db, ctx, spaceId)
 }
 
-func PagesAndPageGroupsUnderSpace(db *gorm.DB, ctx context.Context, spaceID int) (model.PageAndPageGroups, error) {
+func PagesAndPageGroupsUnderSpace(db *gorm.DB, ctx context.Context, spaceID int) (*model.PageAndPageGroups, error) {
 	return controller.PagesAndPageGroupsBySpaceId(db, ctx, spaceID)
 }
 
-func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId, hierarchyLevel, checkEntriesPresence *int) (model.CategoriesList, error) {
-	return controller.CategoriesList(db, ctx, limit, offset, categoryGroupId, hierarchyLevel, checkEntriesPresence)
+func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId *int, categoryGroupSlug *string, hierarchyLevel, checkEntriesPresence *int) (*model.CategoriesList, error) {
+	return controller.CategoriesList(db, ctx, limit, offset, categoryGroupId, categoryGroupSlug, hierarchyLevel, checkEntriesPresence)
 }
 
-func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelID *int, categoryID *int, channelEntryID *int, slug *string) (model.ChannelEntries, error) {
-	return controller.ChannelEntryDetail(db, ctx, channelEntryID, channelID, categoryID, slug)
+func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelID *int, categoryID *int, channelEntryID *int, slug,profileSlug *string) (*model.ChannelEntries, error) {
+	return controller.ChannelEntryDetail(db, ctx, channelEntryID, channelID, categoryID, slug,profileSlug)
 }
 
-func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData, entryId int, updateExactMemberProfileOnly bool) (bool, error) {
-	return controller.MemberProfileUpdate(db, ctx, profiledata, entryId, updateExactMemberProfileOnly)
+func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData) (bool, error) {
+	return controller.MemberProfileUpdate(db, ctx, profiledata)
 }
 
-func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (model.LoginDetails,error) {
+func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails,error) {
 	return controller.VerifyMemberOtp(db, ctx, email, otp)
 }
 
-func Memberclaimnow(db *gorm.DB, ctx context.Context, input model.ClaimData, entryId int) (bool, error) {
-	return controller.Memberclaimnow(db, ctx, input, entryId)
+func Memberclaimnow(db *gorm.DB, ctx context.Context, input model.ClaimData,entryId int, profileId *int,profileSlug *string) (bool, error) {
+	return controller.Memberclaimnow(db, ctx, input, entryId, profileId,profileSlug)
 }
 
-func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (model.EcommerceProducts, error) {
+func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {
 	return controller.EcommerceProductList(db, ctx, limit, offset, filter, sort)
 }
 
-func VerifyProfileName(db *gorm.DB,ctx context.Context, profileName string) (bool, error) {
-	return controller.VerifyProfileName(db,ctx,profileName)
+func VerifyProfileName(db *gorm.DB,ctx context.Context, profileName, profileSlug string) (bool, error) {
+	return controller.VerifyProfileName(db,ctx,profileName, profileSlug)
 }
 
-func TemplateMemberLogin(db *gorm.DB,ctx context.Context, username string, password string) (string, error) {
-	return controller.TemplateMemberLogin(db,ctx,username,password)
+func TemplateMemberLogin(db *gorm.DB,ctx context.Context, username,email *string, password string) (string, error) {
+	return controller.TemplateMemberLogin(db,ctx,username,email,password)
+}
+
+func EcommerceProductDetails(db *gorm.DB,ctx context.Context, productID *int,productSlug *string) (*model.EcommerceProduct, error) {
+	return controller.EcommerceProductDetails(db,ctx,productID,productSlug)
+}
+
+func EcommerceCartList(db *gorm.DB,ctx context.Context,limit,offset int) (*model.EcommerceCartDetails, error) {
+	return controller.EcommerceCartList(db,ctx,limit,offset)
+}
+
+func EcommerceAddToCart(db *gorm.DB,ctx context.Context, productID *int, productSlug *string, quantity int) (bool, error) {
+	return controller.EcommerceAddToCart(db,ctx,productID,productSlug,quantity)
+}
+
+func UpdateChannelEntryViewCount(db *gorm.DB,ctx context.Context,entryId *int,slug *string ) (bool, error) {
+	return controller.UpdateChannelEntryViewCount(db,ctx,entryId,slug)
+}
+
+func RemoveProductFromCartlist(db *gorm.DB,ctx context.Context, productID int) (bool, error) {
+	return controller.RemoveProductFromCartlist(db,ctx,productID)
+}
+
+func MemberProfileDetails(db *gorm.DB,ctx context.Context) (*model.MemberProfile, error) {
+	return controller.MemberProfileDetails(db,ctx)
+}
+
+func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.OrderFilter, sort *model.OrderSort) (*model.EcommerceProducts, error) {
+	return controller.EcommerceProductOrdersList(db,ctx,limit,offset,filter,sort)
+}
+
+func EcommerceProductOrderDetails(db *gorm.DB,ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error) {
+	return controller.EcommerceProductOrderDetails(db,ctx,productID,productSlug)
+}
+
+func EcommerceOrderPlacement(db *gorm.DB,ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error) {
+	return controller.EcommerceOrderPlacement(db,ctx,paymentMode,shippingAddress,orderProducts,orderSummary)
+}
+
+func GetMemberProfileDetails(db *gorm.DB,ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
+	return controller.GetMemberProfileDetails(db,ctx,id,profileSlug)
+}
+
+func EcommerceCustomerDetails(db *gorm.DB,ctx context.Context) (*model.CustomerDetails, error) {
+	return controller.EcommerceCustomerDetails(db,ctx)
+}
+
+func CustomerProfileUpdate(db *gorm.DB,ctx context.Context, customerDetails model.CustomerInput) (bool, error) {
+	return controller.CustomerProfileUpdate(db,ctx,customerDetails)
 }

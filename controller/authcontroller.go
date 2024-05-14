@@ -3,370 +3,344 @@ package controller
 import (
 	"bytes"
 	"context"
+	"strings"
+
+	// "encoding/base64"
 	"errors"
 	"html/template"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spurtcms/pkgcontent/channels"
 	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 )
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
 	member_details, err := Mem.GraphqlMemberLogin(email)
 
-	if err != nil {
+	if gorm.ErrRecordNotFound == err {
+
+		adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
+
+		var admin_mail_data = MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "Notification: New User Attempted Login to OwnDesk Platform"}
+
+		channel := make(chan error)
+
+		tmpls, err := template.ParseFiles("view/email/admin-loginenquiry.html")
+
+		if err != nil {
+
+			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return false, err
+		}
+
+		var template_buffers bytes.Buffer
+
+		if err := tmpls.Execute(&template_buffers, map[string]interface{}{"adminDetails": adminDetails, "unauthorizedMail": email,"additionalData": AdditionalData, "currentTime": time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM")}); err != nil {
+
+			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return false, err
+		}
+
+		admin_content := template_buffers.String()
+
+		go SendMail(admin_mail_data, admin_content, channel)
+
+		if <-channel != nil {
+
+			c.AbortWithError(http.StatusInternalServerError, <-channel)
+
+			return false, <-channel
+
+		}
+
+		return false, ErrInvalidMail
+
+	}else if err!=nil {
 
 		return false, err
 	}
 
 	conv_member := model.Member{
-		ID: member_details.Id,
-		FirstName: member_details.FirstName,
-		LastName: member_details.LastName,
-		Email: member_details.Email,
-		MobileNo: member_details.MobileNo,
-		IsActive: member_details.IsActive,
+		ID:               member_details.Id,
+		FirstName:        member_details.FirstName,
+		LastName:         member_details.LastName,
+		Email:            member_details.Email,
+		MobileNo:         member_details.MobileNo,
+		IsActive:         member_details.IsActive,
 		ProfileImagePath: member_details.ProfileImagePath,
-		CreatedOn: member_details.CreatedOn,
-		CreatedBy: member_details.CreatedBy,
-		ModifiedOn: &member_details.ModifiedOn,
-		ModifiedBy: &member_details.ModifiedBy,
+		CreatedOn:        member_details.CreatedOn,
+		CreatedBy:        member_details.CreatedBy,
+		ModifiedOn:       &member_details.ModifiedOn,
+		ModifiedBy:       &member_details.ModifiedBy,
 	}
 
-    channel := make(chan bool)
+	var memberProfileData model.MemberProfile
 
-	// rand.Seed(time.Now().UnixNano())
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", conv_member.ID).First(&memberProfileData).Error; err != nil {
 
-    otp := rand.Intn(900000) + 100000 
-
-	current_time := time.Now().In(TimeZone)
-
-	otp_expiry_time := current_time.Add(5*time.Minute).Format("2006-01-02 15:04:05")
-
-	mail_expiry_time := current_time.Add(5*time.Minute).Format("02 Jan 2006 03:04 PM")
-
-	err = Mem.StoreGraphqlMemberOtp(otp,conv_member.ID,otp_expiry_time)
-
-	if err!=nil{
+		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
 
-	data := map[string]interface{}{"otp": otp,"expiryTime": mail_expiry_time,"member": conv_member,"additionalData": AdditionalData}
+	channel := make(chan error)
+
+	// rand.Seed(time.Now().UnixNano())
+
+	otp := rand.Intn(900000) + 100000
+
+	current_time := time.Now()
+
+	otp_expiry_time := current_time.UTC().Add(5 * time.Minute).Format("2006-01-02 15:04:05")
+
+	mail_expiry_time := current_time.In(TimeZone).Add(5 * time.Minute).Format("02 Jan 2006 03:04 PM")
+
+	err = Mem.StoreGraphqlMemberOtp(otp, conv_member.ID, otp_expiry_time)
+
+	if err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	data := map[string]interface{}{"otp": otp, "expiryTime": mail_expiry_time, "member": conv_member, "additionalData": AdditionalData, "memberProfile": memberProfileData}
 
 	tmpl, err := template.ParseFiles("view/email/login-template.html")
 
 	if err != nil {
-		
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
 		return false, err
 	}
 
 	var template_buffer bytes.Buffer
-	
-	if err := tmpl.Execute(&template_buffer,data); err != nil {
 
-		return false,err
+	if err := tmpl.Execute(&template_buffer, data); err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
 	}
 
-	mail_data := MailConfig{Email: conv_member.Email,MailUsername: os.Getenv("MAIL_USERNAME"),MailPassword: os.Getenv("MAIL_PASSWORD"),Subject: "OwnDesk - Login Otp Confirmation"}
+	mail_data := MailConfig{Email: conv_member.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "OwnDesk - Login Otp Confirmation"}
 
 	html_content := template_buffer.String()
 
-	go SendMail(mail_data,html_content,channel)
+	go SendMail(mail_data, html_content, channel)
 
-	if <-channel{
+	if <-channel != nil {
 
-		return true,nil
+		c.AbortWithError(http.StatusServiceUnavailable, <-channel)
 
-	}else{
+		return false, <-channel
 
-		return false,nil
 	}
+
+	return true, nil
 }
 
-func VerifyMemberOtp(db *gorm.DB,ctx context.Context,email string,otp int)(model.LoginDetails,error){
+func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
-	currentTime := time.Now().In(TimeZone).Unix()
+	currentTime := time.Now().UTC()
 
-	memberDetails,token,err := Mem.VerifyLoginOtp(email,otp,currentTime)
+	memberDetails, token, err := Mem.VerifyLoginOtp(email, otp, currentTime)
 
-	if err!=nil{
+	if err != nil {
 
-		return model.LoginDetails{},err
+		return &model.LoginDetails{}, err
 	}
 
-	log.Println("memberdetails",memberDetails)
+	var memberProfileDetails model.MemberProfile
 
-	var channelEntryDetails model.ChannelEntries
+	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
 
-	if err := db.Debug().Table("tbl_channel_entries").Select("tbl_channel_entries.*").Joins("inner join tbl_channels on tbl_channels.id = tbl_channel_entries.channel_id ").Joins("inner join tbl_channel_entry_fields on tbl_channel_entry_fields.channel_entry_id = tbl_channel_entries.id").Joins("inner join tbl_fields on tbl_fields.id = tbl_channel_entry_fields.field_id").Joins("inner join tbl_field_types on tbl_field_types.id = tbl_fields.field_type_id").Joins("inner join tbl_members on tbl_members.id = any(string_to_array(tbl_channel_entry_fields.field_value,',')::integer[])").
-	Joins("inner join tbl_member_profiles on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_channels.is_deleted = 0 and tbl_channels.is_active = 1 and tbl_channel_entries.is_deleted = 0 and tbl_channel_entries.status = 1 and tbl_field_types.is_deleted = 0 and tbl_fields.is_deleted = 0 and tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.claim_status = 1 and tbl_field_types.id = ? and tbl_members.id = ?",MemberFieldTypeId,memberDetails.Id).First(&channelEntryDetails).Error;err!=nil{
+		c.AbortWithError(http.StatusInternalServerError, err)
 
-		return model.LoginDetails{},err
+		return &model.LoginDetails{}, err
 	}
 
-	log.Println("chkking",channelEntryDetails)
+	return &model.LoginDetails{MemberProfileData: memberProfileDetails, Token: token}, nil
 
-	channelAuth := channels.Channel{Authority: GetAuthorization(token,db)}
-
-	channelEntry,err :=  channelAuth.GetGraphqlChannelEntriesDetails(&channelEntryDetails.ID,&channelEntryDetails.ChannelID,nil,PathUrl,SectionTypeId,MemberFieldTypeId,nil)
-
-	if err!=nil{
-
-		return model.LoginDetails{},err
-	}
-
-	var conv_categories [][]model.Category
-
-	for _, categories := range channelEntry.Categories {
-
-		var conv_categoryz []model.Category
-
-		for _, category := range categories {
-
-			conv_category := model.Category{
-				ID:           category.Id,
-				CategoryName: category.CategoryName,
-				CategorySlug: category.CategorySlug,
-				Description:  category.Description,
-				ImagePath:    category.ImagePath,
-				CreatedOn:    category.CreatedOn,
-				CreatedBy:    category.CreatedBy,
-				ModifiedOn:   &category.ModifiedOn,
-				ModifiedBy:   &category.ModifiedBy,
-				ParentID:     category.ParentId,
-			}
-
-			conv_categoryz = append(conv_categoryz, conv_category)
-
-		}
-
-		conv_categories = append(conv_categories, conv_categoryz)
-
-	}
-	authorDetails := &model.Author{
-		AuthorID:         channelEntry.AuthorDetail.AuthorID,
-		FirstName:        channelEntry.AuthorDetail.FirstName,
-		LastName:         channelEntry.AuthorDetail.LastName,
-		Email:            channelEntry.AuthorDetail.Email,
-		MobileNo:         channelEntry.AuthorDetail.MobileNo,
-		IsActive:         channelEntry.AuthorDetail.IsActive,
-		ProfileImagePath: channelEntry.AuthorDetail.ProfileImagePath,
-		CreatedOn:        channelEntry.AuthorDetail.CreatedOn,
-		CreatedBy:        channelEntry.AuthorDetail.CreatedBy,
-	}
-
-	var conv_sections []model.Section
-
-	for _, section := range channelEntry.Sections {
-
-		conv_section := model.Section{
-			SectionID:     &section.Id,
-			SectionName:   section.FieldName,
-			SectionTypeID: section.FieldTypeId,
-			CreatedOn:     section.CreatedOn,
-			CreatedBy:     section.CreatedBy,
-			ModifiedOn:    &section.ModifiedOn,
-			ModifiedBy:    &section.ModifiedBy,
-			OrderIndex:    section.OrderIndex,
-		}
-
-		conv_sections = append(conv_sections, conv_section)
-	}
-
-	var conv_fields []model.Field
-
-	for _, field := range channelEntry.Fields {
-
-		conv_field_value := model.FieldValue{
-			ID:         field.FieldValue.FieldId,
-			FieldValue: field.FieldValue.FieldValue,
-			CreatedOn:  field.FieldValue.CreatedOn,
-			CreatedBy:  field.FieldValue.CreatedBy,
-			ModifiedOn: &field.FieldValue.ModifiedOn,
-			ModifiedBy: &field.FieldValue.ModifiedBy,
-		}
-
-		var conv_fieldOptions []model.FieldOptions
-
-		for _, field_option := range field.FieldOptions {
-
-			conv_fieldOption := model.FieldOptions{
-				ID:          field_option.Id,
-				OptionName:  field_option.OptionName,
-				OptionValue: field_option.OptionValue,
-				CreatedOn:   field_option.CreatedOn,
-				CreatedBy:   field_option.CreatedBy,
-				ModifiedOn:  &field_option.ModifiedOn,
-				ModifiedBy:  &field_option.ModifiedBy,
-			}
-
-			conv_fieldOptions = append(conv_fieldOptions, conv_fieldOption)
-		}
-
-		conv_field := model.Field{
-			FieldID:          field.Id,
-			FieldName:        field.FieldName,
-			FieldTypeID:      field.FieldTypeId,
-			MandatoryField:   field.MandatoryField,
-			OptionExist:      field.OptionExist,
-			CreatedOn:        field.CreatedOn,
-			CreatedBy:        field.CreatedBy,
-			ModifiedOn:       &field.ModifiedOn,
-			ModifiedBy:       &field.ModifiedBy,
-			FieldDesc:        field.FieldDesc,
-			OrderIndex:       field.OrderIndex,
-			ImagePath:        field.ImagePath,
-			DatetimeFormat:   &field.DatetimeFormat,
-			TimeFormat:       &field.TimeFormat,
-			SectionParentID:  &field.SectionParentId,
-			CharacterAllowed: &field.CharacterAllowed,
-			FieldTypeName:    field.FieldTypeName,
-			FieldValue:       &conv_field_value,
-			FieldOptions:     conv_fieldOptions,
-		}
-
-		conv_fields = append(conv_fields, conv_field)
-	}
-
-	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
-
-	var conv_memberProfiles []model.MemberProfile
-
-	claimStatus := false
-
-	for _, memberProfile := range channelEntry.MemberProfiles {
-
-		if memberDetails.Id == memberProfile.MemberId && memberProfile.ClaimStatus == 1 {
-
-			claimStatus = true
-
-		}
-
-		conv_MemberProfile := model.MemberProfile{
-			ID:              &memberProfile.Id,
-			MemberID:        &memberProfile.MemberId,
-			ProfileName:     &memberProfile.ProfileName,
-			ProfileSlug:     &memberProfile.ProfileSlug,
-			ProfilePage:     &memberProfile.ProfilePage,
-			MemberDetails:   memberProfile.MemberDetails,
-			CompanyName:     &memberProfile.CompanyName,
-			CompanyLocation: &memberProfile.CompanyLocation,
-			CompanyLogo:     &memberProfile.CompanyLogo,
-			About:           &memberProfile.About,
-			SeoTitle:        &memberProfile.SeoTitle,
-			SeoDescription:  &memberProfile.SeoDescription,
-			SeoKeyword:      &memberProfile.SeoKeyword,
-			CreatedBy:       &memberProfile.CreatedBy,
-			CreatedOn:       &memberProfile.CreatedOn,
-			ModifiedOn:      &memberProfile.ModifiedOn,
-			ModifiedBy:      &memberProfile.ModifiedBy,
-			Linkedin:        &memberProfile.Linkedin,
-			Twitter:         &memberProfile.Twitter,
-			Website:         &memberProfile.Website,
-			ClaimStatus:     &memberProfile.ClaimStatus,
-		}
-
-		conv_memberProfiles = append(conv_memberProfiles, conv_MemberProfile)
-	}
-
-	conv_channelEntry := model.ChannelEntries{
-		ID:               channelEntry.Id,
-		Title:            channelEntry.Title,
-		Slug:             channelEntry.Slug,
-		Description:      channelEntry.Description,
-		UserID:           channelEntry.UserId,
-		ChannelID:        channelEntry.ChannelId,
-		Status:           channelEntry.Status,
-		IsActive:         channelEntry.IsActive,
-		CreatedOn:        channelEntry.CreatedOn,
-		CreatedBy:        channelEntry.CreatedBy,
-		ModifiedBy:       &channelEntry.ModifiedBy,
-		ModifiedOn:       &channelEntry.ModifiedOn,
-		CoverImage:       channelEntry.CoverImage,
-		ThumbnailImage:   channelEntry.ThumbnailImage,
-		MetaTitle:        channelEntry.MetaTitle,
-		MetaDescription:  channelEntry.MetaDescription,
-		Keyword:          channelEntry.Keyword,
-		CategoriesID:     channelEntry.CategoriesId,
-		RelatedArticles:  channelEntry.RelatedArticles,
-		Categories:       conv_categories,
-		AdditionalFields: additionalFields,
-		MemberProfile:    conv_memberProfiles,
-		AuthorDetails:    authorDetails,
-		FeaturedEntry:    channelEntry.Feature,
-		ViewCount:        channelEntry.ViewCount,
-		ClaimStatus:      claimStatus,
-		Author:           &channelEntry.Author,
-		SortOrder:        &channelEntry.SortOrder,
-		CreateDate:       &channelEntry.CreateDate,
-		PublishedTime:    &channelEntry.PublishedTime,
-		ReadingTime:      &channelEntry.ReadingTime,
-		Tags:             &channelEntry.Tags,
-		Excerpt:          &channelEntry.Excerpt,
-	}
-
-
-	return model.LoginDetails{ClaimEntryDetails: &conv_channelEntry,Token: token},nil
-	
 }
 
-func MemberRegister(db *gorm.DB, input model.MemberDetails) (bool, error) {
+func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails, ecomModule *int) (bool, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
-	var imageName, imagePath string
+	var (
 
-	var err error
+		imageName, imagePath string
 
-	if input.ProfileImage != nil {
+		err error
 
-		imageName, imagePath, err = StoreImageBase64ToLocal(*input.ProfileImage, ProfileImagePath, "PROFILE")
+		ecomMod int = *ecomModule
+	)
+
+	if input.ProfileImage.IsSet() {
+
+		imageName, imagePath, err = StoreImageBase64ToLocal(*input.ProfileImage.Value(), ProfileImagePath, "PROFILE")
 
 		if err != nil {
+
+			c.AbortWithError(http.StatusInternalServerError, err)
 
 			return false, err
 		}
 
 	}
 
-	memberDetails := member.MemberCreation{
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		MobileNo:  input.Mobile,
-		Email:     input.Email,
-		Password:  input.Password,
-		//  Username: *input.Username,
-		ProfileImage:     imageName,
-		ProfileImagePath: imagePath,
+	var memberDetails member.MemberCreation
+
+	if input.Mobile.IsSet() {
+
+		memberDetails.MobileNo = *input.Mobile.Value()
 	}
 
-	_, isMemberExists, err := Mem.CheckEmailInMember(0, input.Email)
+	if imageName != "" && imagePath != "" {
 
-	if isMemberExists {
+		memberDetails.ProfileImage = imageName
 
-		return isMemberExists, errors.New("Member already exists!")
+		memberDetails.ProfileImagePath = imagePath
 	}
+
+	if input.LastName.IsSet() {
+
+		memberDetails.LastName = *input.LastName.Value()
+
+	}
+
+	if input.Username.IsSet() {
+
+		memberDetails.Username = *input.Username.Value()
+
+		_, isMemberExists, err := Mem.CheckUsernameInMember(0, *input.Username.Value())
+
+		if isMemberExists || err == nil {
+
+			err = errors.New("member already exists")
+
+			c.AbortWithError(422, err)
+
+			return isMemberExists, err
+		}
+
+		if ecomMod ==1{
+
+			var count int64
+
+			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and username = ?",*input.Username.Value()).Count(&count).Error;err!=nil{
+
+				return false,err
+			}
+
+			if count > 0{
+
+				err = errors.New("customer already exists")
+
+			    c.AbortWithError(422, err)
+
+			    return false, err
+			}
+		}
+
+	}
+
+	if input.Email != "" {
+
+		memberDetails.Email = input.Email
+
+		_, isMemberExists, err := Mem.CheckEmailInMember(0, input.Email)
+
+		if isMemberExists || err == nil {
+
+			err = errors.New("member already exists")
+
+			c.AbortWithError(http.StatusBadRequest, err)
+
+			return isMemberExists, err
+		}
+
+		if ecomMod ==1{
+
+			var count int64
+
+			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and email = ?",input.Email).Count(&count).Error;err!=nil{
+
+				return false,err
+			}
+
+			if count > 0{
+
+				err = errors.New("customer already exists")
+
+			    c.AbortWithError(422, err)
+
+			    return false, err
+			}
+		}
+
+	}
+
+	memberDetails.FirstName = input.FirstName
+
+	memberDetails.Password = input.Password
 
 	isRegistered, err := Mem.MemberRegister(memberDetails)
 
 	if !isRegistered || err != nil {
 
+		c.AbortWithError(http.StatusInternalServerError, err)
+
 		return isRegistered, err
 	}
 
-	return isRegistered, nil
+	if isRegistered && ecomMod == 1{
+
+		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+		var ecomCustomer = model.CustomerDetails{
+			FirstName:        memberDetails.FirstName,
+			LastName:         &memberDetails.LastName,
+			Username:         memberDetails.Email,
+			MobileNo:         memberDetails.MobileNo,
+			Email:            input.Email,
+			IsActive:         memberDetails.IsActive,
+			ProfileImage:     &memberDetails.ProfileImage,
+			ProfileImagePath: &memberDetails.ProfileImagePath,
+			CreatedOn:        createdOn,
+			Password:         HashingPassword(memberDetails.Password),
+		}
+
+		if err := db.Table("tbl_ecom_customers").Create(&ecomCustomer).Error;err!=nil{
+
+			c.AbortWithError(http.StatusInternalServerError, err)
+	
+			return isRegistered, err
+		}
+	}
+
+	return true, nil
 
 }
 
@@ -382,9 +356,9 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	var err error
 
-	if memberdata.ProfileImage != nil {
+	if memberdata.ProfileImage.IsSet() {
 
-		imageName, imagePath, err = StoreImageBase64ToLocal(*memberdata.ProfileImage, ProfileImagePath, "PROFILE")
+		imageName, imagePath, err = StoreImageBase64ToLocal(*memberdata.ProfileImage.Value(), ProfileImagePath, "PROFILE")
 
 		if err != nil {
 
@@ -395,14 +369,14 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	memberDetails := member.MemberCreation{
 		FirstName:        memberdata.FirstName,
-		LastName:         memberdata.LastName,
-		MobileNo:         memberdata.Mobile,
+		LastName:         *memberdata.LastName.Value(),
+		MobileNo:         *memberdata.Mobile.Value(),
 		Email:            memberdata.Email,
 		Password:         memberdata.Password,
 		ProfileImage:     imageName,
 		ProfileImagePath: imagePath,
 		// IsActive: *memberdata.IsActive,
-		// Username: *memberdata.Username,
+		// Username: *memberdata.Username.Value(),
 		// GroupId: *memberdata.GroupID,
 	}
 
@@ -417,18 +391,115 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 }
 
-func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username string, password string) (string, error) {
+func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string) (string, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
-	member_details, err := Mem.CheckMemberLogin(member.MemberLogin{Username: username, Password: password}, db, os.Getenv("JWT_SECRET"))
+	var memberLogin member.MemberLogin
+
+	if username != nil {
+
+		memberLogin.Username = *username
+
+	} else if email != nil {
+
+		memberLogin.Emailid = *email
+	}
+
+	memberLogin.Password = password
+
+	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"))
 
 	if err != nil {
+
+		c.AbortWithError(http.StatusUnauthorized, err)
 
 		log.Println(err)
 	}
 
-	return member_details, err
+	return token, err
 }
 
+func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfile, error) {
 
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberid := c.GetInt("memberid")
+
+	if memberid == 0 {
+
+		err := errors.New("unauthorized access")
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return &model.MemberProfile{}, err
+
+	}
+
+	var memberProfile model.MemberProfile
+
+	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", memberid).First(&memberProfile).Error; err != nil {
+
+		c.AbortWithError(http.StatusUnprocessableEntity, err)
+
+		return &model.MemberProfile{}, err
+	}
+
+	return &memberProfile, nil
+}
+
+func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
+
+	var memberProfile member.TblMemberProfile
+
+	query := db.Table("tbl_member_profiles").Where("is_deleted = 0")
+
+	if id != nil {
+
+		query = query.Where("member_id = ?", *id)
+
+	} else if profileSlug != nil {
+
+		query = query.Where("profile_slug = ?", *profileSlug)
+	}
+
+	if err := query.First(&memberProfile).Error; err != nil {
+
+		return &model.MemberProfile{}, err
+	}
+
+	var profileLogo string
+
+	if memberProfile.CompanyLogo!=""{
+
+		profileLogo = PathUrl + strings.TrimPrefix(memberProfile.CompanyLogo,"/")
+	}
+
+	MemberProfile := model.MemberProfile{
+		ID:              &memberProfile.Id,
+		MemberID:        &memberProfile.MemberId,
+		ProfileName:     &memberProfile.ProfileName,
+		ProfileSlug:     &memberProfile.ProfileSlug,
+		ProfilePage:     &memberProfile.ProfilePage,
+		MemberDetails:   &memberProfile.MemberDetails,
+		CompanyName:     &memberProfile.CompanyName,
+		CompanyLocation: &memberProfile.CompanyLocation,
+		CompanyLogo:     &profileLogo,
+		About:           &memberProfile.About,
+		SeoTitle:        &memberProfile.SeoTitle,
+		SeoDescription:  &memberProfile.SeoDescription,
+		SeoKeyword:      &memberProfile.SeoKeyword,
+		CreatedBy:       &memberProfile.CreatedBy,
+		CreatedOn:       &memberProfile.CreatedOn,
+		ModifiedOn:      &memberProfile.ModifiedOn,
+		ModifiedBy:      &memberProfile.ModifiedBy,
+		Linkedin:        &memberProfile.Linkedin,
+		Twitter:         &memberProfile.Twitter,
+		Website:         &memberProfile.Website,
+		ClaimStatus:     &memberProfile.ClaimStatus,
+	}
+
+	return &MemberProfile, nil
+}
