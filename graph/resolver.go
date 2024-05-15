@@ -80,8 +80,8 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 	return controller.EcommerceProductList(db, ctx, limit, offset, filter, sort)
 }
 
-func VerifyProfileName(db *gorm.DB,ctx context.Context,profileSlug string) (bool, error) {
-	return controller.VerifyProfileName(db,ctx,profileSlug)
+func VerifyProfileName(db *gorm.DB,ctx context.Context,profileSlug string, profileID int) (bool, error) {
+	return controller.VerifyProfileName(db,ctx,profileSlug, profileID)
 }
 
 func TemplateMemberLogin(db *gorm.DB,ctx context.Context, username,email *string, password string) (string, error) {

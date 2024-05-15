@@ -55,7 +55,7 @@ type MutationResolver interface {
 	VerifyMemberOtp(ctx context.Context, email string, otp int) (*model.LoginDetails, error)
 	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error)
 	Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int, profileID *int, profileSlug *string) (bool, error)
-	ProfileNameVerification(ctx context.Context, profileSlug string) (bool, error)
+	ProfileNameVerification(ctx context.Context, profileSlug string, profileID int) (bool, error)
 	UpdateChannelEntryViewCount(ctx context.Context, entryID *int, slug *string) (bool, error)
 	EcommerceAddToCart(ctx context.Context, productID *int, productSlug *string, quantity int) (bool, error)
 	EcommerceOrderPlacement(ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error)
@@ -429,7 +429,7 @@ extend type Mutation{
 	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
 	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
 	memberclaimnow(input: ClaimData!,entryId: Int!,profileId: Int,profileSlug: String): Boolean! @auth
-	profileNameVerification(profileSlug: String!): Boolean! @auth
+	profileNameVerification(profileSlug: String!, profileId: Int!): Boolean! @auth
 	updateChannelEntryViewCount(entryId: Int,slug: String): Boolean! @auth
 }
 
@@ -1021,6 +1021,15 @@ func (ec *executionContext) field_Mutation_profileNameVerification_args(ctx cont
 		}
 	}
 	args["profileSlug"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["profileId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileId"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["profileId"] = arg1
 	return args, nil
 }
 
@@ -11519,7 +11528,7 @@ func (ec *executionContext) _Mutation_profileNameVerification(ctx context.Contex
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ProfileNameVerification(rctx, fc.Args["profileSlug"].(string))
+			return ec.resolvers.Mutation().ProfileNameVerification(rctx, fc.Args["profileSlug"].(string), fc.Args["profileId"].(int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {

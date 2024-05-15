@@ -44,6 +44,9 @@ var(
 	SmtpPort,SmtpHost string
 	OwndeskChannelId int = 108
 	AdditionalData map[string]interface{}
+	OwndeskLoginEnquiryTemplate = "owndeskloginenquiry"
+	OwndeskLoginTemplate = "owndesklogin"
+	OwndeskClaimnowTemplate = "owndeskclaimnow"
 )
 
 var(

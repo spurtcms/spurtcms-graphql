@@ -834,30 +834,27 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 	return true, nil
 }
 
-func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string) (bool, error) {
+func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, profileID int) (bool, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	if profileSlug == "" || profileID < 0 {
 
-	if profileSlug == "" {
-
-		c.AbortWithError(422, ErrEmptyProfileSlug)
-
-		return false, ErrEmptyProfileSlug
+		return false, nil
 	}
 
-	var count int64
+	var profileId int
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and profile_slug = ?", profileSlug).Count(&count).Error; err != nil {
+	db.Debug().Table("tbl_member_profiles").Select("id").Where("is_deleted = 0 and LOWER(profile_slug) = ?", profileSlug).Scan(&profileId)
 
-		return false, err
+	if profileId != 0 && profileId == profileID{
+
+		return true, nil
+
+	}else if profileId == 0{
+
+		return true, nil
 	}
 
-	if count > 0 {
-
-		return false, ErrProfileSlugExist
-	}
-
-	return true, nil
+	return false, nil
 }
 
 func UpdateChannelEntryViewCount(db *gorm.DB, ctx context.Context, entryId *int, slug *string) (bool, error) {

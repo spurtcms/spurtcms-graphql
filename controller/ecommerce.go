@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"log"
 
 	"net/http"
 	"spurtcms-graphql/graph/model"
@@ -338,6 +339,8 @@ func EcommerceCartList(db *gorm.DB, ctx context.Context, limit, offset int) (*mo
 		return &model.EcommerceCartDetails{}, err
 	}
 
+	log.Println("chkk")
+
 	if customer_id == 0 {
 
 		err := errors.New("customer id not found")
@@ -387,37 +390,40 @@ func EcommerceCartList(db *gorm.DB, ctx context.Context, limit, offset int) (*mo
 			}
 
 			cartProduct.ProductImageArray = imagePaths
+		}
+		
+		if cartProduct.EcommerceCart != nil {
+
+			var priceByQuantity int64
+
+			if cartProduct.SpecialPrice != nil {
+
+				reductionPrice := cartProduct.DefaultPrice - *cartProduct.SpecialPrice
+
+				priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(reductionPrice)
+
+				subtotal = subtotal + priceByQuantity
+
+			} else if cartProduct.DiscountPrice != nil {
+
+				priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(*cartProduct.DiscountPrice)
+
+				subtotal = subtotal + priceByQuantity
+
+			} else {
+
+				priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(cartProduct.DefaultPrice)
+
+				subtotal = subtotal + priceByQuantity
+			}
+
+			var taxByQuantity  = int64(cartProduct.EcommerceCart.Quantity) * int64(cartProduct.Tax)
+
+			totalTax = totalTax + taxByQuantity
+
+			totalQuantity = totalQuantity + cartProduct.EcommerceCart.Quantity
 
 		}
-
-		var priceByQuantity int64
-
-		if cartProduct.SpecialPrice != nil {
-
-			reductionPrice := cartProduct.DefaultPrice - *cartProduct.SpecialPrice
-
-			priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(reductionPrice)
-
-			subtotal = subtotal + priceByQuantity
-
-		} else if cartProduct.DiscountPrice != nil {
-
-			priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(*cartProduct.DiscountPrice)
-
-			subtotal = subtotal + priceByQuantity
-
-		} else {
-
-			priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(cartProduct.DefaultPrice)
-
-			subtotal = subtotal + priceByQuantity
-		}
-
-		var taxByQuantity int64 = int64(cartProduct.EcommerceCart.Quantity) * int64(cartProduct.Tax)
-
-		totalTax = totalTax + taxByQuantity
-
-		totalQuantity = totalQuantity + cartProduct.EcommerceCart.Quantity
 
 		final_cartList = append(final_cartList, cartProduct)
 
@@ -679,7 +685,7 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 		return &model.EcommerceProduct{}, err
 
 	}
-	
+
 	var customerId int
 
 	if err := db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?", memberid).Scan(&customerId).Error; err != nil {
@@ -939,9 +945,9 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 		return false, err
 	}
 
-	if customerInput.FirstName.Value()==nil || customerInput.MobileNo.Value()==nil ||  customerInput.Email.Value()==nil || customerInput.Username.Value()==nil || customerInput.IsActive.Value()==nil{
+	if customerInput.FirstName.Value() == nil || customerInput.MobileNo.Value() == nil || customerInput.Email.Value() == nil || customerInput.Username.Value() == nil || customerInput.IsActive.Value() == nil {
 
-		return false,ErrMandatory
+		return false, ErrMandatory
 	}
 
 	var customerDetails model.CustomerDetails
