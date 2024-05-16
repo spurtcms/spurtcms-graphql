@@ -32,6 +32,23 @@ type MailConfig struct{
 	AdditionalData   map[string]interface{}
 }
 
+type MailImages struct{
+	Owndesk    string
+	Twitter    string
+	Facebook   string
+	LinkedIn   string
+	Youtube    string
+	Instagram  string
+}
+
+type SocialMedias struct{
+	Linkedin    string
+	Twitter     string
+	Facebook    string
+	Instagram   string
+	Youtube     string
+}
+
 var(
 	Mem member.MemberAuth
 	Auth *auth.Authorization
@@ -43,7 +60,8 @@ var(
 	EmailImageUrlPrefix string
 	SmtpPort,SmtpHost string
 	OwndeskChannelId int = 108
-	AdditionalData map[string]interface{}
+	EmailImagePath MailImages
+	SocialMediaLinks SocialMedias
 	OwndeskLoginEnquiryTemplate = "owndeskloginenquiry"
 	OwndeskLoginTemplate = "owndesklogin"
 	OwndeskClaimnowTemplate = "owndeskclaimnow"
@@ -88,14 +106,7 @@ func init(){
 
 	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
 
-	EmailImagePath := struct{
-		Owndesk    string
-		Twitter    string
-		Facebook   string
-		LinkedIn   string
-		Youtube    string
-		Instagram  string
-	}{
+	EmailImagePath = MailImages{
 		Owndesk  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/own-desk-logo.png","/"),
 		Twitter  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons3.png","/"),
 		Facebook :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons1.png","/"),
@@ -104,13 +115,7 @@ func init(){
 		Instagram:  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons5.png","/"),
 	}
 
-	SocialMediaLinks := struct{
-		Linkedin    string
-		Twitter     string
-		Facebook    string
-		Instagram   string
-		Youtube     string
-	}{
+	SocialMediaLinks = SocialMedias{
 		Linkedin: os.Getenv("LINKEDIN"),
 		Twitter: os.Getenv("TWITTER"),
 		Facebook: os.Getenv("FACEBOOK"),
@@ -118,7 +123,6 @@ func init(){
 		Youtube: os.Getenv("YOUTUBE"),
 	}
 
-	AdditionalData = map[string]interface{}{"emailImagePath": EmailImagePath,"socialMediaLinks": SocialMediaLinks}
 }
 
 func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {

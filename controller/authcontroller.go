@@ -3,9 +3,6 @@ package controller
 import (
 	"bytes"
 	"context"
-	"strings"
-
-	// "encoding/base64"
 	"errors"
 	"html/template"
 	"log"
@@ -13,6 +10,8 @@ import (
 	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -30,13 +29,41 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if gorm.ErrRecordNotFound == err {
 
+		var loginEnquiryTemplate  model.EmailTemplate
+
+		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and is_active = 1 and template_name = ?",OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error;err!=nil{
+
+			c.AbortWithError(http.StatusInternalServerError, err)
+			
+			return false,err
+		}
+
 		adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
 
-		var admin_mail_data = MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "Notification: New User Attempted Login to OwnDesk Platform"}
+		var admin_mail_data = MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginEnquiryTemplate.TemplateSubject}
 
-		channel := make(chan error)
+		dataReplacer := strings.NewReplacer(
+			"{OwndeskLogo}", EmailImagePath.Owndesk,
+			"{Username}", adminDetails.Username,
+			"{UnauthorizedMail}", email,
+			"{CurrentTime}",time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM"),
+			"{OwndeskFacebookLink}", SocialMediaLinks.Facebook,
+			"{OwndeskLinkedinLink}", SocialMediaLinks.Linkedin,
+			"{OwndeskTwitterLink}", SocialMediaLinks.Twitter,
+			"{OwndeskYoutubeLink}", SocialMediaLinks.Youtube,
+			"{OwndeskInstagramLink}", SocialMediaLinks.Instagram,
+			"{FacebookLogo}", EmailImagePath.Facebook,
+			"{LinkedinLogo}", EmailImagePath.LinkedIn,
+			"{TwitterLogo}", EmailImagePath.Twitter,
+			"{YoutubeLogo}", EmailImagePath.Youtube,
+			"{InstagramLogo}", EmailImagePath.Instagram,
+		)
 
-		tmpls, err := template.ParseFiles("view/email/admin-loginenquiry.html")
+		integratedBody := dataReplacer.Replace(loginEnquiryTemplate.TemplateMessage)
+
+		htmlBody := template.HTML(integratedBody)
+
+		tmpl, err := template.ParseFiles("./view/email/email-template.html")
 
 		if err != nil {
 
@@ -45,9 +72,11 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 			return false, err
 		}
 
+		channel := make(chan error)
+
 		var template_buffers bytes.Buffer
 
-		if err := tmpls.Execute(&template_buffers, map[string]interface{}{"adminDetails": adminDetails, "unauthorizedMail": email,"additionalData": AdditionalData, "currentTime": time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM")}); err != nil {
+		if err := tmpl.Execute(&template_buffers,gin.H{"body":htmlBody}); err != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -73,23 +102,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, err
 	}
 
-	conv_member := model.Member{
-		ID:               member_details.Id,
-		FirstName:        member_details.FirstName,
-		LastName:         member_details.LastName,
-		Email:            member_details.Email,
-		MobileNo:         member_details.MobileNo,
-		IsActive:         member_details.IsActive,
-		ProfileImagePath: member_details.ProfileImagePath,
-		CreatedOn:        member_details.CreatedOn,
-		CreatedBy:        member_details.CreatedBy,
-		ModifiedOn:       &member_details.ModifiedOn,
-		ModifiedBy:       &member_details.ModifiedBy,
-	}
+	var memberProfileData member.TblMemberProfile
 
-	var memberProfileData model.MemberProfile
-
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", conv_member.ID).First(&memberProfileData).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", member_details.Id).First(&memberProfileData).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -108,7 +123,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	mail_expiry_time := current_time.In(TimeZone).Add(5 * time.Minute).Format("02 Jan 2006 03:04 PM")
 
-	err = Mem.StoreGraphqlMemberOtp(otp, conv_member.ID, otp_expiry_time)
+	err = Mem.StoreGraphqlMemberOtp(otp, member_details.Id, otp_expiry_time)
 
 	if err != nil {
 
@@ -117,9 +132,45 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, err
 	}
 
-	data := map[string]interface{}{"otp": otp, "expiryTime": mail_expiry_time, "member": conv_member, "additionalData": AdditionalData, "memberProfile": memberProfileData}
+	var loginTemplate model.EmailTemplate
 
-	tmpl, err := template.ParseFiles("view/email/login-template.html")
+	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_name = ?",OwndeskLoginTemplate).First(&loginTemplate).Error;err!=nil{
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	dataReplacer := strings.NewReplacer(
+		"{OwndeskLogo}", EmailImagePath.Owndesk,
+		"{Username}", member_details.Username,
+		"{CompanyName}", memberProfileData.CompanyName,
+		"{Otp}",strconv.Itoa(otp),
+		"{OtpExpiryTime}", mail_expiry_time,
+		"{OwndeskFacebookLink}", SocialMediaLinks.Facebook,
+		"{OwndeskLinkedinLink}", SocialMediaLinks.Linkedin,
+		"{OwndeskTwitterLink}", SocialMediaLinks.Twitter,
+		"{OwndeskYoutubeLink}", SocialMediaLinks.Youtube,
+		"{OwndeskInstagramLink}", SocialMediaLinks.Instagram,
+		"{FacebookLogo}", EmailImagePath.Facebook,
+		"{LinkedinLogo}", EmailImagePath.LinkedIn,
+		"{TwitterLogo}", EmailImagePath.Twitter,
+		"{YoutubeLogo}", EmailImagePath.Youtube,
+		"{InstagramLogo}", EmailImagePath.Instagram,
+	)
+
+	integratedBody := dataReplacer.Replace(loginTemplate.TemplateMessage)
+
+	htmlBody := template.HTML(integratedBody)
+
+	if err !=nil{
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	tmpl, err := template.ParseFiles("./view/email/login-template.html")
 
 	if err != nil {
 
@@ -130,14 +181,14 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	var template_buffer bytes.Buffer
 
-	if err := tmpl.Execute(&template_buffer, data); err != nil {
+	if err := tmpl.Execute(&template_buffer, gin.H{"body": htmlBody}); err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
 
-	mail_data := MailConfig{Email: conv_member.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "OwnDesk - Login Otp Confirmation"}
+	mail_data := MailConfig{Email: member_details.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginTemplate.TemplateSubject}
 
 	html_content := template_buffer.String()
 

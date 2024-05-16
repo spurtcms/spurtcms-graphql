@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
 	"github.com/spurtcms/pkgcore/member"
-	"github.com/spurtcms/pkgcore/teams"
 	"gorm.io/gorm"
 )
 
@@ -691,7 +690,7 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 }
 
-func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, entryId int, profileId *int, profileSlug *string) (bool, error) {
+func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, profileId *int, profileSlug *string) (bool, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -722,28 +721,45 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	if MemberProfile.ClaimStatus == 1 {
 
 		return false, ErrclaimAlready
-
 	}
 
-	var channelEntry channel.TblChannelEntries
+	adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
 
-	if err := db.Debug().Table("tbl_channel_entries").Where("is_deleted = 0 and status = 1 and id = ?", entryId).First(&channelEntry).Error; err != nil {
+	var claimTemplate model.EmailTemplate
+
+	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_name = ?", OwndeskClaimnowTemplate).First(&claimTemplate).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
 
-	var AuthorDetails teams.TblUser
+	dataReplacer := strings.NewReplacer(
+		"{OwndeskLogo}", EmailImagePath.Owndesk,
+		"{Username}", adminDetails.Username,
+		"{CompanyName}", MemberProfile.CompanyName,
+		"{ProfileName}", profileData.ProfileName,
+		"{ProfileSlug}", profileData.ProfileSlug,
+		"{WorkMail}", profileData.WorkMail,
+		"{CompanyNumber}", profileData.CompanyNumber,
+		"{PersonName}", profileData.PersonName,
+		"{OwndeskFacebookLink}", SocialMediaLinks.Facebook,
+		"{OwndeskLinkedinLink}", SocialMediaLinks.Linkedin,
+		"{OwndeskTwitterLink}", SocialMediaLinks.Twitter,
+		"{OwndeskYoutubeLink}", SocialMediaLinks.Youtube,
+		"{OwndeskInstagramLink}", SocialMediaLinks.Instagram,
+		"{FacebookLogo}", EmailImagePath.Facebook,
+		"{LinkedinLogo}", EmailImagePath.LinkedIn,
+		"{TwitterLogo}", EmailImagePath.Twitter,
+		"{YoutubeLogo}", EmailImagePath.Youtube,
+		"{InstagramLogo}", EmailImagePath.Instagram,
+	)
 
-	if err := db.Table("tbl_users").Select("tbl_users.*").Where("tbl_users.is_deleted = 0 and tbl_channels.is_deleted = 0 and tbl_channels.id = ?", OwndeskChannelId).Joins("inner join tbl_channels on tbl_channels.created_by = tbl_users.id").First(&AuthorDetails).Error; err != nil {
+	integratedBody := dataReplacer.Replace(claimTemplate.TemplateMessage)
 
-		return false, err
-	}
+	htmlBody := template.HTML(integratedBody)
 
-	data := map[string]interface{}{"claimData": profileData, "authorDetails": AuthorDetails, "entry": channelEntry, "additionalData": AdditionalData, "link": PathUrl + "member/updatemember?id=" + strconv.Itoa(MemberProfile.MemberId)}
-
-	tmpl, err := template.ParseFiles("view/email/claim-template.html")
+	tmpl, err := template.ParseFiles("./view/email/email-template.html")
 
 	if err != nil {
 
@@ -752,20 +768,20 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	var template_buff bytes.Buffer
+	var template_buffers bytes.Buffer
 
-	err = tmpl.Execute(&template_buff, data)
-
-	if err != nil {
+	if err := tmpl.Execute(&template_buffers, gin.H{"body": htmlBody}); err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
 
-	mail_data := MailConfig{Email: AuthorDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: "My Claim Request for " + channelEntry.Title}
+	modifiedSubject := strings.TrimSuffix(claimTemplate.TemplateSubject, "{CompanyName}") + MemberProfile.CompanyName
 
-	html_content := template_buff.String()
+	mail_data := MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: modifiedSubject}
+
+	html_content := template_buffers.String()
 
 	go SendMail(mail_data, html_content, verify_chan)
 
@@ -845,11 +861,11 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, pro
 
 	db.Debug().Table("tbl_member_profiles").Select("id").Where("is_deleted = 0 and LOWER(profile_slug) = ?", profileSlug).Scan(&profileId)
 
-	if profileId != 0 && profileId == profileID{
+	if profileId != 0 && profileId == profileID {
 
 		return true, nil
 
-	}else if profileId == 0{
+	} else if profileId == 0 {
 
 		return true, nil
 	}

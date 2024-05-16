@@ -25,8 +25,8 @@ func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata 
 }
 
 // Memberclaimnow is the resolver for the memberclaimnow field.
-func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData, entryID int, profileID *int, profileSlug *string) (bool, error) {
-	return Memberclaimnow(r.DB, ctx, input, entryID, profileID, profileSlug)
+func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData, profileID *int, profileSlug *string) (bool, error) {
+	return Memberclaimnow(r.DB, ctx, input, profileID, profileSlug)
 }
 
 // ProfileNameVerification is the resolver for the profileNameVerification field.

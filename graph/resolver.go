@@ -72,8 +72,8 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 	return controller.VerifyMemberOtp(db, ctx, email, otp)
 }
 
-func Memberclaimnow(db *gorm.DB, ctx context.Context, input model.ClaimData,entryId int, profileId *int,profileSlug *string) (bool, error) {
-	return controller.Memberclaimnow(db, ctx, input, entryId, profileId,profileSlug)
+func Memberclaimnow(db *gorm.DB, ctx context.Context, input model.ClaimData, profileId *int,profileSlug *string) (bool, error) {
+	return controller.Memberclaimnow(db, ctx, input, profileId,profileSlug)
 }
 
 func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error) {

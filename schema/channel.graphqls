@@ -160,6 +160,23 @@ type LoginDetails{
 	token:              String! 
 }
 
+type EmailTemplate{
+	id:                Int!
+	templateName:      String!
+	templateSlug:      String!
+	templateSubject:   String!
+	templateMessage:   String! 
+	IsActive:          Int!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBy:        Int
+	isDeleted:         Int!
+	deletedOn:         Time
+	deletedBy:         Int
+	isDefault:         Int
+}
+
 extend type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int,channelSlug: String): Channel! @auth
@@ -172,7 +189,7 @@ extend type Mutation{
     memberLogin(email: String!): Boolean!
 	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
 	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
-	memberclaimnow(input: ClaimData!,entryId: Int!,profileId: Int,profileSlug: String): Boolean! @auth
+	memberclaimnow(input: ClaimData!,profileId: Int,profileSlug: String): Boolean! @auth
 	profileNameVerification(profileSlug: String!, profileId: Int!): Boolean! @auth
 	updateChannelEntryViewCount(entryId: Int,slug: String): Boolean! @auth
 }
@@ -186,6 +203,7 @@ input ProfileData{
 
 input ClaimData{
 	profileName:     String!
+	profileSlug:     String!
 	workMail:        String!
     companyNumber:   LargeInt!
 	personName:      String!

@@ -112,6 +112,7 @@ type ChannelEntriesDetails struct {
 
 type ClaimData struct {
 	ProfileName   string `json:"profileName"`
+	ProfileSlug   string `json:"profileSlug"`
 	WorkMail      string `json:"workMail"`
 	CompanyNumber string `json:"companyNumber"`
 	PersonName    string `json:"personName"`
@@ -188,6 +189,23 @@ type EcommerceProduct struct {
 type EcommerceProducts struct {
 	ProductList []EcommerceProduct `json:"productList"`
 	Count       int                `json:"count"`
+}
+
+type EmailTemplate struct {
+	ID              int        `json:"id"`
+	TemplateName    string     `json:"templateName"`
+	TemplateSlug    string     `json:"templateSlug"`
+	TemplateSubject string     `json:"templateSubject"`
+	TemplateMessage string     `json:"templateMessage"`
+	IsActive        int        `json:"IsActive"`
+	CreatedOn       time.Time  `json:"createdOn"`
+	CreatedBy       int        `json:"createdBy"`
+	ModifiedOn      *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy      *int       `json:"modifiedBy,omitempty"`
+	IsDeleted       int        `json:"isDeleted"`
+	DeletedOn       *time.Time `json:"deletedOn,omitempty"`
+	DeletedBy       *int       `json:"deletedBy,omitempty"`
+	IsDefault       *int       `json:"isDefault,omitempty"`
 }
 
 type Field struct {
