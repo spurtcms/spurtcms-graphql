@@ -173,7 +173,7 @@ type EcommerceProduct struct {
 	DiscountPrice      *int           `json:"discountPrice,omitempty" gorm:"column:discount_price"`
 	SpecialPrice       *int           `json:"specialPrice,omitempty" gorm:"column:special_price"`
 	ProductImageArray  []string       `json:"productImageArray,omitempty" gorm:"-"`
-	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ProductID"`
+	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ID"`
 	OrderID            *int           `json:"orderId,omitempty" gorm:"column:id;table:tbl_ecom_product_orders"`
 	OrderUniqueID      *string        `json:"orderUniqueId,omitempty" gorm:"column:uuid;table:tbl_ecom_product_orders"`
 	OrderStatus        *string        `json:"orderStatus,omitempty" gorm:"column:status;table:tbl_ecom_product_orders"`

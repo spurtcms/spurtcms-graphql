@@ -24,60 +24,60 @@ type key string
 
 const ContextKey key = "ginContext"
 
-type MailConfig struct{
-	Email            string
-	MailUsername     string
-	MailPassword     string
-	Subject          string
-	AdditionalData   map[string]interface{}
+type MailConfig struct {
+	Email          string
+	MailUsername   string
+	MailPassword   string
+	Subject        string
+	AdditionalData map[string]interface{}
 }
 
-type MailImages struct{
-	Owndesk    string
-	Twitter    string
-	Facebook   string
-	LinkedIn   string
-	Youtube    string
-	Instagram  string
+type MailImages struct {
+	Owndesk   string
+	Twitter   string
+	Facebook  string
+	LinkedIn  string
+	Youtube   string
+	Instagram string
 }
 
-type SocialMedias struct{
-	Linkedin    string
-	Twitter     string
-	Facebook    string
-	Instagram   string
-	Youtube     string
+type SocialMedias struct {
+	Linkedin  string
+	Twitter   string
+	Facebook  string
+	Instagram string
+	Youtube   string
 }
 
-var(
-	Mem member.MemberAuth
-	Auth *auth.Authorization
-	TimeZone *time.Location
-	ProfileImagePath,SpecialToken string
-	SectionTypeId = 12
-    MemberFieldTypeId = 14
-	PathUrl string
-	EmailImageUrlPrefix string
-	SmtpPort,SmtpHost string
-	OwndeskChannelId int = 108
-	EmailImagePath MailImages
-	SocialMediaLinks SocialMedias
-	OwndeskLoginEnquiryTemplate = "owndeskloginenquiry"
-	OwndeskLoginTemplate = "owndesklogin"
-	OwndeskClaimnowTemplate = "owndeskclaimnow"
+var (
+	Mem                            member.MemberAuth
+	Auth                           *auth.Authorization
+	TimeZone                       *time.Location
+	ProfileImagePath, SpecialToken string
+	SectionTypeId                  = 12
+	MemberFieldTypeId              = 14
+	PathUrl                        string
+	EmailImageUrlPrefix            string
+	SmtpPort, SmtpHost             string
+	OwndeskChannelId               int = 108
+	EmailImagePath                 MailImages
+	SocialMediaLinks               SocialMedias
+	OwndeskLoginEnquiryTemplate    = "Owndeskloginenquiry"
+	OwndeskLoginTemplate           = "Owndesklogin"
+	OwndeskClaimnowTemplate        = "Owndeskclaimnow"
 )
 
-var(
-	ErrInvalidMail = errors.New("your email is not yet registered in our owndesk platform")
-	ErrSendMail = errors.New("failed to send unauthorized login attempt mail to admin")
-	ErrclaimAlready = errors.New("member profile is already claimed")
+var (
+	ErrInvalidMail      = errors.New("your email is not yet registered in our owndesk platform")
+	ErrSendMail         = errors.New("failed to send unauthorized login attempt mail to admin")
+	ErrclaimAlready     = errors.New("member profile is already claimed")
 	ErrEmptyProfileSlug = errors.New("profile slug should not be empty")
 	ErrProfileSlugExist = errors.New("profile slug already exists")
-	ErrMandatory = errors.New("missing mandatory fields")
+	ErrMandatory        = errors.New("missing mandatory fields")
 )
 
-func init(){
-	
+func init() {
+
 	err := godotenv.Load()
 
 	if err != nil {
@@ -107,25 +107,25 @@ func init(){
 	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
 
 	EmailImagePath = MailImages{
-		Owndesk  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/own-desk-logo.png","/"),
-		Twitter  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons3.png","/"),
-		Facebook :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons1.png","/"),
-		LinkedIn :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons2.png","/"),
-		Youtube  :  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons4.png","/"),
-		Instagram:  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons5.png","/"),
+		Owndesk:   EmailImageUrlPrefix + strings.TrimPrefix("/view/img/own-desk-logo.png", "/"),
+		Twitter:   EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons3.png", "/"),
+		Facebook:  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons1.png", "/"),
+		LinkedIn:  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons2.png", "/"),
+		Youtube:   EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons4.png", "/"),
+		Instagram: EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons5.png", "/"),
 	}
 
 	SocialMediaLinks = SocialMedias{
-		Linkedin: os.Getenv("LINKEDIN"),
-		Twitter: os.Getenv("TWITTER"),
-		Facebook: os.Getenv("FACEBOOK"),
+		Linkedin:  os.Getenv("LINKEDIN"),
+		Twitter:   os.Getenv("TWITTER"),
+		Facebook:  os.Getenv("FACEBOOK"),
 		Instagram: os.Getenv("INSTAGRAM"),
-		Youtube: os.Getenv("YOUTUBE"),
+		Youtube:   os.Getenv("YOUTUBE"),
 	}
 
 }
 
-func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
+func GetAuthorization(token string, db *gorm.DB) *auth.Authorization {
 
 	auth := spurtcore.NewInstance(&auth.Option{DB: db, Token: token, Secret: os.Getenv("JWT_SECRET")})
 
@@ -133,14 +133,14 @@ func GetAuthorization(token string,db *gorm.DB)(*auth.Authorization) {
 
 }
 
-func GetAuthorizationWithoutToken(db *gorm.DB)(*auth.Authorization){
+func GetAuthorizationWithoutToken(db *gorm.DB) *auth.Authorization {
 
 	auth := spurtcore.NewInstance(&auth.Option{DB: db, Token: "", Secret: os.Getenv("JWT_SECRET")})
 
 	return &auth
 }
 
-func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,string,error) {
+func StoreImageBase64ToLocal(imageData, storagePath, storingName string) (string, string, error) {
 
 	extEndIndex := strings.Index(imageData, ";base64,")
 
@@ -150,26 +150,26 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 
 	randomNum := strconv.Itoa(rand.Intn(900000) + 100000)
 
-	imageName := storingName +"-"+ randomNum + "." + ext
+	imageName := storingName + "-" + randomNum + "." + ext
 
 	err := os.MkdirAll(storagePath, 0755)
 
-	if err!=nil{
+	if err != nil {
 
 		log.Println(err)
 
-		return "","",err
+		return "", "", err
 	}
 
 	storageDestination := storagePath + imageName
-	
+
 	decode, err := base64.StdEncoding.DecodeString(base64data)
 
 	if err != nil {
 
 		log.Println(err)
 
-		return "","",err
+		return "", "", err
 	}
 
 	file, err := os.Create(storageDestination)
@@ -178,21 +178,21 @@ func StoreImageBase64ToLocal(imageData,storagePath,storingName string) (string,s
 
 		log.Println(err)
 
-		return "","",err
+		return "", "", err
 
 	}
 	if _, err := file.Write(decode); err != nil {
 
 		log.Println(err)
 
-		return "","",err
+		return "", "", err
 
 	}
 
-	return imageName,storageDestination,nil
+	return imageName, storageDestination, nil
 }
 
-func SendMail(config MailConfig,html_content string,channel chan error) {
+func SendMail(config MailConfig, html_content string, channel chan error) {
 
 	// Sender data
 	from := config.MailUsername
@@ -206,7 +206,7 @@ func SendMail(config MailConfig,html_content string,channel chan error) {
 	// Authentication
 	auth := smtp.PlainAuth("", from, password, SmtpHost)
 
-	subject := "Subject:"+config.Subject+" \n"
+	subject := "Subject:" + config.Subject + " \n"
 
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 
