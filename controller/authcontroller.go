@@ -235,6 +235,11 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails, ecomModule *int) (bool, error) {
 
+	if MemberRegisterPermission == "false"{
+
+		return false, ErrMemberRegisterPerm
+	}
+
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)

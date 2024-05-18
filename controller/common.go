@@ -54,12 +54,13 @@ var (
 	Auth                           *auth.Authorization
 	TimeZone                       *time.Location
 	ProfileImagePath, SpecialToken string
+	MemberRegisterPermission       string
 	SectionTypeId                  = 12
 	MemberFieldTypeId              = 14
 	PathUrl                        string
 	EmailImageUrlPrefix            string
 	SmtpPort, SmtpHost             string
-	OwndeskChannelId               int = 108
+	OwndeskChannelId               = 108
 	EmailImagePath                 MailImages
 	SocialMediaLinks               SocialMedias
 	OwndeskLoginEnquiryTemplate    = "Owndeskloginenquiry"
@@ -68,12 +69,13 @@ var (
 )
 
 var (
-	ErrInvalidMail      = errors.New("your email is not yet registered in our owndesk platform")
-	ErrSendMail         = errors.New("failed to send unauthorized login attempt mail to admin")
-	ErrclaimAlready     = errors.New("member profile is already claimed")
-	ErrEmptyProfileSlug = errors.New("profile slug should not be empty")
-	ErrProfileSlugExist = errors.New("profile slug already exists")
-	ErrMandatory        = errors.New("missing mandatory fields")
+	ErrInvalidMail         = errors.New("your email is not yet registered in our owndesk platform")
+	ErrSendMail            = errors.New("failed to send unauthorized login attempt mail to admin")
+	ErrclaimAlready        = errors.New("member profile is already claimed")
+	ErrEmptyProfileSlug    = errors.New("profile slug should not be empty")
+	ErrProfileSlugExist    = errors.New("profile slug already exists")
+	ErrMandatory           = errors.New("missing mandatory fields")
+	ErrMemberRegisterPerm  = errors.New("member register permission denied")
 )
 
 func init() {
@@ -122,6 +124,8 @@ func init() {
 		Instagram: os.Getenv("INSTAGRAM"),
 		Youtube:   os.Getenv("YOUTUBE"),
 	}
+
+	MemberRegisterPermission = os.Getenv("ALLOW_MEMBER_REGISTER")
 
 }
 
@@ -239,3 +243,4 @@ func HashingPassword(pass string) string {
 
 	return string(passbyte)
 }
+
