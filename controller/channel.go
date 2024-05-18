@@ -753,6 +753,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		"{TwitterLogo}", EmailImagePath.Twitter,
 		"{YoutubeLogo}", EmailImagePath.Youtube,
 		"{InstagramLogo}", EmailImagePath.Instagram,
+		"<figure","<div",
+		"</figure","</div",
+		"&nbsp;","",          
 	)
 
 	integratedBody := dataReplacer.Replace(claimTemplate.TemplateMessage)

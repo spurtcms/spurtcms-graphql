@@ -57,6 +57,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 			"{TwitterLogo}", EmailImagePath.Twitter,
 			"{YoutubeLogo}", EmailImagePath.Youtube,
 			"{InstagramLogo}", EmailImagePath.Instagram,
+			"<figure","<div",
+			"</figure","</div",
+			"&nbsp;","",          
 		)
 
 		integratedBody := dataReplacer.Replace(loginEnquiryTemplate.TemplateMessage)
@@ -157,6 +160,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		"{TwitterLogo}", EmailImagePath.Twitter,
 		"{YoutubeLogo}", EmailImagePath.Youtube,
 		"{InstagramLogo}", EmailImagePath.Instagram,
+		"<figure","<div",
+		"</figure","</div",
+		"&nbsp;","",          
 	)
 
 	integratedBody := dataReplacer.Replace(loginTemplate.TemplateMessage)
