@@ -368,7 +368,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	memberDetails.Password = input.Password
 
-	isRegistered, err := Mem.MemberRegister(memberDetails)
+	memberData,isRegistered, err := Mem.MemberRegister(memberDetails)
 
 	if !isRegistered || err != nil {
 
@@ -392,6 +392,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			ProfileImagePath: &memberDetails.ProfileImagePath,
 			CreatedOn:        createdOn,
 			Password:         HashingPassword(memberDetails.Password),
+			MemberID:         &memberData.Id,
 		}
 
 		if err := db.Table("tbl_ecom_customers").Create(&ecomCustomer).Error;err!=nil{

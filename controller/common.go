@@ -63,9 +63,9 @@ var (
 	OwndeskChannelId               = 108
 	EmailImagePath                 MailImages
 	SocialMediaLinks               SocialMedias
-	OwndeskLoginEnquiryTemplate    = "Owndeskloginenquiry"
-	OwndeskLoginTemplate           = "Owndesklogin"
-	OwndeskClaimnowTemplate        = "Owndeskclaimnow"
+	OwndeskLoginEnquiryTemplate    = "OwndeskLoginEnquiry"
+	OwndeskLoginTemplate           = "OwndeskLogin"
+	OwndeskClaimnowTemplate        = "OwndeskClaimRequest"
 )
 
 var (

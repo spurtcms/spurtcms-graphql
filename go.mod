@@ -7,7 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
 	github.com/spurtcms/pkgcontent v1.1.11
-	github.com/spurtcms/pkgcore v1.0.73
+	github.com/spurtcms/pkgcore v1.0.80
 	github.com/vektah/gqlparser/v2 v2.5.11
 	golang.org/x/crypto v0.21.0
 	gorm.io/driver/postgres v1.5.4
