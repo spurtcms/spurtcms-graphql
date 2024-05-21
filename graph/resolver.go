@@ -135,3 +135,11 @@ func EcommerceCustomerDetails(db *gorm.DB,ctx context.Context) (*model.CustomerD
 func CustomerProfileUpdate(db *gorm.DB,ctx context.Context, customerDetails model.CustomerInput) (bool, error) {
 	return controller.CustomerProfileUpdate(db,ctx,customerDetails)
 }
+
+func UpdateProductViewCount(db *gorm.DB,ctx context.Context, productID *int, productSlug *string) (bool, error) {
+	return controller.UpdateProductViewCount(db,ctx, productID, productSlug)
+}
+
+func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.JobFilter, sort *model.JobSort) (*model.JobsList, error) {
+	return controller.JobsList(db, ctx, limit, offset, filter, sort)
+}

@@ -99,8 +99,6 @@ github.com/sosodev/duration v1.2.0 h1:pqK/FLSjsAADWY74SyWDCjOcd5l7H8GSnnOGEB9A1U
 github.com/sosodev/duration v1.2.0/go.mod h1:RQIBBX0+fMLc/D9+Jb/fwvVmo0eZvDDEERAikUR6SDg=
 github.com/spurtcms/pkgcontent v1.1.11 h1:XlrCokNB+M+DyKx1bf00K4lKEpYdy4D7RpXCK/UjPhw=
 github.com/spurtcms/pkgcontent v1.1.11/go.mod h1:VLcQLLqUo4LKL0DwC5RGp2UrHCK1M1oL2j0HEudGIAA=
-github.com/spurtcms/pkgcore v1.0.73 h1:E8S2WpzI/KCzPlfa64DBs6KCICBP+YEIXEAZMlvxvkg=
-github.com/spurtcms/pkgcore v1.0.73/go.mod h1:k/HTW4fjgZbQTN92Q7pWfvoHtbT0S08b1LbFNJsdn38=
 github.com/spurtcms/pkgcore v1.0.80 h1:sG+vXlF7icciftHn+CRfaYj6jCDOpEd56EdmihT+igY=
 github.com/spurtcms/pkgcore v1.0.80/go.mod h1:k/HTW4fjgZbQTN92Q7pWfvoHtbT0S08b1LbFNJsdn38=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

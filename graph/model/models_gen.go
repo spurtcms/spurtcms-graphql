@@ -173,7 +173,7 @@ type EcommerceProduct struct {
 	DiscountPrice      *int           `json:"discountPrice,omitempty" gorm:"column:discount_price"`
 	SpecialPrice       *int           `json:"specialPrice,omitempty" gorm:"column:special_price"`
 	ProductImageArray  []string       `json:"productImageArray,omitempty" gorm:"-"`
-	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ID"`
+	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ProductID"`
 	OrderID            *int           `json:"orderId,omitempty" gorm:"column:id;table:tbl_ecom_product_orders"`
 	OrderUniqueID      *string        `json:"orderUniqueId,omitempty" gorm:"column:uuid;table:tbl_ecom_product_orders"`
 	OrderStatus        *string        `json:"orderStatus,omitempty" gorm:"column:status;table:tbl_ecom_product_orders"`
@@ -247,6 +247,53 @@ type FieldValue struct {
 	CreatedBy  int        `json:"createdBy"`
 	ModifiedOn *time.Time `json:"modifiedOn,omitempty"`
 	ModifiedBy *int       `json:"modifiedBY,omitempty"`
+}
+
+type Job struct {
+	ID             int        `json:"id"`
+	CategoriesID   int        `json:"categoriesId"`
+	JobTitle       string     `json:"jobTitle"`
+	JobDescription string     `json:"jobDescription"`
+	JobLocation    string     `json:"jobLocation"`
+	JobType        string     `json:"jobType"`
+	Education      string     `json:"education"`
+	Department     *string    `json:"department,omitempty"`
+	Experience     *string    `json:"experience,omitempty"`
+	Salary         string     `json:"salary"`
+	CreatedOn      time.Time  `json:"createdOn"`
+	CreatedBy      int        `json:"createdBy"`
+	IsDeleted      *int       `json:"isDeleted,omitempty"`
+	DeletedOn      *time.Time `json:"deletedOn,omitempty"`
+	DeletedBy      *int       `json:"deletedBy,omitempty"`
+	Keyword        *string    `json:"keyword,omitempty"`
+	Skill          string     `json:"skill"`
+	MinimumYears   int        `json:"minimumYears"`
+	MaximumYears   int        `json:"maximumYears"`
+	PostedDate     time.Time  `json:"postedDate"`
+	ValidThrough   time.Time  `json:"validThrough"`
+	Status         int        `json:"status"`
+	ModifiedOn     *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy     *int       `json:"modifiedBy,omitempty"`
+}
+
+type JobFilter struct {
+	JobTitle     graphql.Omittable[*string] `json:"jobTitle,omitempty"`
+	JobLocation  graphql.Omittable[*string] `json:"jobLocation,omitempty"`
+	JobType      graphql.Omittable[*string] `json:"jobType,omitempty"`
+	KeyWord      graphql.Omittable[*string] `json:"keyWord,omitempty"`
+	Skill        graphql.Omittable[*string] `json:"skill,omitempty"`
+	MinimumYears graphql.Omittable[*int]    `json:"minimumYears,omitempty"`
+	MaximumYears graphql.Omittable[*int]    `json:"maximumYears,omitempty"`
+}
+
+type JobSort struct {
+	Salary     graphql.Omittable[*int] `json:"salary,omitempty"`
+	PostedDate graphql.Omittable[*int] `json:"postedDate,omitempty"`
+}
+
+type JobsList struct {
+	Jobs  []Job `json:"jobs"`
+	Count int   `json:"count"`
 }
 
 type LoginDetails struct {
@@ -385,7 +432,7 @@ type ProductPricing struct {
 	Sku       string    `json:"sku"`
 	Priority  int       `json:"priority"`
 	Price     int       `json:"price"`
-	StartDtae time.Time `json:"startDtae"`
+	StartDate time.Time `json:"startDate"`
 	EndDate   time.Time `json:"endDate"`
 	Type      string    `json:"type"`
 }

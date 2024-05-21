@@ -50,7 +50,7 @@ type ProductPricing{
 	sku:         String!
 	priority:    Int!
 	price:       Int!
-	startDtae:   Time!
+	startDate:   Time!
 	endDate:     Time!
 	type:        String!
 }
@@ -149,6 +149,7 @@ extend type Mutation{
 	ecommerceOrderPlacement(paymentMode: String!,shippingAddress: String!,orderProducts: [orderProduct!]!,orderSummary: OrderSummary): Boolean! @auth
 	removeProductFromCartlist(productId: Int!): Boolean! @auth
 	customerProfileUpdate(customerDetails: customerInput!): Boolean! @auth
+	UpdateProductViewCount(productId: Int,productSlug: String): Boolean!
 }
 
 input ProductFilter{

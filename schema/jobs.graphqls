@@ -1,0 +1,55 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Job{
+    id:                Int!
+    categoriesId:      Int!
+    jobTitle:          String!
+    jobDescription:    String!
+    jobLocation:       String!
+    jobType:           String!
+    education:         String!
+    department:        String
+    experience:        String
+    salary:            String!
+    createdOn:         Time!
+    createdBy:         Int!
+    isDeleted:         Int
+    deletedOn:         Time
+    deletedBy:         Int
+    keyword:           String
+    skill:             String!
+    minimumYears:      Int!
+    maximumYears:      Int!
+    postedDate:        Time!
+    validThrough:      Time!   
+    status:            Int!
+    modifiedOn:        Time
+    modifiedBy:        Int
+}
+
+type JobsList{
+    jobs: [Job!]!
+    count: Int!
+}
+
+
+extend type Query{
+    jobsList(limit:Int!,offset: Int!,filter: JobFilter,sort: JobSort) : JobsList! @auth
+}
+
+input JobFilter{
+    jobTitle:          String
+    jobLocation:       String
+    jobType:           String
+    keyWord:           String
+    skill:             String
+    minimumYears:      Int
+    maximumYears:      Int
+}
+
+input JobSort{
+    salary:            Int
+    postedDate:        Int
+}

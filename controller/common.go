@@ -76,6 +76,7 @@ var (
 	ErrProfileSlugExist    = errors.New("profile slug already exists")
 	ErrMandatory           = errors.New("missing mandatory fields")
 	ErrMemberRegisterPerm  = errors.New("member register permission denied")
+	ErrMemberInactive      = errors.New("member is inactive")
 )
 
 func init() {

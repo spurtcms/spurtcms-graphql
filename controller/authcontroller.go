@@ -27,11 +27,16 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	member_details, err := Mem.GraphqlMemberLogin(email)
 
+	if member_details.IsActive==0{
+
+		return false,ErrMemberInactive
+	}
+
 	if gorm.ErrRecordNotFound == err {
 
 		var loginEnquiryTemplate  model.EmailTemplate
 
-		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and is_active = 1 and template_name = ?",OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error;err!=nil{
+		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_name = ?",OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error;err!=nil{
 
 			c.AbortWithError(http.StatusInternalServerError, err)
 			
@@ -228,7 +233,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	var memberProfileDetails model.MemberProfile
 
-	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_member_profiles.is_deleted = 0 and tbl_members.is_deleted = 0 and  tbl_members.is_active =1 and tbl_member_profiles.member_id = ?", memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 

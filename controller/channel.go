@@ -700,7 +700,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	var MemberProfile member.TblMemberProfile
 
-	profileQuery := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0")
+	profileQuery := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profile.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_members.is_active = 1 and tbl_member_profiles.is_deleted = 0")
 
 	if profileId != nil {
 
@@ -712,8 +712,6 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	}
 
 	if err := profileQuery.First(&MemberProfile).Error; err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
