@@ -14,7 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
-	"github.com/spurtcms/pkgcore/member"
+	// "github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 )
 
@@ -698,7 +698,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	verify_chan := make(chan error)
 
-	var MemberProfile member.TblMemberProfile
+	var MemberProfile model.MemberProfile
 
 	profileQuery := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profile.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_members.is_active = 1 and tbl_member_profiles.is_deleted = 0")
 
@@ -716,9 +716,14 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	if MemberProfile.ClaimStatus == 1 {
+	if *MemberProfile.ClaimStatus == 1{
 
 		return false, ErrclaimAlready
+	}
+
+	if *MemberProfile.IsActive != 1{
+
+		return false,ErrMemberInactive
 	}
 
 	adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
@@ -735,7 +740,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	dataReplacer := strings.NewReplacer(
 		"{OwndeskLogo}", EmailImagePath.Owndesk,
 		"{Username}", adminDetails.Username,
-		"{CompanyName}", MemberProfile.CompanyName,
+		"{CompanyName}", *MemberProfile.CompanyName,
 		"{ProfileName}", profileData.ProfileName,
 		"{ProfileSlug}", profileData.ProfileSlug,
 		"{WorkMail}", profileData.WorkMail,
@@ -778,7 +783,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	modifiedSubject := strings.TrimSuffix(claimTemplate.TemplateSubject, "{CompanyName}") + MemberProfile.CompanyName
+	modifiedSubject := strings.TrimSuffix(claimTemplate.TemplateSubject, "{CompanyName}") + *MemberProfile.CompanyName
 
 	mail_data := MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: modifiedSubject}
 

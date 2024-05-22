@@ -27,7 +27,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	member_details, err := Mem.GraphqlMemberLogin(email)
 
-	if member_details.IsActive==0{
+	if member_details.IsActive==0 && member_details.Id != 0{
 
 		return false,ErrMemberInactive
 	}

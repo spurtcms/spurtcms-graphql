@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-
 	"net/http"
 	"spurtcms-graphql/graph/model"
 	"strconv"
@@ -1005,12 +1004,32 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 
 func UpdateProductViewCount(db *gorm.DB,ctx context.Context, productID *int, productSlug *string) (bool, error) {
 
-	// if productID == nil && productSlug == nil {
+	c,_ := ctx.Value(ContextKey).(*gin.Context)
 
-	// 	return false, ErrMandatory
-	// }
+	if productID == nil && productSlug == nil {
 
-	// if err := db.Debug().Table("tbl_ecom_products")
+		return false, ErrMandatory
+	}
+
+	query := db.Debug().Table("tbl_ecom_products").Where("is_deleted = 0 and is_active = 1")
+
+	if productID!=nil{
+
+		query = query.Where("id = ?",*productID)
+
+	}else if productSlug != nil{
+
+		query = query.Where("product_slug = ?", *productSlug)
+	}
+
+	err := query.Update("view_count",gorm.Expr("view_count + 1")).Error
+
+	if err != nil{
+
+		c.AbortWithError(500,err)
+
+		return false, err
+	}
 
 	return true, nil
 }

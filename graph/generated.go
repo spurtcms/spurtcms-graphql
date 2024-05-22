@@ -82,7 +82,7 @@ type QueryResolver interface {
 	JobsList(ctx context.Context, limit int, offset int, filter *model.JobFilter, sort *model.JobSort) (*model.JobsList, error)
 	MemberProfileDetails(ctx context.Context) (*model.MemberProfile, error)
 	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error)
-	SpaceDetails(ctx context.Context, spaceID int) (*model.Space, error)
+	SpaceDetails(ctx context.Context, spaceID *int, spaceSlug *string) (*model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (*model.PageAndPageGroups, error)
 }
 
@@ -354,7 +354,8 @@ type MemberProfile{
 	createdOn:         Time
 	modifiedOn:        Time 
 	modifiedBy:        Int 
-	claimStatus:       Int      
+	claimStatus:       Int 
+	IsActive:          Int    
 }
 
 
@@ -876,7 +877,7 @@ type PageGroup{
 
 extend type Query{
 	spaceList(limit: Int!,offset: Int!,categoriesId: Int): SpaceDetails! @auth
-	spaceDetails(spaceId: Int!): Space! @auth
+	spaceDetails(spaceId: Int, spaceSlug: String): Space! @auth
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
 }`, BuiltIn: false},
 }
@@ -1732,15 +1733,24 @@ func (ec *executionContext) field_Query_jobsList_args(ctx context.Context, rawAr
 func (ec *executionContext) field_Query_spaceDetails_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
+	var arg0 *int
 	if tmp, ok := rawArgs["spaceId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spaceId"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["spaceId"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["spaceSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spaceSlug"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["spaceSlug"] = arg1
 	return args, nil
 }
 
@@ -4826,6 +4836,8 @@ func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx contex
 				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
+			case "IsActive":
+				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -11224,6 +11236,8 @@ func (ec *executionContext) fieldContext_LoginDetails_memberProfileData(ctx cont
 				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
+			case "IsActive":
+				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -13141,6 +13155,47 @@ func (ec *executionContext) _MemberProfile_claimStatus(ctx context.Context, fiel
 }
 
 func (ec *executionContext) fieldContext_MemberProfile_claimStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MemberProfile_IsActive(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_IsActive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsActive, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_IsActive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MemberProfile",
 		Field:      field,
@@ -16241,6 +16296,8 @@ func (ec *executionContext) fieldContext_Query_getMemberProfileDetails(ctx conte
 				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
+			case "IsActive":
+				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -17050,6 +17107,8 @@ func (ec *executionContext) fieldContext_Query_memberProfileDetails(ctx context.
 				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
+			case "IsActive":
+				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -17153,7 +17212,7 @@ func (ec *executionContext) _Query_spaceDetails(ctx context.Context, field graph
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().SpaceDetails(rctx, fc.Args["spaceId"].(int))
+			return ec.resolvers.Query().SpaceDetails(rctx, fc.Args["spaceId"].(*int), fc.Args["spaceSlug"].(*string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -24426,6 +24485,8 @@ func (ec *executionContext) _MemberProfile(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._MemberProfile_modifiedBy(ctx, field, obj)
 		case "claimStatus":
 			out.Values[i] = ec._MemberProfile_claimStatus(ctx, field, obj)
+		case "IsActive":
+			out.Values[i] = ec._MemberProfile_IsActive(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

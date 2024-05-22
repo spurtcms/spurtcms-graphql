@@ -94,7 +94,8 @@ type MemberProfile{
 	createdOn:         Time
 	modifiedOn:        Time 
 	modifiedBy:        Int 
-	claimStatus:       Int      
+	claimStatus:       Int 
+	IsActive:          Int    
 }
 
 

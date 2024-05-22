@@ -365,6 +365,7 @@ type MemberProfile struct {
 	ModifiedOn      *time.Time  `json:"modifiedOn,omitempty"`
 	ModifiedBy      *int        `json:"modifiedBy,omitempty"`
 	ClaimStatus     *int        `json:"claimStatus,omitempty"`
+	IsActive        *int        `json:"IsActive,omitempty"`
 }
 
 type Mutation struct {

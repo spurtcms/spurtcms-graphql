@@ -82,7 +82,7 @@ func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoriesID
 	return &model.SpaceDetails{Spacelist: final_spacelist, Count: int(count)}, nil
 }
 
-func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (*model.Space, error) {
+func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId *int, spaceSlug *string) (*model.Space, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -101,7 +101,7 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (*model.Space, 
 
 	spaceAuth := spaces.Space{Authority: GetAuthorization(token.(string), db)}
 
-	space, err := spaceAuth.GetGraphqlSpaceDetails(spaceId, pathUrl)
+	space, err := spaceAuth.GetGraphqlSpaceDetails(*spaceId, *spaceSlug, pathUrl)
 
 	if err != nil {
 

@@ -68,6 +68,6 @@ type PageGroup{
 
 extend type Query{
 	spaceList(limit: Int!,offset: Int!,categoriesId: Int): SpaceDetails! @auth
-	spaceDetails(spaceId: Int!): Space! @auth
+	spaceDetails(spaceId: Int, spaceSlug: String): Space! @auth
 	PagesAndPageGroupsUnderSpace(spaceId: Int!): PageAndPageGroups! @auth
 }

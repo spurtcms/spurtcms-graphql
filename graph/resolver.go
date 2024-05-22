@@ -48,8 +48,8 @@ func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoryId *
 	return controller.SpaceList(db, ctx, limit, offset, categoryId)
 }
 
-func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId int) (*model.Space, error) {
-	return controller.SpaceDetails(db, ctx, spaceId)
+func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId *int, spaceSlug *string) (*model.Space, error) {
+	return controller.SpaceDetails(db, ctx, spaceId, spaceSlug)
 }
 
 func PagesAndPageGroupsUnderSpace(db *gorm.DB, ctx context.Context, spaceID int) (*model.PageAndPageGroups, error) {

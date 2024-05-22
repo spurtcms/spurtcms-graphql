@@ -15,8 +15,8 @@ func (r *queryResolver) SpaceList(ctx context.Context, limit int, offset int, ca
 }
 
 // SpaceDetails is the resolver for the spaceDetails field.
-func (r *queryResolver) SpaceDetails(ctx context.Context, spaceID int) (*model.Space, error) {
-	return SpaceDetails(r.DB, ctx, spaceID)
+func (r *queryResolver) SpaceDetails(ctx context.Context, spaceID *int, spaceSlug *string) (*model.Space, error) {
+	return SpaceDetails(r.DB, ctx, spaceID, spaceSlug)
 }
 
 // PagesAndPageGroupsUnderSpace is the resolver for the PagesAndPageGroupsUnderSpace field.
