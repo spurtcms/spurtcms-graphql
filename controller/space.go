@@ -88,20 +88,23 @@ func SpaceDetails(db *gorm.DB, ctx context.Context, spaceId *int, spaceSlug *str
 
 	token, _ := c.Get("token")
 
-	var pathUrl string
-
-	if os.Getenv("DOMAIN_URL") != "" {
-
-		pathUrl = os.Getenv("DOMAIN_URL")
-
-	} else {
-
-		pathUrl = os.Getenv("LOCAL_URL")
-	}
-
 	spaceAuth := spaces.Space{Authority: GetAuthorization(token.(string), db)}
 
-	space, err := spaceAuth.GetGraphqlSpaceDetails(*spaceId, *spaceSlug, pathUrl)
+	var (
+		space_id   int
+		space_slug string
+	)
+
+	if spaceId != nil {
+
+		space_id = *spaceId
+
+	} else if spaceSlug != nil {
+
+		space_slug = *spaceSlug
+	}
+
+	space, err := spaceAuth.GetGraphqlSpaceDetails(space_id, space_slug, PathUrl)
 
 	if err != nil {
 

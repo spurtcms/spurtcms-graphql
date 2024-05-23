@@ -169,6 +169,7 @@ type EcommerceProduct struct {
 	IsDeleted          int            `json:"isDeleted"`
 	DeletedBy          *int           `json:"deletedBy,omitempty"`
 	DeletedOn          *time.Time     `json:"deletedOn,omitempty"`
+	ViewCount          *int           `json:"viewCount,omitempty"`
 	DefaultPrice       int            `json:"defaultPrice" gorm:"column:product_price"`
 	DiscountPrice      *int           `json:"discountPrice,omitempty" gorm:"column:discount_price"`
 	SpecialPrice       *int           `json:"specialPrice,omitempty" gorm:"column:special_price"`
@@ -315,7 +316,7 @@ type Member struct {
 	ModifiedOn       *time.Time    `json:"modifiedOn,omitempty"`
 	ModifiedBy       *int          `json:"modifiedBy,omitempty"`
 	MemberGroupID    int           `json:"memberGroupId"`
-	Group            []MemberGroup `json:"group,omitempty"`
+	Group            []MemberGroup `json:"group,omitempty" gorm:"-"`
 }
 
 type MemberDetails struct {
@@ -441,6 +442,7 @@ type ProductPricing struct {
 type ProductSort struct {
 	Price graphql.Omittable[*int] `json:"price,omitempty"`
 	Date  graphql.Omittable[*int] `json:"date,omitempty"`
+	ViewCount graphql.Omittable[*int] `json:"viewCount,omitempty"`
 }
 
 type ProfileData struct {

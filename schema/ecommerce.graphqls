@@ -27,6 +27,7 @@ type EcommerceProduct{
 	isDeleted:                 Int!
 	deletedBy:                 Int
 	deletedOn:                 Time
+	viewCount:                 Int
 	defaultPrice:              Int! 
 	discountPrice:             Int
 	specialPrice:              Int
@@ -165,6 +166,7 @@ input ProductFilter{
 input ProductSort{
 	price:        Int
 	date:         Int
+	viewCount:    Int
 }
 
 input orderFilter{

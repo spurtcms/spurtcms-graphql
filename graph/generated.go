@@ -505,6 +505,7 @@ type EcommerceProduct{
 	isDeleted:                 Int!
 	deletedBy:                 Int
 	deletedOn:                 Time
+	viewCount:                 Int
 	defaultPrice:              Int! 
 	discountPrice:             Int
 	specialPrice:              Int
@@ -643,6 +644,7 @@ input ProductFilter{
 input ProductSort{
 	price:        Int
 	date:         Int
+	viewCount:    Int
 }
 
 input orderFilter{
@@ -5752,6 +5754,8 @@ func (ec *executionContext) fieldContext_EcommerceCartDetails_cartList(ctx conte
 				return ec.fieldContext_EcommerceProduct_deletedBy(ctx, field)
 			case "deletedOn":
 				return ec.fieldContext_EcommerceProduct_deletedOn(ctx, field)
+			case "viewCount":
+				return ec.fieldContext_EcommerceProduct_viewCount(ctx, field)
 			case "defaultPrice":
 				return ec.fieldContext_EcommerceProduct_defaultPrice(ctx, field)
 			case "discountPrice":
@@ -7188,6 +7192,47 @@ func (ec *executionContext) fieldContext_EcommerceProduct_deletedOn(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _EcommerceProduct_viewCount(ctx context.Context, field graphql.CollectedField, obj *model.EcommerceProduct) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EcommerceProduct_viewCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ViewCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EcommerceProduct_viewCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EcommerceProduct",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EcommerceProduct_defaultPrice(ctx context.Context, field graphql.CollectedField, obj *model.EcommerceProduct) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EcommerceProduct_defaultPrice(ctx, field)
 	if err != nil {
@@ -7901,6 +7946,8 @@ func (ec *executionContext) fieldContext_EcommerceProducts_productList(ctx conte
 				return ec.fieldContext_EcommerceProduct_deletedBy(ctx, field)
 			case "deletedOn":
 				return ec.fieldContext_EcommerceProduct_deletedOn(ctx, field)
+			case "viewCount":
+				return ec.fieldContext_EcommerceProduct_viewCount(ctx, field)
 			case "defaultPrice":
 				return ec.fieldContext_EcommerceProduct_defaultPrice(ctx, field)
 			case "discountPrice":
@@ -16454,6 +16501,8 @@ func (ec *executionContext) fieldContext_Query_ecommerceProductDetails(ctx conte
 				return ec.fieldContext_EcommerceProduct_deletedBy(ctx, field)
 			case "deletedOn":
 				return ec.fieldContext_EcommerceProduct_deletedOn(ctx, field)
+			case "viewCount":
+				return ec.fieldContext_EcommerceProduct_viewCount(ctx, field)
 			case "defaultPrice":
 				return ec.fieldContext_EcommerceProduct_defaultPrice(ctx, field)
 			case "discountPrice":
@@ -16763,6 +16812,8 @@ func (ec *executionContext) fieldContext_Query_ecommerceProductOrderDetails(ctx 
 				return ec.fieldContext_EcommerceProduct_deletedBy(ctx, field)
 			case "deletedOn":
 				return ec.fieldContext_EcommerceProduct_deletedOn(ctx, field)
+			case "viewCount":
+				return ec.fieldContext_EcommerceProduct_viewCount(ctx, field)
 			case "defaultPrice":
 				return ec.fieldContext_EcommerceProduct_defaultPrice(ctx, field)
 			case "discountPrice":
@@ -22284,7 +22335,7 @@ func (ec *executionContext) unmarshalInputProductSort(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"price", "date"}
+	fieldsInOrder := [...]string{"price", "date", "viewCount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -22305,6 +22356,13 @@ func (ec *executionContext) unmarshalInputProductSort(ctx context.Context, obj i
 				return &it, err
 			}
 			it.Date = graphql.OmittableOf(data)
+		case "viewCount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("viewCount"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.ViewCount = graphql.OmittableOf(data)
 		}
 	}
 
@@ -23631,6 +23689,8 @@ func (ec *executionContext) _EcommerceProduct(ctx context.Context, sel ast.Selec
 			out.Values[i] = ec._EcommerceProduct_deletedBy(ctx, field, obj)
 		case "deletedOn":
 			out.Values[i] = ec._EcommerceProduct_deletedOn(ctx, field, obj)
+		case "viewCount":
+			out.Values[i] = ec._EcommerceProduct_viewCount(ctx, field, obj)
 		case "defaultPrice":
 			out.Values[i] = ec._EcommerceProduct_defaultPrice(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

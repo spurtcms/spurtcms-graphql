@@ -96,36 +96,41 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 		listQuery = listQuery.Where("LOWER(TRIM(tbl_ecom_products.product_name)) ILIKE LOWER(TRIM(?))", "%"+searchKeyword+"%")
 	}
 
-	if sort != nil {
+	if sort != nil && sort.Date.IsSet() && *sort.Date.Value() != -1 {
 
-		if sort.Date.Value() != nil && *sort.Date.Value() != -1 {
+		if *sort.Date.Value() == 1 {
 
-			if *sort.Date.Value() == 1 {
+			listQuery = listQuery.Order("tbl_ecom_products.id desc")
 
-				listQuery = listQuery.Order("tbl_ecom_products.id desc")
+		} else if *sort.Date.Value() == 0 {
 
-			} else if *sort.Date.Value() == 0 {
+			listQuery = listQuery.Order("tbl_ecom_products.id ")
+		}
 
-				listQuery = listQuery.Order("tbl_ecom_products.id ")
-			}
+	} else if sort != nil &&  sort.Price.IsSet() && *sort.Price.Value() != -1 {
+
+		if *sort.Price.Value() == 1 {
+
+			listQuery = listQuery.Order("tbl_ecom_products.product_price desc")
+
+		} else if *sort.Price.Value() == 0 {
+
+			listQuery = listQuery.Order("tbl_ecom_products.product_price")
 
 		}
 
-		if sort.Price.Value() != nil && *sort.Price.Value() != -1 {
+	} else if sort != nil && sort.ViewCount.IsSet() && *sort.ViewCount.Value() != -1 {
 
-			if *sort.Price.Value() == 1 {
+		if *sort.ViewCount.Value() == 1 {
 
-				listQuery = listQuery.Order("tbl_ecom_products.product_price desc")
+			listQuery = listQuery.Order("tbl_ecom_products.view_count desc")
 
-			} else if *sort.Price.Value() == 0 {
+		} else if *sort.ViewCount.Value() == 0 {
 
-				listQuery = listQuery.Order("tbl_ecom_products.product_price")
-
-			}
-
+			listQuery = listQuery.Order("tbl_ecom_products.view_count")
 		}
 
-	} else {
+	}else {
 
 		listQuery = listQuery.Order("tbl_ecom_products.id desc")
 	}
@@ -1002,9 +1007,9 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 	return true, nil
 }
 
-func UpdateProductViewCount(db *gorm.DB,ctx context.Context, productID *int, productSlug *string) (bool, error) {
+func UpdateProductViewCount(db *gorm.DB, ctx context.Context, productID *int, productSlug *string) (bool, error) {
 
-	c,_ := ctx.Value(ContextKey).(*gin.Context)
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	if productID == nil && productSlug == nil {
 
@@ -1013,20 +1018,20 @@ func UpdateProductViewCount(db *gorm.DB,ctx context.Context, productID *int, pro
 
 	query := db.Debug().Table("tbl_ecom_products").Where("is_deleted = 0 and is_active = 1")
 
-	if productID!=nil{
+	if productID != nil {
 
-		query = query.Where("id = ?",*productID)
+		query = query.Where("id = ?", *productID)
 
-	}else if productSlug != nil{
+	} else if productSlug != nil {
 
 		query = query.Where("product_slug = ?", *productSlug)
 	}
 
-	err := query.Update("view_count",gorm.Expr("view_count + 1")).Error
+	err := query.Update("view_count", gorm.Expr("view_count + 1")).Error
 
-	if err != nil{
+	if err != nil {
 
-		c.AbortWithError(500,err)
+		c.AbortWithError(500, err)
 
 		return false, err
 	}

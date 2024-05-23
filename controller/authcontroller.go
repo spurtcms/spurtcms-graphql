@@ -386,10 +386,12 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
+		is_deleted := 0 
+
 		var ecomCustomer = model.CustomerDetails{
 			FirstName:        memberDetails.FirstName,
 			LastName:         &memberDetails.LastName,
-			Username:         memberDetails.Email,
+			Username:         memberDetails.Username,
 			MobileNo:         memberDetails.MobileNo,
 			Email:            input.Email,
 			IsActive:         memberDetails.IsActive,
@@ -398,6 +400,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			CreatedOn:        createdOn,
 			Password:         HashingPassword(memberDetails.Password),
 			MemberID:         &memberData.Id,
+			IsDeleted:        &is_deleted,
 		}
 
 		if err := db.Table("tbl_ecom_customers").Create(&ecomCustomer).Error;err!=nil{
@@ -522,20 +525,32 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	var memberProfile member.TblMemberProfile
 
-	query := db.Table("tbl_member_profiles").Where("is_deleted = 0")
+	query := db.Select("tbl_member_profiles.*").Table("tbl_member_profiles").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0")
 
 	if id != nil {
 
-		query = query.Where("member_id = ?", *id)
+		query = query.Where("tbl_member_profiles.member_id = ?", *id)
 
 	} else if profileSlug != nil {
 
-		query = query.Where("profile_slug = ?", *profileSlug)
+		query = query.Where("tbl_member_profiles.profile_slug = ?", *profileSlug)
 	}
 
 	if err := query.First(&memberProfile).Error; err != nil {
 
 		return &model.MemberProfile{}, err
+	}
+
+	var memberDetails model.Member
+
+	if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?",memberProfile.MemberId).First(&memberDetails).Error; err!=nil{
+
+	   return &model.MemberProfile{}, err
+    }
+	
+	if memberDetails.IsActive == 0 && memberDetails.ID != 0{
+
+		return &model.MemberProfile{},ErrMemberInactive
 	}
 
 	var profileLogo string
