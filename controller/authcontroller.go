@@ -27,11 +27,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	member_details, err := Mem.GraphqlMemberLogin(email)
 
-	if member_details.IsActive==0 && member_details.Id != 0{
-
-		return false,ErrMemberInactive
-	}
-
 	if gorm.ErrRecordNotFound == err {
 
 		var loginEnquiryTemplate  model.EmailTemplate
@@ -108,6 +103,11 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 	}else if err!=nil {
 
 		return false, err
+	}
+
+	if member_details.IsActive==0 && member_details.Id != 0{
+
+		return false,ErrMemberInactive
 	}
 
 	var memberProfileData member.TblMemberProfile

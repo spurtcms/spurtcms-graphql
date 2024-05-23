@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
+
 	// "github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 )
@@ -700,7 +701,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	var MemberProfile model.MemberProfile
 
-	profileQuery := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profile.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_members.is_active = 1 and tbl_member_profiles.is_deleted = 0")
+	profileQuery := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*,tbl_members.is_active").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_members.is_active = 1 and tbl_member_profiles.is_deleted = 0")
 
 	if profileId != nil {
 
@@ -716,15 +717,17 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	if *MemberProfile.ClaimStatus == 1{
+	if *MemberProfile.ClaimStatus == 1 {
 
 		return false, ErrclaimAlready
 	}
 
-	if *MemberProfile.IsActive != 1{
+	if *MemberProfile.IsActive != 1 {
 
-		return false,ErrMemberInactive
+		return false, ErrMemberInactive
 	}
+
+	Mem.Auth = GetAuthorizationWithoutToken(db)
 
 	adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
 
@@ -756,9 +759,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		"{TwitterLogo}", EmailImagePath.Twitter,
 		"{YoutubeLogo}", EmailImagePath.Youtube,
 		"{InstagramLogo}", EmailImagePath.Instagram,
-		"<figure","<div",
-		"</figure","</div",
-		"&nbsp;","",          
+		"<figure", "<div",
+		"</figure", "</div",
+		"&nbsp;", "",
 	)
 
 	integratedBody := dataReplacer.Replace(claimTemplate.TemplateMessage)
@@ -846,7 +849,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		ModifiedOn:    &currentTime,
 	}
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn, "modified_by": memberid}).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberid).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn, "modified_by": memberid}).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
