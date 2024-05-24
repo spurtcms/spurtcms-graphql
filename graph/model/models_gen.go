@@ -118,6 +118,11 @@ type ClaimData struct {
 	PersonName    string `json:"personName"`
 }
 
+type EcomOrderedProductDetails struct {
+	EcommerceProduct EcommerceProduct `json:"EcommerceProduct"`
+	OrderStatuses    []OrderStatus    `json:"OrderStatuses"`
+}
+
 type EcommerceCart struct {
 	ID         int        `json:"id"`
 	ProductID  int        `json:"productId"`
@@ -175,16 +180,17 @@ type EcommerceProduct struct {
 	SpecialPrice       *int           `json:"specialPrice,omitempty" gorm:"column:special_price"`
 	ProductImageArray  []string       `json:"productImageArray,omitempty" gorm:"-"`
 	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ProductID"`
-	OrderID            *int           `json:"orderId,omitempty" gorm:"column:id;table:tbl_ecom_product_orders"`
-	OrderUniqueID      *string        `json:"orderUniqueId,omitempty" gorm:"column:uuid;table:tbl_ecom_product_orders"`
-	OrderStatus        *string        `json:"orderStatus,omitempty" gorm:"column:status;table:tbl_ecom_product_orders"`
-	OrderCustomer      *int           `json:"orderCustomer,omitempty" gorm:"column:customer_id;table:tbl_ecom_product_orders"`
-	OrderTime          *time.Time     `json:"orderTime,omitempty" gorm:"column:created_on;table:tbl_ecom_product_orders"`
-	ShippingDetails    *string        `json:"shippingDetails,omitempty" gorm:"column:shipping_address;table:tbl_ecom_product_orders"`
-	OrderQuantity      *int           `json:"orderQuantity,omitempty" gorm:"column:quantity;table:tbl_ecom_product_order_details"`
-	OrderPrice         *int           `json:"orderPrice,omitempty" gorm:"column:price;table:tbl_ecom_product_order_details"`
-	OrderTax           *int           `json:"orderTax,omitempty" gorm:"column:tax;table:tbl_ecom_product_order_details"`
-	PaymentMode        *string        `json:"paymentMode,omitempty" gorm:"column:payment_mode;table:tbl_ecom_order_payments"`
+	OrderID            *int           `json:"orderId,omitempty" gorm:"column:id"`
+	OrderUniqueID      *string        `json:"orderUniqueId,omitempty" gorm:"column:uuid"`
+	OrderStatus        *string        `json:"orderStatus,omitempty" gorm:"column:status"`
+	OrderCustomer      *int           `json:"orderCustomer,omitempty" gorm:"column:customer_id"`
+	OrderTime          *time.Time     `json:"orderTime,omitempty" gorm:"column:created_on"`
+	ShippingDetails    *string        `json:"shippingDetails,omitempty" gorm:"column:shipping_address"`
+	OrderQuantity      *int           `json:"orderQuantity,omitempty" gorm:"column:quantity"`
+	OrderPrice         *int           `json:"orderPrice,omitempty" gorm:"column:price"`
+	OrderTax           *int           `json:"orderTax,omitempty" gorm:"column:tax"`
+	PaymentMode        *string        `json:"paymentMode,omitempty" gorm:"column:payment_mode"`
+	OrderStatuses      []OrderStatus  `json:"orderStatuses,omitempty" gorm:"-"`
 }
 
 type EcommerceProducts struct {

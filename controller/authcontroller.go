@@ -224,7 +224,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	currentTime := time.Now().UTC()
 
-	memberDetails, token, err := Mem.VerifyLoginOtp(email, otp, currentTime)
+	memberDetails, token, err := Mem.VerifyLoginOtp(email, otp, currentTime, LocalLoginType)
 
 	if err != nil {
 
@@ -481,7 +481,7 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 	memberLogin.Password = password
 
-	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"))
+	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"), LocalLoginType)
 
 	if err != nil {
 
@@ -523,6 +523,10 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
 
+	c,_ := ctx.Value(ContextKey).(*gin.Context)
+
+	tokenType := c.GetString("tokenType")
+
 	var memberProfile member.TblMemberProfile
 
 	query := db.Select("tbl_member_profiles.*").Table("tbl_member_profiles").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0")
@@ -548,7 +552,7 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 	   return &model.MemberProfile{}, err
     }
 	
-	if memberDetails.IsActive == 0 && memberDetails.ID != 0{
+	if memberDetails.IsActive == 0 && memberDetails.ID != 0 && tokenType == LocalLoginType{
 
 		return &model.MemberProfile{},ErrMemberInactive
 	}

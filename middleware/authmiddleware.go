@@ -48,7 +48,7 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	log.Println("log",controller.TimeZone,currentTime,currentTime1)
 
-	memberid,groupid,err :=  auth.VerifyTokenWithExpiryTime(token,os.Getenv("JWT_SECRET"),currentTime)
+	memberid,groupid,tokenType,err :=  auth.VerifyTokenWithExpiryTime(token,os.Getenv("JWT_SECRET"),currentTime)
 
 	if err != nil {
 
@@ -64,6 +64,8 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 	c.Set("groupid",groupid)
 
 	c.Set("token",token)
+
+	c.Set("tokenType",tokenType)
 
 	return next(ctx)
 }

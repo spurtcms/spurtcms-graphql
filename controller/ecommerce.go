@@ -107,7 +107,7 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 			listQuery = listQuery.Order("tbl_ecom_products.id ")
 		}
 
-	} else if sort != nil &&  sort.Price.IsSet() && *sort.Price.Value() != -1 {
+	} else if sort != nil && sort.Price.IsSet() && *sort.Price.Value() != -1 {
 
 		if *sort.Price.Value() == 1 {
 
@@ -130,7 +130,7 @@ func EcommerceProductList(db *gorm.DB, ctx context.Context, limit int, offset in
 			listQuery = listQuery.Order("tbl_ecom_products.view_count")
 		}
 
-	}else {
+	} else {
 
 		listQuery = listQuery.Order("tbl_ecom_products.id desc")
 	}
@@ -606,33 +606,27 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 		return &model.EcommerceProducts{}, err
 	}
 
-	if sort != nil {
+	if sort != nil && sort.Date.Value() != nil && *sort.Date.Value() != -1 {
 
-		if sort.Date.Value() != nil && *sort.Date.Value() != -1 {
+		if *sort.Date.Value() == 1 {
 
-			if *sort.Date.Value() == 1 {
+			query = query.Order("o.id desc")
 
-				query = query.Order("o.id desc")
+		} else if *sort.Date.Value() == 0 {
 
-			} else if *sort.Date.Value() == 0 {
-
-				query = query.Order("o.id")
-
-			}
+			query = query.Order("o.id")
 
 		}
 
-		if sort.Price.Value() != nil && *sort.Price.Value() != -1 {
+	} else if sort != nil && sort.Price.Value() != nil && *sort.Price.Value() != -1 {
 
-			if *sort.Price.Value() == 1 {
+		if *sort.Price.Value() == 1 {
 
-				query = query.Order("d.price desc")
+			query = query.Order("d.price desc")
 
-			} else if *sort.Price.Value() == 0 {
+		} else if *sort.Price.Value() == 0 {
 
-				query = query.Order("d.price")
-
-			}
+			query = query.Order("d.price")
 
 		}
 
@@ -641,7 +635,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 		query = query.Order("o.id desc")
 	}
 
-	if err := query.Select("p.*,o.*,d.*,op.*").Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
+	if err := query.Select("p.*,o.id,o.uuid,o.status,o.customer_id,o.created_on,o.shipping_address,d.quantity,d.price,d.tax,op.payment_mode").Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
 
 		return &model.EcommerceProducts{}, err
 	}
@@ -671,7 +665,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 	return &model.EcommerceProducts{ProductList: final_OrderedProductList, Count: int(count)}, nil
 }
 
-func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error) {
+func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *int, productSlug *string) (*model.EcomOrderedProductDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -683,7 +677,7 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 
 		c.AbortWithError(http.StatusUnauthorized, err)
 
-		return &model.EcommerceProduct{}, err
+		return &model.EcomOrderedProductDetails{}, err
 
 	}
 
@@ -691,7 +685,7 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 
 	if err := db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?", memberid).Scan(&customerId).Error; err != nil {
 
-		return &model.EcommerceProduct{}, err
+		return &model.EcomOrderedProductDetails{}, err
 	}
 
 	var orderedProduct model.EcommerceProduct
@@ -707,9 +701,9 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 		query = query.Where("p.product_slug = ?", *productSlug)
 	}
 
-	if err := query.Select("p.*,o.*,d.*,op.*").First(&orderedProduct).Error; err != nil {
+	if err := query.Select("p.*,o.id,o.uuid,o.status,o.customer_id,o.created_on,o.shipping_address,d.quantity,d.price,d.tax,op.payment_mode").First(&orderedProduct).Error; err != nil {
 
-		return &model.EcommerceProduct{}, err
+		return &model.EcomOrderedProductDetails{}, err
 	}
 
 	if orderedProduct.ProductImagePath != "" {
@@ -727,7 +721,14 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 
 	}
 
-	return &orderedProduct, nil
+	var productOrderStatuses []model.OrderStatus
+
+	if err := db.Debug().Table("tbl_ecom_order_statuses").Where("order_id = ?", orderedProduct.OrderID).Find(&productOrderStatuses).Error; err != nil {
+
+		return &model.EcomOrderedProductDetails{}, err
+	}
+
+	return &model.EcomOrderedProductDetails{EcommerceProduct: orderedProduct,OrderStatuses: productOrderStatuses}, nil
 }
 
 func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error) {
@@ -869,6 +870,11 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 	if err := db.Table("tbl_ecom_carts").Where("is_deleted = 0 and product_id in (?) and customer_id = ?", orderedProductIds, customerId).UpdateColumns(map[string]interface{}{"is_deleted": 1, "deleted_on": currentTime}).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	if err := db.Debug().Table("tbl_ecom_products").Where("is_deleted = 0 and product_id in (?)", orderedProductIds).Update("stock",gorm.Expr("stock - 1")).Error;err!=nil{
 
 		return false, err
 	}

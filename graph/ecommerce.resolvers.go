@@ -55,7 +55,7 @@ func (r *queryResolver) EcommerceProductOrdersList(ctx context.Context, limit in
 }
 
 // EcommerceProductOrderDetails is the resolver for the ecommerceProductOrderDetails field.
-func (r *queryResolver) EcommerceProductOrderDetails(ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error) {
+func (r *queryResolver) EcommerceProductOrderDetails(ctx context.Context, productID *int, productSlug *string) (*model.EcomOrderedProductDetails, error) {
 	return EcommerceProductOrderDetails(r.DB, ctx, productID, productSlug)
 }
 

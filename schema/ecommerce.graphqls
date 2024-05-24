@@ -43,7 +43,7 @@ type EcommerceProduct{
 	orderTime:                 Time
 	paymentMode:               String
 	shippingDetails:           String
-} 
+}
 
 type ProductPricing{
 	id:          Int!
@@ -136,12 +136,17 @@ type customerDetails{
 	memberId:         Int
 }
 
+type EcomOrderedProductDetails{
+	EcommerceProduct: EcommerceProduct!
+	OrderStatuses:  [OrderStatus!]!
+}
+
 extend type Query{
     ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
 	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct!
 	ecommerceCartList(limit: Int!,offset: Int!):EcommerceCartDetails! @auth
 	ecommerceProductOrdersList(limit: Int!,offset: Int!,filter: orderFilter,sort: orderSort): EcommerceProducts! @auth
-	ecommerceProductOrderDetails(productId: Int,productSlug: String): EcommerceProduct! @auth
+	ecommerceProductOrderDetails(productId: Int,productSlug: String): EcomOrderedProductDetails! @auth
 	ecommerceCustomerDetails: customerDetails! @auth
 }
 

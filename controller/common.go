@@ -66,6 +66,7 @@ var (
 	OwndeskLoginEnquiryTemplate    = "OwndeskLoginEnquiry"
 	OwndeskLoginTemplate           = "OwndeskLogin"
 	OwndeskClaimnowTemplate        = "OwndeskClaimRequest"
+	LocalLoginType                  = "member"
 )
 
 var (
