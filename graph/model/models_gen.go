@@ -190,7 +190,6 @@ type EcommerceProduct struct {
 	OrderPrice         *int           `json:"orderPrice,omitempty" gorm:"column:price"`
 	OrderTax           *int           `json:"orderTax,omitempty" gorm:"column:tax"`
 	PaymentMode        *string        `json:"paymentMode,omitempty" gorm:"column:payment_mode"`
-	OrderStatuses      []OrderStatus  `json:"orderStatuses,omitempty" gorm:"-"`
 }
 
 type EcommerceProducts struct {
