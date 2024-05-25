@@ -31,6 +31,15 @@ type MemberGroup{
 	modifiedBy:   Int 
 }
 
+type MemberSettings {
+    id:                  Int!
+    allowRegistration:   Int!     
+	memberLogin:         String!
+	modifiedBy:          Int       
+	modifiedOn:          Time 
+	notificationUsers:   String!  
+}
+
 extend type Query{
     memberProfileDetails: MemberProfile! @auth
 }

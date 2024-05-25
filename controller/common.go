@@ -25,7 +25,7 @@ type key string
 const ContextKey key = "ginContext"
 
 type MailConfig struct {
-	Email          string
+	Emails         []string
 	MailUsername   string
 	MailPassword   string
 	Subject        string
@@ -60,13 +60,13 @@ var (
 	PathUrl                        string
 	EmailImageUrlPrefix            string
 	SmtpPort, SmtpHost             string
-	OwndeskChannelId               = 108
+	// OwndeskChannelId               = 108
 	EmailImagePath                 MailImages
 	SocialMediaLinks               SocialMedias
 	OwndeskLoginEnquiryTemplate    = "OwndeskLoginEnquiry"
 	OwndeskLoginTemplate           = "OwndeskLogin"
 	OwndeskClaimnowTemplate        = "OwndeskClaimRequest"
-	LocalLoginType                  = "member"
+	LocalLoginType                 = "member"
 )
 
 var (
@@ -78,6 +78,7 @@ var (
 	ErrMandatory           = errors.New("missing mandatory fields")
 	ErrMemberRegisterPerm  = errors.New("member register permission denied")
 	ErrMemberInactive      = errors.New("inactive member")
+	ErrMemberLoginPerm     = errors.New("member login permission denied")
 )
 
 func init() {
@@ -205,9 +206,7 @@ func SendMail(config MailConfig, html_content string, channel chan error) {
 	password := config.MailPassword
 
 	// Receiver email address
-	to := []string{
-		config.Email,
-	}
+	to := config.Emails
 
 	// Authentication
 	auth := smtp.PlainAuth("", from, password, SmtpHost)
@@ -244,5 +243,26 @@ func HashingPassword(pass string) string {
 	}
 
 	return string(passbyte)
+}
+
+func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]auth.TblUser,[]string,error){
+
+	Mem.Auth = GetAuthorizationWithoutToken(db)
+
+	adminDetails,err := Mem.GetAdminDetails(adminIds)
+
+	if err != nil{
+
+		return []auth.TblUser{},[]string{},err
+	}
+
+	var adminEmails []string
+
+	for _,admin := range adminDetails{
+
+		adminEmails = append(adminEmails, admin.Email)
+	}
+
+	return adminDetails,adminEmails,nil
 }
 

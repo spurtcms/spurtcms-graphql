@@ -374,7 +374,25 @@ type MemberProfile struct {
 	IsActive        *int        `json:"IsActive,omitempty"`
 }
 
+type MemberSettings struct {
+	ID                int        `json:"id"`
+	AllowRegistration int        `json:"allowRegistration"`
+	MemberLogin       string     `json:"memberLogin"`
+	ModifiedBy        *int       `json:"modifiedBy,omitempty"`
+	ModifiedOn        *time.Time `json:"modifiedOn,omitempty"`
+	NotificationUsers string     `json:"notificationUsers"`
+}
+
 type Mutation struct {
+}
+
+type OrderProductDetails struct {
+	ID        int `json:"id"`
+	OrderID   int `json:"orderId"`
+	ProductID int `json:"productId"`
+	Quantity  int `json:"quantity"`
+	Price     int `json:"price"`
+	Tax       int `json:"tax"`
 }
 
 type OrderStatus struct {

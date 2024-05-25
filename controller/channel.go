@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
+	"strconv"
 	"strings"
 	"time"
 
@@ -727,9 +728,25 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, ErrMemberInactive
 	}
 
-	Mem.Auth = GetAuthorizationWithoutToken(db)
+	var memberSettings model.MemberSettings
 
-	adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
+	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
+
+		return false, err
+	}
+
+	var convIds []int
+
+	adminIds := strings.Split(memberSettings.NotificationUsers, ",")
+
+	for _, adminId := range adminIds {
+
+		convId, _ := strconv.Atoi(adminId)
+
+		convIds = append(convIds, convId)
+	}
+
+	_, notifyEmails, _ := GetNotifyAdminEmails(db,convIds)
 
 	var claimTemplate model.EmailTemplate
 
@@ -742,7 +759,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	dataReplacer := strings.NewReplacer(
 		"{OwndeskLogo}", EmailImagePath.Owndesk,
-		"{Username}", adminDetails.Username,
+		"{Username}", "Admin",
 		"{CompanyName}", *MemberProfile.CompanyName,
 		"{ProfileName}", profileData.ProfileName,
 		"{ProfileSlug}", profileData.ProfileSlug,
@@ -788,7 +805,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	modifiedSubject := strings.TrimSuffix(claimTemplate.TemplateSubject, "{CompanyName}") + *MemberProfile.CompanyName
 
-	mail_data := MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: modifiedSubject}
+	mail_data := MailConfig{Emails: notifyEmails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: modifiedSubject}
 
 	html_content := template_buffers.String()
 

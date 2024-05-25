@@ -21,6 +21,18 @@ import (
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
+	var memberSettings model.MemberSettings
+
+	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error;err!=nil{
+
+		return false, err
+	}
+
+	if memberSettings.MemberLogin == "password"{
+
+		return false,ErrMemberLoginPerm
+	}
+
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
@@ -38,13 +50,24 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 			return false,err
 		}
 
-		adminDetails, _ := Mem.GetAdminDetails(OwndeskChannelId)
+		var convIds []int
 
-		var admin_mail_data = MailConfig{Email: adminDetails.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginEnquiryTemplate.TemplateSubject}
+		adminIds := strings.Split(memberSettings.NotificationUsers,",")
+
+		for _,adminId := range adminIds{
+
+			convId,_ := strconv.Atoi(adminId) 
+
+			convIds = append(convIds, convId)
+		}
+
+        _, notifyEmails, _ := GetNotifyAdminEmails(db,convIds)
+
+		var admin_mail_data = MailConfig{Emails: notifyEmails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginEnquiryTemplate.TemplateSubject}
 
 		dataReplacer := strings.NewReplacer(
 			"{OwndeskLogo}", EmailImagePath.Owndesk,
-			"{Username}", adminDetails.Username,
+			"{Username}", "Admin",
 			"{UnauthorizedMail}", email,
 			"{CurrentTime}",time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM"),
 			"{OwndeskFacebookLink}", SocialMediaLinks.Facebook,
@@ -102,7 +125,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	}else if err!=nil {
 
-		return false, err
+		return false, ErrInvalidMail
 	}
 
 	if member_details.IsActive==0 && member_details.Id != 0{
@@ -199,7 +222,11 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, err
 	}
 
-	mail_data := MailConfig{Email: member_details.Email, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginTemplate.TemplateSubject}
+	var sendMails []string
+
+	sendMails = append(sendMails, member_details.Email)
+
+	mail_data := MailConfig{Emails: sendMails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginTemplate.TemplateSubject}
 
 	html_content := template_buffer.String()
 
@@ -246,9 +273,16 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails, ecomModule *int) (bool, error) {
 
-	if MemberRegisterPermission == "false"{
+	var memberSettings model.MemberSettings
 
-		return false, ErrMemberRegisterPerm
+	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error;err!=nil{
+
+		return false, err
+	}
+
+	if memberSettings.AllowRegistration == 0{
+
+		return false,ErrMemberRegisterPerm
 	}
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
@@ -464,6 +498,18 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string) (string, error) {
 
+	var memberSettings model.MemberSettings
+
+	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error;err!=nil{
+
+		return "", err
+	}
+
+	if memberSettings.MemberLogin == "otp"{
+
+		return "",ErrMemberLoginPerm
+	}
+
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
@@ -481,7 +527,7 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 	memberLogin.Password = password
 
-	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"), LocalLoginType)
+	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"))
 
 	if err != nil {
 

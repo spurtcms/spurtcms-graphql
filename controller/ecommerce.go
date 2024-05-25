@@ -665,7 +665,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 	return &model.EcommerceProducts{ProductList: final_OrderedProductList, Count: int(count)}, nil
 }
 
-func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *int, productSlug *string) (*model.EcomOrderedProductDetails, error) {
+func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *int, productSlug *string, orderId int) (*model.EcomOrderedProductDetails, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -690,7 +690,7 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 
 	var orderedProduct model.EcommerceProduct
 
-	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_order_payments op on op.order_id = o.id").Where("p.is_deleted = 0 and o.is_deleted = 0 and o.customer_id = ?", customerId)
+	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_order_payments op on op.order_id = o.id").Where("p.is_deleted = 0 and o.is_deleted = 0 and o.customer_id = ? and o.id = ?", customerId, orderId)
 
 	if productID != nil {
 
@@ -827,9 +827,16 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	for _, value := range orderProducts {
 
-		if err := db.Table("tbl_ecom_product_order_details").Create(map[string]interface{}{"product_id": value.ProductID, "order_id": createorder.ID, "quantity": value.Quantity, "price": value.Price, "tax": value.Tax}).Error; err != nil {
+		var productDetails = model.OrderProductDetails{OrderID: createorder.ID,ProductID: value.ProductID,Quantity: value.Quantity,Price: value.Price,Tax: value.Tax}
+
+		if err := db.Table("tbl_ecom_product_order_details").Create(&productDetails).Error; err != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return false, err
+		}
+
+		if err := db.Debug().Table("tbl_ecom_products").Where("is_deleted = 0 and is_active = 1 and id = ?",value.ProductID).Update("stock",gorm.Expr("stock - ?",value.Quantity)).Error;err!=nil{
 
 			return false, err
 		}
@@ -870,11 +877,6 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 	if err := db.Table("tbl_ecom_carts").Where("is_deleted = 0 and product_id in (?) and customer_id = ?", orderedProductIds, customerId).UpdateColumns(map[string]interface{}{"is_deleted": 1, "deleted_on": currentTime}).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
-
-		return false, err
-	}
-
-	if err := db.Debug().Table("tbl_ecom_products").Where("is_deleted = 0 and product_id in (?)", orderedProductIds).Update("stock",gorm.Expr("stock - 1")).Error;err!=nil{
 
 		return false, err
 	}

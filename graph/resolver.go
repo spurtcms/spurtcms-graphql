@@ -116,8 +116,8 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 	return controller.EcommerceProductOrdersList(db,ctx,limit,offset,filter,sort)
 }
 
-func EcommerceProductOrderDetails(db *gorm.DB,ctx context.Context, productID *int, productSlug *string) (*model.EcomOrderedProductDetails, error) {
-	return controller.EcommerceProductOrderDetails(db,ctx,productID,productSlug)
+func EcommerceProductOrderDetails(db *gorm.DB,ctx context.Context, productID *int, productSlug *string, orderId int) (*model.EcomOrderedProductDetails, error) {
+	return controller.EcommerceProductOrderDetails(db,ctx,productID,productSlug, orderId)
 }
 
 func EcommerceOrderPlacement(db *gorm.DB,ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error) {

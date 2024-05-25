@@ -95,6 +95,15 @@ type EcommerceOrder{
 	totalCost:         Int!
 }
 
+type OrderProductDetails{
+	id:           Int!
+	orderId:      Int!
+	productId:    Int!
+	quantity:     Int!
+	price:        Int!
+	tax:          Int!
+}
+
 type OrderStatus{
 	id:            Int!
 	orderId:       Int!
@@ -146,7 +155,7 @@ extend type Query{
 	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct!
 	ecommerceCartList(limit: Int!,offset: Int!):EcommerceCartDetails! @auth
 	ecommerceProductOrdersList(limit: Int!,offset: Int!,filter: orderFilter,sort: orderSort): EcommerceProducts! @auth
-	ecommerceProductOrderDetails(productId: Int,productSlug: String): EcomOrderedProductDetails! @auth
+	ecommerceProductOrderDetails(productId: Int,productSlug: String, orderId : Int!): EcomOrderedProductDetails! @auth
 	ecommerceCustomerDetails: customerDetails! @auth
 }
 
