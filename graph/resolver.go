@@ -140,6 +140,14 @@ func UpdateProductViewCount(db *gorm.DB,ctx context.Context, productID *int, pro
 	return controller.UpdateProductViewCount(db,ctx, productID, productSlug)
 }
 
-func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.JobFilter, sort *model.JobSort) (*model.JobsList, error) {
-	return controller.JobsList(db, ctx, limit, offset, filter, sort)
+func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *model.JobFilter) (*model.JobsList, error) {
+	return controller.JobsList(db, ctx, limit, offset, filter)
+}
+
+func JobDetail(db *gorm.DB, ctx context.Context, id *int, jobSlug *string) (*model.Job, error) {
+	return controller.JobDetail(db, ctx, id, jobSlug)
+}
+
+func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.ApplicationInput) (bool, error) {
+	return controller.JobApplication(db, ctx, applicationDetails)
 }

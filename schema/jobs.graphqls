@@ -1,11 +1,17 @@
+
 # GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
 
+
+scalar Upload
+
 type Job{
-    id:                Int!
-    categoriesId:      Int!
+    id:                  Int!
+    categoriesId:        Int!
+    category:          Category
     jobTitle:          String!
+    jobSlug:           String!
     jobDescription:    String!
     jobLocation:       String!
     jobType:           String!
@@ -36,20 +42,39 @@ type JobsList{
 
 
 extend type Query{
-    jobsList(limit:Int!,offset: Int!,filter: JobFilter,sort: JobSort) : JobsList! @auth
+    jobsList(limit:Int!,offset: Int!,filter: JobFilter) : JobsList! 
+    jobDetail(Id: Int,jobSlug: String):Job!
+}
+
+extend type Mutation{
+    jobApplication(applicationDetails:applicationInput!):Boolean! @auth
+}
+
+input applicationInput{
+    name:            String!
+    emailId:         String!
+    mobileNo:        Int!
+    jobType:         String!
+    gender:          String!
+    location:        String!
+    education:       String!
+    graduation:      Int!
+    companyName:     String
+    experience:      Int!
+    skills:          String!
+    applicantImage:  Upload!
+    currentSalary:   Int
+    expectedSalary:  Int!
+    resume:          Upload!
 }
 
 input JobFilter{
     jobTitle:          String
     jobLocation:       String
-    jobType:           String
+    categoryId:        Int
+    categorySlug:      String
     keyWord:           String
-    skill:             String
     minimumYears:      Int
     maximumYears:      Int
-}
-
-input JobSort{
-    salary:            Int
-    postedDate:        Int
+    datePosted:        String
 }

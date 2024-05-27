@@ -9,7 +9,17 @@ import (
 	"spurtcms-graphql/graph/model"
 )
 
+// JobApplication is the resolver for the jobApplication field.
+func (r *mutationResolver) JobApplication(ctx context.Context, applicationDetails model.ApplicationInput) (bool, error) {
+	return JobApplication(r.DB, ctx, applicationDetails)
+}
+
 // JobsList is the resolver for the jobsList field.
-func (r *queryResolver) JobsList(ctx context.Context, limit int, offset int, filter *model.JobFilter, sort *model.JobSort) (*model.JobsList, error) {
-	return JobsList(r.DB, ctx, limit, offset, filter, sort)
+func (r *queryResolver) JobsList(ctx context.Context, limit int, offset int, filter *model.JobFilter) (*model.JobsList, error) {
+	return JobsList(r.DB, ctx, limit, offset, filter)
+}
+
+// JobDetail is the resolver for the jobDetail field.
+func (r *queryResolver) JobDetail(ctx context.Context, id *int, jobSlug *string) (*model.Job, error) {
+	return JobDetail(r.DB, ctx, id, jobSlug)
 }

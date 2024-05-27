@@ -572,6 +572,8 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	tokenType := c.GetString("tokenType")
 
+	memberid := c.GetInt("memberid")
+
 	var memberProfile member.TblMemberProfile
 
 	query := db.Select("tbl_member_profiles.*").Table("tbl_member_profiles").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0")
@@ -597,9 +599,16 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 		return &model.MemberProfile{}, err
 	}
 
-	if memberDetails.IsActive == 0 && memberDetails.ID != 0 && tokenType == LocalLoginType {
+	if memberDetails.IsActive == 0 && memberDetails.ID != 0 {
 
-		return &model.MemberProfile{}, ErrMemberInactive
+		if memberid != 0 && tokenType == LocalLoginType {
+
+			return &model.MemberProfile{}, ErrMemberInactive
+
+		}else if memberid == 0{
+
+			return &model.MemberProfile{}, ErrMemberInactive
+		}
 	}
 
 	var profileLogo string

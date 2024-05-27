@@ -61,24 +61,25 @@ var (
 	EmailImageUrlPrefix            string
 	SmtpPort, SmtpHost             string
 	// OwndeskChannelId               = 108
-	EmailImagePath                 MailImages
-	SocialMediaLinks               SocialMedias
-	OwndeskLoginEnquiryTemplate    = "OwndeskLoginEnquiry"
-	OwndeskLoginTemplate           = "OwndeskLogin"
-	OwndeskClaimnowTemplate        = "OwndeskClaimRequest"
-	LocalLoginType                 = "member"
+	EmailImagePath              MailImages
+	SocialMediaLinks            SocialMedias
+	OwndeskLoginEnquiryTemplate = "OwndeskLoginEnquiry"
+	OwndeskLoginTemplate        = "OwndeskLogin"
+	OwndeskClaimnowTemplate     = "OwndeskClaimRequest"
+	LocalLoginType              = "member"
 )
 
 var (
-	ErrInvalidMail         = errors.New("your email is not yet registered in our owndesk platform")
-	ErrSendMail            = errors.New("failed to send unauthorized login attempt mail to admin")
-	ErrclaimAlready        = errors.New("member profile is already claimed")
-	ErrEmptyProfileSlug    = errors.New("profile slug should not be empty")
-	ErrProfileSlugExist    = errors.New("profile slug already exists")
-	ErrMandatory           = errors.New("missing mandatory fields")
-	ErrMemberRegisterPerm  = errors.New("member register permission denied")
-	ErrMemberInactive      = errors.New("inactive member")
-	ErrMemberLoginPerm     = errors.New("member login permission denied")
+	ErrInvalidMail        = errors.New("your email is not yet registered in our owndesk platform")
+	ErrSendMail           = errors.New("failed to send unauthorized login attempt mail to admin")
+	ErrclaimAlready       = errors.New("member profile is already claimed")
+	ErrEmptyProfileSlug   = errors.New("profile slug should not be empty")
+	ErrProfileSlugExist   = errors.New("profile slug already exists")
+	ErrMandatory          = errors.New("missing mandatory fields")
+	ErrMemberRegisterPerm = errors.New("member register permission denied")
+	ErrMemberInactive     = errors.New("inactive member")
+	ErrMemberLoginPerm    = errors.New("member login permission denied")
+	ErrRecordNotFound     = errors.New("record not found")
 )
 
 func init() {
@@ -245,24 +246,23 @@ func HashingPassword(pass string) string {
 	return string(passbyte)
 }
 
-func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]auth.TblUser,[]string,error){
+func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]auth.TblUser, []string, error) {
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
-	adminDetails,err := Mem.GetAdminDetails(adminIds)
+	adminDetails, err := Mem.GetAdminDetails(adminIds)
 
-	if err != nil{
+	if err != nil {
 
-		return []auth.TblUser{},[]string{},err
+		return []auth.TblUser{}, []string{}, err
 	}
 
 	var adminEmails []string
 
-	for _,admin := range adminDetails{
+	for _, admin := range adminDetails {
 
 		adminEmails = append(adminEmails, admin.Email)
 	}
 
-	return adminDetails,adminEmails,nil
+	return adminDetails, adminEmails, nil
 }
-

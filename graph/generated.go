@@ -62,6 +62,7 @@ type MutationResolver interface {
 	RemoveProductFromCartlist(ctx context.Context, productID int) (bool, error)
 	CustomerProfileUpdate(ctx context.Context, customerDetails model.CustomerInput) (bool, error)
 	UpdateProductViewCount(ctx context.Context, productID *int, productSlug *string) (bool, error)
+	JobApplication(ctx context.Context, applicationDetails model.ApplicationInput) (bool, error)
 	TemplateMemberLogin(ctx context.Context, username *string, email *string, password string) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails, ecomModule *int) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
@@ -79,7 +80,8 @@ type QueryResolver interface {
 	EcommerceProductOrdersList(ctx context.Context, limit int, offset int, filter *model.OrderFilter, sort *model.OrderSort) (*model.EcommerceProducts, error)
 	EcommerceProductOrderDetails(ctx context.Context, productID *int, productSlug *string, orderID int) (*model.EcomOrderedProductDetails, error)
 	EcommerceCustomerDetails(ctx context.Context) (*model.CustomerDetails, error)
-	JobsList(ctx context.Context, limit int, offset int, filter *model.JobFilter, sort *model.JobSort) (*model.JobsList, error)
+	JobsList(ctx context.Context, limit int, offset int, filter *model.JobFilter) (*model.JobsList, error)
+	JobDetail(ctx context.Context, id *int, jobSlug *string) (*model.Job, error)
 	MemberProfileDetails(ctx context.Context) (*model.MemberProfile, error)
 	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID *int, spaceSlug *string) (*model.Space, error)
@@ -113,13 +115,13 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputClaimData,
 		ec.unmarshalInputJobFilter,
-		ec.unmarshalInputJobSort,
 		ec.unmarshalInputMemberDetails,
 		ec.unmarshalInputOrderSummary,
 		ec.unmarshalInputProductFilter,
 		ec.unmarshalInputProductSort,
 		ec.unmarshalInputProfileData,
 		ec.unmarshalInputRequireData,
+		ec.unmarshalInputapplicationInput,
 		ec.unmarshalInputcustomerInput,
 		ec.unmarshalInputorderFilter,
 		ec.unmarshalInputorderProduct,
@@ -713,14 +715,20 @@ input customerInput{
 	streetAddress:    String
 }
 `, BuiltIn: false},
-	{Name: "../schema/jobs.graphqls", Input: `# GraphQL schema example
+	{Name: "../schema/jobs.graphqls", Input: `
+# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
 
+
+scalar Upload
+
 type Job{
-    id:                Int!
-    categoriesId:      Int!
+    id:                  Int!
+    categoriesId:        Int!
+    category:          Category
     jobTitle:          String!
+    jobSlug:           String!
     jobDescription:    String!
     jobLocation:       String!
     jobType:           String!
@@ -751,22 +759,41 @@ type JobsList{
 
 
 extend type Query{
-    jobsList(limit:Int!,offset: Int!,filter: JobFilter,sort: JobSort) : JobsList! @auth
+    jobsList(limit:Int!,offset: Int!,filter: JobFilter) : JobsList! 
+    jobDetail(Id: Int,jobSlug: String):Job!
+}
+
+extend type Mutation{
+    jobApplication(applicationDetails:applicationInput!):Boolean! @auth
+}
+
+input applicationInput{
+    name:            String!
+    emailId:         String!
+    mobileNo:        Int!
+    jobType:         String!
+    gender:          String!
+    location:        String!
+    education:       String!
+    graduation:      Int!
+    companyName:     String
+    experience:      Int!
+    skills:          String!
+    applicantImage:  Upload!
+    currentSalary:   Int
+    expectedSalary:  Int!
+    resume:          Upload!
 }
 
 input JobFilter{
     jobTitle:          String
     jobLocation:       String
-    jobType:           String
+    categoryId:        Int
+    categorySlug:      String
     keyWord:           String
-    skill:             String
     minimumYears:      Int
     maximumYears:      Int
-}
-
-input JobSort{
-    salary:            Int
-    postedDate:        Int
+    datePosted:        String
 }`, BuiltIn: false},
 	{Name: "../schema/member.graphqls", Input: `# GraphQL schema example
 #
@@ -1023,6 +1050,21 @@ func (ec *executionContext) field_Mutation_ecommerceOrderPlacement_args(ctx cont
 		}
 	}
 	args["orderSummary"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_jobApplication_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ApplicationInput
+	if tmp, ok := rawArgs["applicationDetails"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("applicationDetails"))
+		arg0, err = ec.unmarshalNapplicationInput2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐApplicationInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["applicationDetails"] = arg0
 	return args, nil
 }
 
@@ -1722,6 +1764,30 @@ func (ec *executionContext) field_Query_getMemberProfileDetails_args(ctx context
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_jobDetail_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["Id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Id"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["Id"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["jobSlug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobSlug"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["jobSlug"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_jobsList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1752,15 +1818,6 @@ func (ec *executionContext) field_Query_jobsList_args(ctx context.Context, rawAr
 		}
 	}
 	args["filter"] = arg2
-	var arg3 *model.JobSort
-	if tmp, ok := rawArgs["sort"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
-		arg3, err = ec.unmarshalOJobSort2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐJobSort(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sort"] = arg3
 	return args, nil
 }
 
@@ -10324,6 +10381,69 @@ func (ec *executionContext) fieldContext_Job_categoriesId(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Job_category(ctx context.Context, field graphql.CollectedField, obj *model.Job) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Job_category(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Category, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Category)
+	fc.Result = res
+	return ec.marshalOCategory2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategory(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Job_category(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Job",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Category_id(ctx, field)
+			case "categoryName":
+				return ec.fieldContext_Category_categoryName(ctx, field)
+			case "categorySlug":
+				return ec.fieldContext_Category_categorySlug(ctx, field)
+			case "description":
+				return ec.fieldContext_Category_description(ctx, field)
+			case "imagePath":
+				return ec.fieldContext_Category_imagePath(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_Category_createdOn(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Category_createdBy(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_Category_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_Category_modifiedBy(ctx, field)
+			case "parentId":
+				return ec.fieldContext_Category_parentId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Job_jobTitle(ctx context.Context, field graphql.CollectedField, obj *model.Job) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Job_jobTitle(ctx, field)
 	if err != nil {
@@ -10356,6 +10476,50 @@ func (ec *executionContext) _Job_jobTitle(ctx context.Context, field graphql.Col
 }
 
 func (ec *executionContext) fieldContext_Job_jobTitle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Job",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Job_jobSlug(ctx context.Context, field graphql.CollectedField, obj *model.Job) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Job_jobSlug(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JobSlug, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Job_jobSlug(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Job",
 		Field:      field,
@@ -11311,8 +11475,12 @@ func (ec *executionContext) fieldContext_JobsList_jobs(ctx context.Context, fiel
 				return ec.fieldContext_Job_id(ctx, field)
 			case "categoriesId":
 				return ec.fieldContext_Job_categoriesId(ctx, field)
+			case "category":
+				return ec.fieldContext_Job_category(ctx, field)
 			case "jobTitle":
 				return ec.fieldContext_Job_jobTitle(ctx, field)
+			case "jobSlug":
+				return ec.fieldContext_Job_jobSlug(ctx, field)
 			case "jobDescription":
 				return ec.fieldContext_Job_jobDescription(ctx, field)
 			case "jobLocation":
@@ -14488,6 +14656,81 @@ func (ec *executionContext) fieldContext_Mutation_UpdateProductViewCount(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_jobApplication(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_jobApplication(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().JobApplication(rctx, fc.Args["applicationDetails"].(model.ApplicationInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_jobApplication(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_jobApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_templateMemberLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_templateMemberLogin(ctx, field)
 	if err != nil {
@@ -17649,28 +17892,8 @@ func (ec *executionContext) _Query_jobsList(ctx context.Context, field graphql.C
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().JobsList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["filter"].(*model.JobFilter), fc.Args["sort"].(*model.JobSort))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.Auth == nil {
-				return nil, errors.New("directive auth is not implemented")
-			}
-			return ec.directives.Auth(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.JobsList); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.JobsList`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().JobsList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["filter"].(*model.JobFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -17711,6 +17934,115 @@ func (ec *executionContext) fieldContext_Query_jobsList(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_jobsList_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_jobDetail(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_jobDetail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().JobDetail(rctx, fc.Args["Id"].(*int), fc.Args["jobSlug"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Job)
+	fc.Result = res
+	return ec.marshalNJob2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐJob(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_jobDetail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Job_id(ctx, field)
+			case "categoriesId":
+				return ec.fieldContext_Job_categoriesId(ctx, field)
+			case "category":
+				return ec.fieldContext_Job_category(ctx, field)
+			case "jobTitle":
+				return ec.fieldContext_Job_jobTitle(ctx, field)
+			case "jobSlug":
+				return ec.fieldContext_Job_jobSlug(ctx, field)
+			case "jobDescription":
+				return ec.fieldContext_Job_jobDescription(ctx, field)
+			case "jobLocation":
+				return ec.fieldContext_Job_jobLocation(ctx, field)
+			case "jobType":
+				return ec.fieldContext_Job_jobType(ctx, field)
+			case "education":
+				return ec.fieldContext_Job_education(ctx, field)
+			case "department":
+				return ec.fieldContext_Job_department(ctx, field)
+			case "experience":
+				return ec.fieldContext_Job_experience(ctx, field)
+			case "salary":
+				return ec.fieldContext_Job_salary(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_Job_createdOn(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Job_createdBy(ctx, field)
+			case "isDeleted":
+				return ec.fieldContext_Job_isDeleted(ctx, field)
+			case "deletedOn":
+				return ec.fieldContext_Job_deletedOn(ctx, field)
+			case "deletedBy":
+				return ec.fieldContext_Job_deletedBy(ctx, field)
+			case "keyword":
+				return ec.fieldContext_Job_keyword(ctx, field)
+			case "skill":
+				return ec.fieldContext_Job_skill(ctx, field)
+			case "minimumYears":
+				return ec.fieldContext_Job_minimumYears(ctx, field)
+			case "maximumYears":
+				return ec.fieldContext_Job_maximumYears(ctx, field)
+			case "postedDate":
+				return ec.fieldContext_Job_postedDate(ctx, field)
+			case "validThrough":
+				return ec.fieldContext_Job_validThrough(ctx, field)
+			case "status":
+				return ec.fieldContext_Job_status(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_Job_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_Job_modifiedBy(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Job", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_jobDetail_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -22678,7 +23010,7 @@ func (ec *executionContext) unmarshalInputJobFilter(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"jobTitle", "jobLocation", "jobType", "keyWord", "skill", "minimumYears", "maximumYears"}
+	fieldsInOrder := [...]string{"jobTitle", "jobLocation", "categoryId", "categorySlug", "keyWord", "minimumYears", "maximumYears", "datePosted"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -22699,13 +23031,20 @@ func (ec *executionContext) unmarshalInputJobFilter(ctx context.Context, obj int
 				return &it, err
 			}
 			it.JobLocation = graphql.OmittableOf(data)
-		case "jobType":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobType"))
+		case "categoryId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CategoryID = graphql.OmittableOf(data)
+		case "categorySlug":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categorySlug"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
-			it.JobType = graphql.OmittableOf(data)
+			it.CategorySlug = graphql.OmittableOf(data)
 		case "keyWord":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyWord"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -22713,13 +23052,6 @@ func (ec *executionContext) unmarshalInputJobFilter(ctx context.Context, obj int
 				return &it, err
 			}
 			it.KeyWord = graphql.OmittableOf(data)
-		case "skill":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skill"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return &it, err
-			}
-			it.Skill = graphql.OmittableOf(data)
 		case "minimumYears":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minimumYears"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
@@ -22734,40 +23066,13 @@ func (ec *executionContext) unmarshalInputJobFilter(ctx context.Context, obj int
 				return &it, err
 			}
 			it.MaximumYears = graphql.OmittableOf(data)
-		}
-	}
-
-	return &it, nil
-}
-
-func (ec *executionContext) unmarshalInputJobSort(ctx context.Context, obj interface{}) (*model.JobSort, error) {
-	var it model.JobSort
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"salary", "postedDate"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "salary":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("salary"))
-			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+		case "datePosted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("datePosted"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
-			it.Salary = graphql.OmittableOf(data)
-		case "postedDate":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postedDate"))
-			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
-			if err != nil {
-				return &it, err
-			}
-			it.PostedDate = graphql.OmittableOf(data)
+			it.DatePosted = graphql.OmittableOf(data)
 		}
 	}
 
@@ -23119,6 +23424,131 @@ func (ec *executionContext) unmarshalInputRequireData(ctx context.Context, obj i
 				return &it, err
 			}
 			it.AdditionalFields = graphql.OmittableOf(data)
+		}
+	}
+
+	return &it, nil
+}
+
+func (ec *executionContext) unmarshalInputapplicationInput(ctx context.Context, obj interface{}) (*model.ApplicationInput, error) {
+	var it model.ApplicationInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "emailId", "mobileNo", "jobType", "gender", "location", "education", "graduation", "companyName", "experience", "skills", "applicantImage", "currentSalary", "expectedSalary", "resume"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Name = data
+		case "emailId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.EmailID = data
+		case "mobileNo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mobileNo"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.MobileNo = data
+		case "jobType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobType"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.JobType = data
+		case "gender":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gender"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Gender = data
+		case "location":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("location"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Location = data
+		case "education":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("education"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Education = data
+		case "graduation":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("graduation"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Graduation = data
+		case "companyName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CompanyName = graphql.OmittableOf(data)
+		case "experience":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("experience"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Experience = data
+		case "skills":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skills"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Skills = data
+		case "applicantImage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("applicantImage"))
+			data, err := ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.ApplicantImage = data
+		case "currentSalary":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentSalary"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CurrentSalary = graphql.OmittableOf(data)
+		case "expectedSalary":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expectedSalary"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.ExpectedSalary = data
+		case "resume":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resume"))
+			data, err := ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Resume = data
 		}
 	}
 
@@ -24831,8 +25261,15 @@ func (ec *executionContext) _Job(ctx context.Context, sel ast.SelectionSet, obj 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "category":
+			out.Values[i] = ec._Job_category(ctx, field, obj)
 		case "jobTitle":
 			out.Values[i] = ec._Job_jobTitle(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "jobSlug":
+			out.Values[i] = ec._Job_jobSlug(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -25424,6 +25861,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "UpdateProductViewCount":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_UpdateProductViewCount(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "jobApplication":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_jobApplication(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -26157,6 +26601,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_jobsList(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "jobDetail":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_jobDetail(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -27516,6 +27982,16 @@ func (ec *executionContext) marshalNJob2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐ
 	return ret
 }
 
+func (ec *executionContext) marshalNJob2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v *model.Job) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Job(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNJobsList2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐJobsList(ctx context.Context, sel ast.SelectionSet, v model.JobsList) graphql.Marshaler {
 	return ec._JobsList(ctx, sel, &v)
 }
@@ -27899,6 +28375,21 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
+func (ec *executionContext) unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (graphql.Upload, error) {
+	res, err := graphql.UnmarshalUpload(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v graphql.Upload) graphql.Marshaler {
+	res := graphql.MarshalUpload(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -28152,6 +28643,11 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) unmarshalNapplicationInput2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐApplicationInput(ctx context.Context, v interface{}) (model.ApplicationInput, error) {
+	res, err := ec.unmarshalInputapplicationInput(ctx, v)
+	return *res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNcustomerDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCustomerDetails(ctx context.Context, sel ast.SelectionSet, v model.CustomerDetails) graphql.Marshaler {
 	return ec._customerDetails(ctx, sel, &v)
 }
@@ -28240,6 +28736,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOCategory2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Category(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOEcommerceCart2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEcommerceCart(ctx context.Context, sel ast.SelectionSet, v *model.EcommerceCart) graphql.Marshaler {
@@ -28387,14 +28890,6 @@ func (ec *executionContext) unmarshalOJobFilter2ᚖspurtcmsᚑgraphqlᚋgraphᚋ
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputJobFilter(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOJobSort2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐJobSort(ctx context.Context, v interface{}) (*model.JobSort, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputJobSort(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

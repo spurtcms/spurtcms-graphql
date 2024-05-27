@@ -6,20 +6,21 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"spurtcms-graphql/graph/model"
 )
 
 // SpaceList is the resolver for the spaceList field.
 func (r *queryResolver) SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error) {
-	return SpaceList(r.DB, ctx, limit, offset, categoriesID)
+	panic(fmt.Errorf("not implemented: SpaceList - spaceList"))
 }
 
 // SpaceDetails is the resolver for the spaceDetails field.
 func (r *queryResolver) SpaceDetails(ctx context.Context, spaceID *int, spaceSlug *string) (*model.Space, error) {
-	return SpaceDetails(r.DB, ctx, spaceID, spaceSlug)
+	panic(fmt.Errorf("not implemented: SpaceDetails - spaceDetails"))
 }
 
 // PagesAndPageGroupsUnderSpace is the resolver for the PagesAndPageGroupsUnderSpace field.
 func (r *queryResolver) PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (*model.PageAndPageGroups, error) {
-	return PagesAndPageGroupsUnderSpace(r.DB, ctx, spaceID)
+	panic(fmt.Errorf("not implemented: PagesAndPageGroupsUnderSpace - PagesAndPageGroupsUnderSpace"))
 }
