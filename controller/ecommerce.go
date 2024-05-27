@@ -728,7 +728,7 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 		return &model.EcomOrderedProductDetails{}, err
 	}
 
-	return &model.EcomOrderedProductDetails{EcommerceProduct: orderedProduct,OrderStatuses: productOrderStatuses}, nil
+	return &model.EcomOrderedProductDetails{EcommerceProduct: orderedProduct, OrderStatuses: productOrderStatuses}, nil
 }
 
 func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error) {
@@ -827,7 +827,7 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	for _, value := range orderProducts {
 
-		var productDetails = model.OrderProductDetails{OrderID: createorder.ID,ProductID: value.ProductID,Quantity: value.Quantity,Price: value.Price,Tax: value.Tax}
+		var productDetails = model.OrderProductDetails{OrderID: createorder.ID, ProductID: value.ProductID, Quantity: value.Quantity, Price: value.Price, Tax: value.Tax}
 
 		if err := db.Table("tbl_ecom_product_order_details").Create(&productDetails).Error; err != nil {
 
@@ -836,7 +836,7 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 			return false, err
 		}
 
-		if err := db.Debug().Table("tbl_ecom_products").Where("is_deleted = 0 and is_active = 1 and id = ?",value.ProductID).Update("stock",gorm.Expr("stock - ?",value.Quantity)).Error;err!=nil{
+		if err := db.Debug().Table("tbl_ecom_products").Where("is_deleted = 0 and is_active = 1 and id = ?", value.ProductID).Update("stock", gorm.Expr("stock - ?", value.Quantity)).Error; err != nil {
 
 			return false, err
 		}
@@ -954,7 +954,7 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 		return false, err
 	}
 
-	if customerInput.FirstName.Value() == nil || customerInput.MobileNo.Value() == nil || customerInput.Email.Value() == nil || customerInput.Username.Value() == nil || customerInput.IsActive.Value() == nil {
+	if customerInput.FirstName.Value() == nil || customerInput.MobileNo.Value() == nil || customerInput.Email.Value() == nil || customerInput.IsActive.Value() == nil {
 
 		return false, ErrMandatory
 	}
@@ -969,7 +969,11 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 
 	customerDetails.Email = *customerInput.Email.Value()
 
-	customerDetails.Username = *customerInput.Username.Value()
+	if customerInput.Username.IsSet() && *customerInput.Username.Value() != "" {
+
+		customerDetails.Username = *customerInput.Username.Value()
+
+	}
 
 	customerDetails.IsActive = *customerInput.IsActive.Value()
 

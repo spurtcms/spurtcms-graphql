@@ -23,14 +23,14 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	var memberSettings model.MemberSettings
 
-	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error;err!=nil{
+	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
 
 		return false, err
 	}
 
-	if memberSettings.MemberLogin == "password"{
+	if memberSettings.MemberLogin == "password" {
 
-		return false,ErrMemberLoginPerm
+		return false, ErrMemberLoginPerm
 	}
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
@@ -41,27 +41,27 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if gorm.ErrRecordNotFound == err {
 
-		var loginEnquiryTemplate  model.EmailTemplate
+		var loginEnquiryTemplate model.EmailTemplate
 
-		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_name = ?",OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error;err!=nil{
+		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_name = ?", OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error; err != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, err)
-			
-			return false,err
+
+			return false, err
 		}
 
 		var convIds []int
 
-		adminIds := strings.Split(memberSettings.NotificationUsers,",")
+		adminIds := strings.Split(memberSettings.NotificationUsers, ",")
 
-		for _,adminId := range adminIds{
+		for _, adminId := range adminIds {
 
-			convId,_ := strconv.Atoi(adminId) 
+			convId, _ := strconv.Atoi(adminId)
 
 			convIds = append(convIds, convId)
 		}
 
-        _, notifyEmails, _ := GetNotifyAdminEmails(db,convIds)
+		_, notifyEmails, _ := GetNotifyAdminEmails(db, convIds)
 
 		var admin_mail_data = MailConfig{Emails: notifyEmails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginEnquiryTemplate.TemplateSubject}
 
@@ -69,7 +69,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 			"{OwndeskLogo}", EmailImagePath.Owndesk,
 			"{Username}", "Admin",
 			"{UnauthorizedMail}", email,
-			"{CurrentTime}",time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM"),
+			"{CurrentTime}", time.Now().In(TimeZone).Format("02 Jan 2006 03:04 PM"),
 			"{OwndeskFacebookLink}", SocialMediaLinks.Facebook,
 			"{OwndeskLinkedinLink}", SocialMediaLinks.Linkedin,
 			"{OwndeskTwitterLink}", SocialMediaLinks.Twitter,
@@ -80,9 +80,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 			"{TwitterLogo}", EmailImagePath.Twitter,
 			"{YoutubeLogo}", EmailImagePath.Youtube,
 			"{InstagramLogo}", EmailImagePath.Instagram,
-			"<figure","<div",
-			"</figure","</div",
-			"&nbsp;","",          
+			"<figure", "<div",
+			"</figure", "</div",
+			"&nbsp;", "",
 		)
 
 		integratedBody := dataReplacer.Replace(loginEnquiryTemplate.TemplateMessage)
@@ -102,7 +102,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		var template_buffers bytes.Buffer
 
-		if err := tmpl.Execute(&template_buffers,gin.H{"body":htmlBody}); err != nil {
+		if err := tmpl.Execute(&template_buffers, gin.H{"body": htmlBody}); err != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -123,14 +123,14 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		return false, ErrInvalidMail
 
-	}else if err!=nil {
+	} else if err != nil {
 
 		return false, ErrInvalidMail
 	}
 
-	if member_details.IsActive==0 && member_details.Id != 0{
+	if member_details.IsActive == 0 && member_details.Id != 0 {
 
-		return false,ErrMemberInactive
+		return false, ErrMemberInactive
 	}
 
 	var memberProfileData member.TblMemberProfile
@@ -165,7 +165,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	var loginTemplate model.EmailTemplate
 
-	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_name = ?",OwndeskLoginTemplate).First(&loginTemplate).Error;err!=nil{
+	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_name = ?", OwndeskLoginTemplate).First(&loginTemplate).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -176,7 +176,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		"{OwndeskLogo}", EmailImagePath.Owndesk,
 		"{Username}", member_details.Username,
 		"{CompanyName}", memberProfileData.CompanyName,
-		"{Otp}",strconv.Itoa(otp),
+		"{Otp}", strconv.Itoa(otp),
 		"{OtpExpiryTime}", mail_expiry_time,
 		"{OwndeskFacebookLink}", SocialMediaLinks.Facebook,
 		"{OwndeskLinkedinLink}", SocialMediaLinks.Linkedin,
@@ -188,16 +188,16 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		"{TwitterLogo}", EmailImagePath.Twitter,
 		"{YoutubeLogo}", EmailImagePath.Youtube,
 		"{InstagramLogo}", EmailImagePath.Instagram,
-		"<figure","<div",
-		"</figure","</div",
-		"&nbsp;","",          
+		"<figure", "<div",
+		"</figure", "</div",
+		"&nbsp;", "",
 	)
 
 	integratedBody := dataReplacer.Replace(loginTemplate.TemplateMessage)
 
 	htmlBody := template.HTML(integratedBody)
 
-	if err !=nil{
+	if err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -275,14 +275,14 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	var memberSettings model.MemberSettings
 
-	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error;err!=nil{
+	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
 
 		return false, err
 	}
 
-	if memberSettings.AllowRegistration == 0{
+	if memberSettings.AllowRegistration == 0 {
 
-		return false,ErrMemberRegisterPerm
+		return false, ErrMemberRegisterPerm
 	}
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
@@ -290,7 +290,6 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
 	var (
-
 		imageName, imagePath string
 
 		err error
@@ -346,22 +345,22 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			return isMemberExists, err
 		}
 
-		if ecomMod ==1{
+		if ecomMod == 1 {
 
 			var count int64
 
-			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and username = ?",*input.Username.Value()).Count(&count).Error;err!=nil{
+			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and username = ?", *input.Username.Value()).Count(&count).Error; err != nil {
 
-				return false,err
+				return false, err
 			}
 
-			if count > 0{
+			if count > 0 {
 
 				err = errors.New("customer already exists")
 
-			    c.AbortWithError(422, err)
+				c.AbortWithError(422, err)
 
-			    return false, err
+				return false, err
 			}
 		}
 
@@ -382,22 +381,22 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			return isMemberExists, err
 		}
 
-		if ecomMod ==1{
+		if ecomMod == 1 {
 
 			var count int64
 
-			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and email = ?",input.Email).Count(&count).Error;err!=nil{
+			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and email = ?", input.Email).Count(&count).Error; err != nil {
 
-				return false,err
+				return false, err
 			}
 
-			if count > 0{
+			if count > 0 {
 
 				err = errors.New("customer already exists")
 
-			    c.AbortWithError(422, err)
+				c.AbortWithError(422, err)
 
-			    return false, err
+				return false, err
 			}
 		}
 
@@ -407,7 +406,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	memberDetails.Password = input.Password
 
-	memberData,isRegistered, err := Mem.MemberRegister(memberDetails)
+	memberData, isRegistered, err := Mem.MemberRegister(memberDetails)
 
 	if !isRegistered || err != nil {
 
@@ -416,11 +415,11 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 		return isRegistered, err
 	}
 
-	if isRegistered && ecomMod == 1{
+	if isRegistered && ecomMod == 1 {
 
 		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
-		is_deleted := 0 
+		is_deleted := 0
 
 		var ecomCustomer = model.CustomerDetails{
 			FirstName:        memberDetails.FirstName,
@@ -437,10 +436,10 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			IsDeleted:        &is_deleted,
 		}
 
-		if err := db.Table("tbl_ecom_customers").Create(&ecomCustomer).Error;err!=nil{
+		if err := db.Table("tbl_ecom_customers").Create(&ecomCustomer).Error; err != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, err)
-	
+
 			return isRegistered, err
 		}
 	}
@@ -500,14 +499,14 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 	var memberSettings model.MemberSettings
 
-	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error;err!=nil{
+	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
 
 		return "", err
 	}
 
-	if memberSettings.MemberLogin == "otp"{
+	if memberSettings.MemberLogin == "otp" {
 
-		return "",ErrMemberLoginPerm
+		return "", ErrMemberLoginPerm
 	}
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
@@ -527,7 +526,7 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 	memberLogin.Password = password
 
-	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"),LocalLoginType)
+	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"), LocalLoginType)
 
 	if err != nil {
 
@@ -557,7 +556,7 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 	var memberProfile model.MemberProfile
 
-	if err := db.Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", memberid).First(&memberProfile).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*,tbl_members.is_active").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberid).First(&memberProfile).Error; err != nil {
 
 		c.AbortWithError(http.StatusUnprocessableEntity, err)
 
@@ -569,7 +568,7 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
 
-	c,_ := ctx.Value(ContextKey).(*gin.Context)
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	tokenType := c.GetString("tokenType")
 
@@ -593,21 +592,21 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	var memberDetails model.Member
 
-	if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?",memberProfile.MemberId).First(&memberDetails).Error; err!=nil{
+	if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?", memberProfile.MemberId).First(&memberDetails).Error; err != nil {
 
-	   return &model.MemberProfile{}, err
-    }
-	
-	if memberDetails.IsActive == 0 && memberDetails.ID != 0 && tokenType == LocalLoginType{
+		return &model.MemberProfile{}, err
+	}
 
-		return &model.MemberProfile{},ErrMemberInactive
+	if memberDetails.IsActive == 0 && memberDetails.ID != 0 && tokenType == LocalLoginType {
+
+		return &model.MemberProfile{}, ErrMemberInactive
 	}
 
 	var profileLogo string
 
-	if memberProfile.CompanyLogo!=""{
+	if memberProfile.CompanyLogo != "" {
 
-		profileLogo = PathUrl + strings.TrimPrefix(memberProfile.CompanyLogo,"/")
+		profileLogo = PathUrl + strings.TrimPrefix(memberProfile.CompanyLogo, "/")
 	}
 
 	MemberProfile := model.MemberProfile{
