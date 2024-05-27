@@ -527,7 +527,7 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 	memberLogin.Password = password
 
-	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"))
+	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"),LocalLoginType)
 
 	if err != nil {
 
