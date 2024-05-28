@@ -2,7 +2,6 @@ package dbconfig
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"gorm.io/driver/postgres"
@@ -14,7 +13,7 @@ func SetupDB() *gorm.DB {
 
 	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_NAME"), os.Getenv("DB_PASSWORD")) //Build connection string
 
-	log.Println(dbUri)
+	fmt.Println(dbUri)
 
 	DB, err := gorm.Open(postgres.Open(dbUri), &gorm.Config{})
 
@@ -24,8 +23,6 @@ func SetupDB() *gorm.DB {
 
 		panic(err)
 	}
-	
+
 	return DB
 }
-
-

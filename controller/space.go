@@ -33,6 +33,8 @@ func SpaceList(db *gorm.DB, ctx context.Context, limit, offset int, categoriesID
 
 	if err != nil {
 
+		ErrorLog.Printf("getting spacelist data error: %s", err)
+
 		return &model.SpaceDetails{}, err
 	}
 
@@ -160,6 +162,8 @@ func PagesAndPageGroupsBySpaceId(db *gorm.DB, ctx context.Context, spaceId int) 
 	pagez, subpagez, pagegroupz, err := spaceAuth.GetPagesAndPagegroupsUnderSpace(spaceId)
 
 	if err != nil {
+
+		ErrorLog.Printf("PagesAndPageGroupsBySpaceId data error: %s", err)
 
 		return &model.PageAndPageGroups{}, err
 	}
