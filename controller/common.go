@@ -24,6 +24,11 @@ type key string
 
 const ContextKey key = "ginContext"
 
+var (
+	ErrorLog *log.Logger
+	WarnLog  *log.Logger
+)
+
 type MailConfig struct {
 	Emails         []string
 	MailUsername   string

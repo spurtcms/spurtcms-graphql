@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"spurtcms-graphql/controller"
@@ -18,7 +18,12 @@ import (
 // Implement the AuthMiddleware function
 func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
 
-	c, _ := ctx.Value(controller.ContextKey).(*gin.Context)
+	c, ok := ctx.Value(controller.ContextKey).(*gin.Context)
+
+	if !ok {
+
+		controller.ErrorLog.Printf("Auth context error: %s", ok)
+	}
 
 	token := c.GetHeader("Authorization")
 
@@ -26,9 +31,11 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	if token == "" {
 
-		err:= errors.New("unauthorized access")
+		err := errors.New("unauthorized access")
 
-		c.AbortWithError(http.StatusUnauthorized,err)
+		controller.ErrorLog.Printf("invalid token error: %s", err)
+
+		c.AbortWithError(http.StatusUnauthorized, err)
 
 		return "", err
 
@@ -36,7 +43,7 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	if token == controller.SpecialToken {
 
-		c.Set("token",token)
+		c.Set("token", token)
 
 		return next(ctx)
 
@@ -46,27 +53,26 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	currentTime1 := time.Now().Unix()
 
-	log.Println("log",controller.TimeZone,currentTime,currentTime1)
+	fmt.Println("log", controller.TimeZone, currentTime, currentTime1)
 
-	memberid,groupid,tokenType,err :=  auth.VerifyTokenWithExpiryTime(token,os.Getenv("JWT_SECRET"),currentTime)
+	memberid, groupid, tokenType, err := auth.VerifyTokenWithExpiryTime(token, os.Getenv("JWT_SECRET"), currentTime)
 
 	if err != nil {
 
-		log.Println("err",err)
+		controller.ErrorLog.Printf("Verify token error: %s", err)
 
-		c.AbortWithError(http.StatusUnauthorized,err)
-		
-		return "", err 
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return "", err
 	}
 
-	c.Set("memberid",memberid)
+	c.Set("memberid", memberid)
 
-	c.Set("groupid",groupid)
+	c.Set("groupid", groupid)
 
-	c.Set("token",token)
+	c.Set("token", token)
 
-	c.Set("tokenType",tokenType)
+	c.Set("tokenType", tokenType)
 
 	return next(ctx)
 }
-
