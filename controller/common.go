@@ -15,6 +15,7 @@ import (
 	"github.com/spurtcms/pkgcore/auth"
 	"github.com/spurtcms/pkgcore/member"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	spurtcore "github.com/spurtcms/pkgcore"
@@ -54,6 +55,15 @@ type SocialMedias struct {
 	Youtube   string
 }
 
+type StorageType struct {
+	Id           int
+	Local        string
+	Aws          datatypes.JSONMap `gorm:"type:jsonb"`
+	Azure        datatypes.JSONMap `gorm:"type:jsonb"`
+	Drive        datatypes.JSONMap `gorm:"type:jsonb"`
+	SelectedType string
+}
+
 var (
 	Mem                            member.MemberAuth
 	Auth                           *auth.Authorization
@@ -85,6 +95,7 @@ var (
 	ErrMemberInactive     = errors.New("inactive member")
 	ErrMemberLoginPerm    = errors.New("member login permission denied")
 	ErrRecordNotFound     = errors.New("record not found")
+	ErrPassHash           = errors.New("hasing password failed")
 )
 
 func init() {
@@ -238,17 +249,16 @@ func SendMail(config MailConfig, html_content string, channel chan error) {
 	channel <- nil
 }
 
-func HashingPassword(pass string) string {
+func HashingPassword(pass string) (string, error) {
 
 	passbyte, err := bcrypt.GenerateFromPassword([]byte(pass), 14)
 
 	if err != nil {
 
-		panic(err)
-
+		return "", err
 	}
 
-	return string(passbyte)
+	return string(passbyte),nil
 }
 
 func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]auth.TblUser, []string, error) {
@@ -270,4 +280,16 @@ func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]auth.TblUser, []string
 	}
 
 	return adminDetails, adminEmails, nil
+}
+
+func GetStorageType(db *gorm.DB)(StorageType,error){
+
+	var storageType StorageType
+
+	if err := db.Debug().Table("tbl_storage_types").First(&storageType).Error;err != nil{
+
+		return StorageType{},err
+	}
+
+	return storageType, nil
 }

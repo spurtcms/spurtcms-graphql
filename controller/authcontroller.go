@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"html/template"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
-	"spurtcms-graphql/logger"
+	"spurtcms-graphql/storage"
 	"strconv"
 	"strings"
 	"time"
@@ -19,14 +20,6 @@ import (
 	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 )
-
-func init() {
-
-	ErrorLog = logger.ErrorLOG()
-
-	WarnLog = logger.WarnLOG()
-
-}
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
@@ -299,25 +292,25 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
 	var (
-		imageName, imagePath string
+		// imageName, imagePath string
 
 		err error
 
 		ecomMod int = *ecomModule
 	)
 
-	if input.ProfileImage.IsSet() {
+	// if input.ProfileImage.IsSet() {
 
-		imageName, imagePath, err = StoreImageBase64ToLocal(*input.ProfileImage.Value(), ProfileImagePath, "PROFILE")
+	// 	imageName, imagePath, err = StoreImageBase64ToLocal(*input.ProfileImage.Value(), ProfileImagePath, "PROFILE")
 
-		if err != nil {
+	// 	if err != nil {
 
-			c.AbortWithError(http.StatusInternalServerError, err)
+	// 		c.AbortWithError(http.StatusInternalServerError, err)
 
-			return false, err
-		}
+	// 		return false, err
+	// 	}
 
-	}
+	// }
 
 	var memberDetails member.MemberCreation
 
@@ -326,17 +319,31 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 		memberDetails.MobileNo = *input.Mobile.Value()
 	}
 
-	if imageName != "" && imagePath != "" {
+	// if imageName != "" && imagePath != "" {
 
-		memberDetails.ProfileImage = imageName
+	// 	memberDetails.ProfileImage = imageName
 
-		memberDetails.ProfileImagePath = imagePath
-	}
+	// 	memberDetails.ProfileImagePath = imagePath
+	// }
 
 	if input.LastName.IsSet() {
 
 		memberDetails.LastName = *input.LastName.Value()
 
+	}
+
+	var hashpass string
+
+	if input.Password.IsSet() {
+
+		hashpass, err = HashingPassword(*input.Password.Value())
+
+		if err != nil {
+
+			return false, ErrPassHash
+		}
+
+		memberDetails.Password = hashpass
 	}
 
 	if input.Username.IsSet() {
@@ -413,8 +420,6 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	memberDetails.FirstName = input.FirstName
 
-	memberDetails.Password = input.Password
-
 	memberData, isRegistered, err := Mem.MemberRegister(memberDetails)
 
 	if !isRegistered || err != nil {
@@ -440,7 +445,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			ProfileImage:     &memberDetails.ProfileImage,
 			ProfileImagePath: &memberDetails.ProfileImagePath,
 			CreatedOn:        createdOn,
-			Password:         HashingPassword(memberDetails.Password),
+			Password:         hashpass,
 			MemberID:         &memberData.Id,
 			IsDeleted:        &is_deleted,
 		}
@@ -461,46 +466,196 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	token := c.GetString("token")
+	memberid := c.GetInt("memberid")
 
-	Mem.Auth = GetAuthorization(token, db)
+	if memberid == 0 {
 
-	var imageName, imagePath string
+		err := errors.New("unauthorized access")
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return false, err
+
+	}
+
+	var memberDetails model.Member
 
 	var err error
 
+	var selectEmpty string
+
 	if memberdata.ProfileImage.IsSet() {
 
-		imageName, imagePath, err = StoreImageBase64ToLocal(*memberdata.ProfileImage.Value(), ProfileImagePath, "PROFILE")
+		storageType, _ := GetStorageType(db)
+
+		fileName := memberdata.ProfileImage.Value().Filename
+
+		filePath := "media/" + fileName
+
+		if storageType.SelectedType == "aws" {
+
+			err = storage.UploadFileS3(storageType.Aws, memberdata.ProfileImage.Value(), filePath)
+
+		} else if storageType.SelectedType == "local" {
+
+			fmt.Printf("local storage selected")
+
+		} else if storageType.SelectedType == "azure" {
+
+			fmt.Println("azure storage selected")
+
+		} else if storageType.SelectedType == "drive" {
+
+			fmt.Println("drive storage selected")
+		}
 
 		if err != nil {
+
+			fmt.Printf("image upload failed %v\n", err)
+
+			return false, err
+
+		}
+
+		memberDetails.ProfileImage = fileName
+
+		memberDetails.ProfileImagePath = filePath
+
+		if memberdata.ProfileImage.Value() == nil{
+
+			selectEmpty = selectEmpty + "profile_image, profile_image_path"
+		}
+
+	}
+
+	log.Println("0")
+
+	memberDetails.FirstName = memberdata.FirstName
+
+	memberDetails.Email = memberdata.Email
+
+	if memberdata.Mobile.IsSet() {
+
+		memberDetails.MobileNo = *memberdata.Mobile.Value()
+
+		if *memberdata.Mobile.Value()==""{
+
+			if selectEmpty == ""{
+
+				selectEmpty = selectEmpty + "mobile_no"
+
+			}else{
+
+				selectEmpty = selectEmpty + ", mobile_no"
+			}
+
+		}
+	}
+
+	log.Println("21")
+
+	if memberdata.GroupID.IsSet() && memberdata.GroupID.Value()!= nil && *memberdata.GroupID.Value() != 0 {
+
+		memberDetails.MemberGroupID = *memberdata.GroupID.Value()
+
+	}
+
+	if memberdata.Password.IsSet() && memberdata.Password.Value()!= nil &&*memberdata.Password.Value() != "" {
+
+		hashpass, err := HashingPassword(*memberdata.Password.Value())
+
+		if err != nil {
+
+			return false, ErrPassHash
+		}
+
+		memberDetails.Password = &hashpass
+	}
+
+	log.Println("2")
+
+	if memberdata.LastName.IsSet() && memberdata.LastName.Value()!= nil {
+
+		memberDetails.LastName = *memberdata.LastName.Value()
+
+		if *memberdata.LastName.Value()==""{
+
+			if selectEmpty == ""{
+
+				selectEmpty = selectEmpty + "last_name"
+
+			}else{
+
+				selectEmpty = selectEmpty + ", last_name"
+			}
+		}
+	}
+
+	log.Println("3")
+
+	if memberdata.Username.IsSet() && memberdata.Username.Value()!=nil {
+
+		memberDetails.Username = memberdata.Username.Value()
+
+		if *memberdata.Username.Value()==""{
+
+			if selectEmpty == ""{
+
+				selectEmpty = selectEmpty + "username"
+
+			}else{
+
+				selectEmpty = selectEmpty + ", username"
+			}
+		}
+	}
+
+	log.Println("4")
+
+	if memberdata.IsActive.IsSet() && memberdata.IsActive.Value()!=nil {
+
+		memberDetails.IsActive = *memberdata.IsActive.Value()
+
+		if *memberdata.IsActive.Value()==0{
+
+			if selectEmpty == ""{
+
+				selectEmpty = selectEmpty + "is_active"
+
+			}else{
+
+				selectEmpty = selectEmpty + ", is_active"
+			}
+		}
+	}
+
+	log.Println("5")
+
+	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+	memberDetails.ModifiedOn = &currentTime
+
+	memberDetails.ModifiedBy = &memberid
+
+	query := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?", memberid)
+
+	log.Println("selectEmpty",selectEmpty)
+
+	if selectEmpty != "" {
+
+		if err := query.Select(selectEmpty).Updates(&memberDetails).Error;err!= nil{
 
 			return false, err
 		}
 
 	}
 
-	memberDetails := member.MemberCreation{
-		FirstName:        memberdata.FirstName,
-		LastName:         *memberdata.LastName.Value(),
-		MobileNo:         *memberdata.Mobile.Value(),
-		Email:            memberdata.Email,
-		Password:         memberdata.Password,
-		ProfileImage:     imageName,
-		ProfileImagePath: imagePath,
-		// IsActive: *memberdata.IsActive,
-		// Username: *memberdata.Username.Value(),
-		// GroupId: *memberdata.GroupID,
+	if err = query.Updates(&memberDetails).Error; err != nil {
+
+		return false, err
 	}
 
-	isUpdated, err := Mem.MemberUpdate(memberDetails)
-
-	if err != nil || !isUpdated {
-
-		return isUpdated, err
-	}
-
-	return isUpdated, nil
+	return true, nil
 
 }
 
@@ -553,7 +708,7 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 	if !ok {
 
-		ErrorLog.Printf("memberProfileDetails context error: %s", ok)
+		ErrorLog.Printf("memberProfileDetails context error: %v", ok)
 	}
 
 	memberid := c.GetInt("memberid")
@@ -589,7 +744,8 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 	c, ok := ctx.Value(ContextKey).(*gin.Context)
 
 	if !ok {
-		ErrorLog.Printf("getmemberProfileDetails context error: %s", ok)
+
+		ErrorLog.Printf("getmemberProfileDetails context error: %v", ok)
 
 	}
 

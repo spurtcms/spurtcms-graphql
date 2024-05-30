@@ -16,7 +16,9 @@ type Member{
     modifiedOn:       Time 
     modifiedBy:       Int       
     memberGroupId:    Int!
-    group:            [MemberGroup!] 
+    group:            [MemberGroup!]
+    password:         String
+    username:         String
 }
 
 type MemberGroup{
@@ -51,14 +53,14 @@ extend type Mutation{
 }
 
 input MemberDetails{
-    firstName:        String!
-    lastName:         String
-    mobile:           String
-    email:            String!
-    password:         String!
-    isActive:         Int
-    profileImage:     String
-    profileImagePath: String
-    username:         String
-    groupId:          Int 
+    firstName:         String!
+    lastName:          String
+    mobile:            String
+    email:             String!
+    password:          String
+    isActive:          Int
+    profileImage:      Upload
+    profileImagePath:  String
+    username:          String
+    groupId:           Int 
 }

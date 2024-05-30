@@ -320,19 +320,21 @@ type Member struct {
 	ModifiedBy       *int          `json:"modifiedBy,omitempty"`
 	MemberGroupID    int           `json:"memberGroupId"`
 	Group            []MemberGroup `json:"group,omitempty" gorm:"-"`
+	Password         *string       `json:"password,omitempty"`
+	Username         *string       `json:"username,omitempty"`
 }
 
 type MemberDetails struct {
-	FirstName        string                     `json:"firstName"`
-	LastName         graphql.Omittable[*string] `json:"lastName,omitempty"`
-	Mobile           graphql.Omittable[*string] `json:"mobile,omitempty"`
-	Email            string                     `json:"email"`
-	Password         string                     `json:"password"`
-	IsActive         graphql.Omittable[*int]    `json:"isActive,omitempty"`
-	ProfileImage     graphql.Omittable[*string] `json:"profileImage,omitempty"`
-	ProfileImagePath graphql.Omittable[*string] `json:"profileImagePath,omitempty"`
-	Username         graphql.Omittable[*string] `json:"username,omitempty"`
-	GroupID          graphql.Omittable[*int]    `json:"groupId,omitempty"`
+	FirstName        string                             `json:"firstName"`
+	LastName         graphql.Omittable[*string]         `json:"lastName,omitempty"`
+	Mobile           graphql.Omittable[*string]         `json:"mobile,omitempty"`
+	Email            string                             `json:"email"`
+	Password         graphql.Omittable[*string]         `json:"password,omitempty"`
+	IsActive         graphql.Omittable[*int]            `json:"isActive,omitempty"`
+	ProfileImage     graphql.Omittable[*graphql.Upload] `json:"profileImage,omitempty"`
+	ProfileImagePath graphql.Omittable[*string]         `json:"profileImagePath,omitempty"`
+	Username         graphql.Omittable[*string]         `json:"username,omitempty"`
+	GroupID          graphql.Omittable[*int]            `json:"groupId,omitempty"`
 }
 
 type MemberGroup struct {
@@ -632,4 +634,3 @@ func(Category) TableName() string{
 
 return "tbl_categories"
 }
-
