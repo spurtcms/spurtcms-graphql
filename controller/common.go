@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
+	"io"
 	"log"
 	"math/rand"
 	"net/smtp"
@@ -96,6 +98,9 @@ var (
 	ErrMemberLoginPerm    = errors.New("member login permission denied")
 	ErrRecordNotFound     = errors.New("record not found")
 	ErrPassHash           = errors.New("hasing password failed")
+	ErrUpload             = errors.New("file upload failed")
+	ErrOldPass            = errors.New("old password mismatched")
+	ErrConfirmPass        = errors.New("new passowrd and confirmation password mismatched")
 )
 
 func init() {
@@ -292,4 +297,29 @@ func GetStorageType(db *gorm.DB)(StorageType,error){
 	}
 
 	return storageType, nil
+}
+
+func IoReadSeekerToBase64(file io.ReadSeeker)(string, error){
+
+	_, err := file.Seek(0, io.SeekStart)
+
+    if err != nil {
+		
+        return "", err
+    }
+
+    // Read the data into a buffer
+    var buf bytes.Buffer
+
+    _, err = io.Copy(&buf, file)
+
+    if err != nil {
+
+        return "", err
+    }
+
+    // Encode the buffer to a base64 string
+    base64Str := base64.StdEncoding.EncodeToString(buf.Bytes())
+
+    return base64Str, nil
 }

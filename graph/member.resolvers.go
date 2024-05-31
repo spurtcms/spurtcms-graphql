@@ -24,6 +24,11 @@ func (r *mutationResolver) MemberUpdate(ctx context.Context, memberdata model.Me
 	return MemberUpdate(r.DB, ctx, memberdata)
 }
 
+// MemberPasswordUpdate is the resolver for the memberPasswordUpdate field.
+func (r *mutationResolver) MemberPasswordUpdate(ctx context.Context, oldPassword string, newPassword string, confirmPassword string) (bool, error) {
+	return MemberPasswordUpdate(r.DB, ctx, oldPassword, newPassword, confirmPassword)
+}
+
 // MemberProfileDetails is the resolver for the memberProfileDetails field.
 func (r *queryResolver) MemberProfileDetails(ctx context.Context) (*model.MemberProfile, error) {
 	return MemberProfileDetails(r.DB, ctx)

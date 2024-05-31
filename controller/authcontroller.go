@@ -3,12 +3,15 @@ package controller
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"os"
 	"spurtcms-graphql/graph/model"
 	"spurtcms-graphql/storage"
@@ -18,6 +21,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spurtcms/pkgcore/member"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -269,6 +273,13 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 		return &model.LoginDetails{}, err
 	}
 
+	if memberProfileDetails.CompanyLogo != nil && *memberProfileDetails.CompanyLogo != "" {
+
+		logoPath := PathUrl + strings.TrimPrefix(*memberProfileDetails.CompanyLogo, "/")
+
+		memberProfileDetails.CompanyLogo = &logoPath
+	}
+
 	return &model.LoginDetails{MemberProfileData: memberProfileDetails, Token: token}, nil
 
 }
@@ -478,89 +489,134 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	}
 
-	var memberDetails model.Member
+	memberData := make(map[string]interface{})
 
 	var err error
 
-	var selectEmpty string
+	var fileName, filePath string
 
-	if memberdata.ProfileImage.IsSet() {
+	if memberdata.ProfileImage.IsSet() && memberdata.ProfileImage.Value() != nil {
 
 		storageType, _ := GetStorageType(db)
 
-		fileName := memberdata.ProfileImage.Value().Filename
+		fileName = memberdata.ProfileImage.Value().Filename
 
-		filePath := "media/" + fileName
+		file := memberdata.ProfileImage.Value().File
 
 		if storageType.SelectedType == "aws" {
 
+			fmt.Printf("aws-S3 storage selected\n")
+
+			filePath = "media/" + fileName
+
 			err = storage.UploadFileS3(storageType.Aws, memberdata.ProfileImage.Value(), filePath)
+
+			if err != nil {
+
+				fmt.Printf("image upload failed %v\n", err)
+
+				return false, ErrUpload
+
+			}
 
 		} else if storageType.SelectedType == "local" {
 
-			fmt.Printf("local storage selected")
+			fmt.Printf("local storage selected\n")
+
+			client := http.Client{}
+
+			paramSetter := url.Values{}
+
+			b64Data, err := IoReadSeekerToBase64(file)
+
+			if err != nil {
+
+				return false, err
+			}
+
+			paramSetter.Add("imgFile", b64Data)
+
+			paramSetter.Add("imgFileName", fileName)
+
+			method := "POST"
+
+			endpoint := "gqlSaveLocal"
+
+			url := PathUrl + endpoint
+
+			uploadReq, err := http.NewRequest(method, url, bytes.NewBufferString(paramSetter.Encode()))
+
+			if err != nil {
+
+				return false, err
+			}
+
+			response, err := client.Do(uploadReq)
+
+			if err != nil || response.StatusCode != 200 {
+
+				return false, ErrUpload
+			}
+
+			defer response.Body.Close()
+
+			responseBytes, err := io.ReadAll(response.Body)
+
+			if err != nil {
+
+				return false, err
+			}
+
+			var responseData map[string]interface{}
+
+			err = json.Unmarshal(responseBytes, &responseData)
+
+			if err != nil {
+
+				return false, err
+			}
+
+			path, ok := responseData["StoragePath"].(string)
+
+			if !ok {
+
+				return false, ErrUpload
+			}
+
+			filePath = path
 
 		} else if storageType.SelectedType == "azure" {
 
-			fmt.Println("azure storage selected")
+			fmt.Printf("azure storage selected")
 
 		} else if storageType.SelectedType == "drive" {
 
 			fmt.Println("drive storage selected")
 		}
 
-		if err != nil {
+	}
 
-			fmt.Printf("image upload failed %v\n", err)
+	memberData["profile_image"] = fileName
 
-			return false, err
+	memberData["profile_image_path"] = filePath
 
-		}
+	memberData["first_name"] = memberdata.FirstName
 
-		memberDetails.ProfileImage = fileName
+	memberData["email"] = memberdata.Email
 
-		memberDetails.ProfileImagePath = filePath
+	if memberdata.Mobile.IsSet() && memberdata.Mobile.Value() != nil {
 
-		if memberdata.ProfileImage.Value() == nil{
-
-			selectEmpty = selectEmpty + "profile_image, profile_image_path"
-		}
+		memberData["mobile_no"] = *memberdata.Mobile.Value()
 
 	}
 
-	log.Println("0")
+	if memberdata.GroupID.IsSet() && memberdata.GroupID.Value() != nil && *memberdata.GroupID.Value() != 0 {
 
-	memberDetails.FirstName = memberdata.FirstName
-
-	memberDetails.Email = memberdata.Email
-
-	if memberdata.Mobile.IsSet() {
-
-		memberDetails.MobileNo = *memberdata.Mobile.Value()
-
-		if *memberdata.Mobile.Value()==""{
-
-			if selectEmpty == ""{
-
-				selectEmpty = selectEmpty + "mobile_no"
-
-			}else{
-
-				selectEmpty = selectEmpty + ", mobile_no"
-			}
-
-		}
-	}
-
-	log.Println("21")
-
-	if memberdata.GroupID.IsSet() && memberdata.GroupID.Value()!= nil && *memberdata.GroupID.Value() != 0 {
-
-		memberDetails.MemberGroupID = *memberdata.GroupID.Value()
+		memberData["member_group_id"] = *memberdata.GroupID.Value()
 
 	}
 
-	if memberdata.Password.IsSet() && memberdata.Password.Value()!= nil &&*memberdata.Password.Value() != "" {
+	if memberdata.Password.IsSet() && memberdata.Password.Value() != nil && *memberdata.Password.Value() != "" {
 
 		hashpass, err := HashingPassword(*memberdata.Password.Value())
 
@@ -569,88 +625,36 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 			return false, ErrPassHash
 		}
 
-		memberDetails.Password = &hashpass
+		memberData["password"] = &hashpass
 	}
 
-	log.Println("2")
+	if memberdata.LastName.IsSet() && memberdata.LastName.Value() != nil {
 
-	if memberdata.LastName.IsSet() && memberdata.LastName.Value()!= nil {
+		memberData["last_name"] = *memberdata.LastName.Value()
 
-		memberDetails.LastName = *memberdata.LastName.Value()
-
-		if *memberdata.LastName.Value()==""{
-
-			if selectEmpty == ""{
-
-				selectEmpty = selectEmpty + "last_name"
-
-			}else{
-
-				selectEmpty = selectEmpty + ", last_name"
-			}
-		}
 	}
 
-	log.Println("3")
+	if memberdata.Username.IsSet() && memberdata.Username.Value() != nil {
 
-	if memberdata.Username.IsSet() && memberdata.Username.Value()!=nil {
+		memberData["username"] = memberdata.Username.Value()
 
-		memberDetails.Username = memberdata.Username.Value()
-
-		if *memberdata.Username.Value()==""{
-
-			if selectEmpty == ""{
-
-				selectEmpty = selectEmpty + "username"
-
-			}else{
-
-				selectEmpty = selectEmpty + ", username"
-			}
-		}
 	}
 
-	log.Println("4")
+	if memberdata.IsActive.IsSet() && memberdata.IsActive.Value() != nil {
 
-	if memberdata.IsActive.IsSet() && memberdata.IsActive.Value()!=nil {
+		memberData["is_active"] = *memberdata.IsActive.Value()
 
-		memberDetails.IsActive = *memberdata.IsActive.Value()
-
-		if *memberdata.IsActive.Value()==0{
-
-			if selectEmpty == ""{
-
-				selectEmpty = selectEmpty + "is_active"
-
-			}else{
-
-				selectEmpty = selectEmpty + ", is_active"
-			}
-		}
 	}
-
-	log.Println("5")
 
 	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
-	memberDetails.ModifiedOn = &currentTime
+	memberData["modified_on"] = &currentTime
 
-	memberDetails.ModifiedBy = &memberid
+	memberData["modified_by"] = &memberid
 
 	query := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?", memberid)
 
-	log.Println("selectEmpty",selectEmpty)
-
-	if selectEmpty != "" {
-
-		if err := query.Select(selectEmpty).Updates(&memberDetails).Error;err!= nil{
-
-			return false, err
-		}
-
-	}
-
-	if err = query.Updates(&memberDetails).Error; err != nil {
+	if err = query.UpdateColumns(memberData).Error; err != nil {
 
 		return false, err
 	}
@@ -729,11 +733,18 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*,tbl_members.is_active").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberid).First(&memberProfile).Error; err != nil {
 
-		ErrorLog.Printf("get memberProfileDetails data error: %s", err)
+		// ErrorLog.Printf("get memberProfileDetails data error: %s", err)
 
 		c.AbortWithError(http.StatusUnprocessableEntity, err)
 
 		return &model.MemberProfile{}, err
+	}
+
+	if memberProfile.CompanyLogo != nil && *memberProfile.CompanyLogo == "" {
+
+		logoPath := PathUrl + strings.TrimPrefix(*memberProfile.CompanyLogo, "/")
+
+		memberProfile.CompanyLogo = &logoPath
 	}
 
 	return &memberProfile, nil
@@ -741,13 +752,13 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
 
-	c, ok := ctx.Value(ContextKey).(*gin.Context)
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	if !ok {
+	// if !ok {
 
-		ErrorLog.Printf("getmemberProfileDetails context error: %v", ok)
+	// 	ErrorLog.Printf("getmemberProfileDetails context error: %v", ok)
 
-	}
+	// }
 
 	tokenType := c.GetString("tokenType")
 
@@ -768,7 +779,7 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	if err := query.First(&memberProfile).Error; err != nil {
 
-		ErrorLog.Printf("getmemberProfileDetails data error: %s", err)
+		// ErrorLog.Printf("getmemberProfileDetails data error: %s", err)
 
 		return &model.MemberProfile{}, err
 	}
@@ -824,4 +835,59 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 	}
 
 	return &MemberProfile, nil
+}
+
+func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, newPassword string, confirmPassword string) (bool, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberId := c.GetInt("memberid")
+
+	if memberId == 0 {
+
+		err := errors.New("unauthorized access")
+
+		// ErrorLog.Printf("memberProfileDetails context error: %s", err)
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return false, err
+
+	}
+
+	var loggedInMember member.TblMember
+
+	result := db.Where("id = ?", memberId).First(&loggedInMember)
+
+	if result.Error != nil {
+
+		c.AbortWithError(404, result.Error)
+
+		return false, result.Error
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(loggedInMember.Password), []byte(oldPassword))
+
+	if err != nil {
+
+		return false, ErrOldPass
+
+	}
+
+	if newPassword != confirmPassword  {
+
+		return false, ErrConfirmPass
+	}
+
+	updateQuery := db.Model(&member.TblMember{}).Where("id = ?", memberId).Update("password", newPassword)
+
+	if updateQuery.Error != nil {
+
+		c.AbortWithError(404, updateQuery.Error)
+
+		return false, updateQuery.Error
+
+	}
+
+	return true, nil
 }

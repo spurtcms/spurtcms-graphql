@@ -76,8 +76,6 @@ func CreateS3Sess(AwsCredentials map[string]interface{}) *session.Session {
 /*upload files to s3 */
 func UploadFileS3(AwsCredentials map[string]interface{}, upload *graphql.Upload, filePath string) error {
 
-	log.Println("enter",AwsCredentials)
-
 	session := CreateS3Sess(AwsCredentials)
 
 	awsBucket := AwsCredentials["BucketName"].(string)

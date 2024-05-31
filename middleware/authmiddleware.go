@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"spurtcms-graphql/controller"
@@ -59,7 +60,7 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	if err != nil {
 
-		controller.ErrorLog.Printf("Verify token error: %s", err)
+		// controller.ErrorLog.Printf("Verify token error: %s", err)
 
 		c.AbortWithError(http.StatusUnauthorized, err)
 
@@ -73,6 +74,8 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 	c.Set("token", token)
 
 	c.Set("tokenType", tokenType)
+
+	log.Println("ccccc",tokenType)
 
 	return next(ctx)
 }

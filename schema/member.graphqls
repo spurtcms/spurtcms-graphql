@@ -50,6 +50,7 @@ extend type Mutation{
     templateMemberLogin(username: String,email: String,password: String!): String! 
     memberRegister(input: MemberDetails!,ecomModule: Int): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
+    memberPasswordUpdate(oldPassword: String!,newPassword: String!,confirmPassword: String!): Boolean! @auth
 }
 
 input MemberDetails{
