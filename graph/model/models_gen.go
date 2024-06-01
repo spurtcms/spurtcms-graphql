@@ -643,8 +643,3 @@ func(Category) TableName() string{
 
     return "tbl_categories"
 }
-
-func(ProfileData) TableName()string{
-
-	return "tbl_member_profiles"
-}

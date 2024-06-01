@@ -33,3 +33,8 @@ func (r *mutationResolver) MemberPasswordUpdate(ctx context.Context, oldPassword
 func (r *queryResolver) MemberProfileDetails(ctx context.Context) (*model.MemberProfile, error) {
 	return MemberProfileDetails(r.DB, ctx)
 }
+
+// GetMemberDetails is the resolver for the getMemberDetails field.
+func (r *queryResolver) GetMemberDetails(ctx context.Context) (*model.Member, error) {
+	return GetMemberDetails(r.DB,ctx)
+}

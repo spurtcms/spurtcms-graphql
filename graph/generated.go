@@ -84,6 +84,7 @@ type QueryResolver interface {
 	JobsList(ctx context.Context, limit int, offset int, filter *model.JobFilter) (*model.JobsList, error)
 	JobDetail(ctx context.Context, id *int, jobSlug *string) (*model.Job, error)
 	MemberProfileDetails(ctx context.Context) (*model.MemberProfile, error)
+	GetMemberDetails(ctx context.Context) (*model.Member, error)
 	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID *int, spaceSlug *string) (*model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (*model.PageAndPageGroups, error)
@@ -851,6 +852,7 @@ type MemberSettings {
 
 extend type Query{
     memberProfileDetails: MemberProfile! @auth
+    getMemberDetails: Member! @auth
 }
 
 extend type Mutation{
@@ -18362,6 +18364,104 @@ func (ec *executionContext) fieldContext_Query_memberProfileDetails(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getMemberDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getMemberDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().GetMemberDetails(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Member); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.Member`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Member)
+	fc.Result = res
+	return ec.marshalNMember2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMember(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getMemberDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Member_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Member_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Member_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_Member_email(ctx, field)
+			case "mobileNo":
+				return ec.fieldContext_Member_mobileNo(ctx, field)
+			case "isActive":
+				return ec.fieldContext_Member_isActive(ctx, field)
+			case "profileImage":
+				return ec.fieldContext_Member_profileImage(ctx, field)
+			case "profileImagePath":
+				return ec.fieldContext_Member_profileImagePath(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_Member_createdOn(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Member_createdBy(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_Member_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_Member_modifiedBy(ctx, field)
+			case "memberGroupId":
+				return ec.fieldContext_Member_memberGroupId(ctx, field)
+			case "group":
+				return ec.fieldContext_Member_group(ctx, field)
+			case "password":
+				return ec.fieldContext_Member_password(ctx, field)
+			case "username":
+				return ec.fieldContext_Member_username(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Member", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_spaceList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_spaceList(ctx, field)
 	if err != nil {
@@ -26934,6 +27034,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getMemberDetails":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getMemberDetails(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "spaceList":
 			field := field
 
@@ -28295,6 +28417,20 @@ func (ec *executionContext) marshalNLoginDetails2ᚖspurtcmsᚑgraphqlᚋgraph�
 		return graphql.Null
 	}
 	return ec._LoginDetails(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMember2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMember(ctx context.Context, sel ast.SelectionSet, v model.Member) graphql.Marshaler {
+	return ec._Member(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMember2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMember(ctx context.Context, sel ast.SelectionSet, v *model.Member) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Member(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNMemberDetails2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberDetails(ctx context.Context, v interface{}) (model.MemberDetails, error) {

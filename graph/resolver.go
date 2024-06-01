@@ -155,3 +155,7 @@ func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.A
 func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, newPassword string, confirmPassword string) (bool, error) {
 	return controller.MemberPasswordUpdate(db, ctx, oldPassword, newPassword, confirmPassword)
 }
+
+func GetMemberDetails(db *gorm.DB,ctx context.Context) (*model.Member, error) {
+	return controller.GetMemberDetails(db,ctx)
+}

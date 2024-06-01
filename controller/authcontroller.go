@@ -857,3 +857,36 @@ func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, 
 
 	return true, nil
 }
+
+func GetMemberDetails(db *gorm.DB,ctx context.Context) (*model.Member, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberId := c.GetInt("memberid")
+
+	if memberId == 0 {
+
+		err := errors.New("unauthorized access")
+
+		// ErrorLog.Printf("memberProfileDetails context error: %s", err)
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return &model.Member{}, err
+
+	}
+
+	var memberDetails model.Member
+
+	result := db.Table("tbl_members").Where("is_deleted = 0 and id = ?", memberId).First(&memberDetails)
+
+	if result.Error != nil {
+
+		c.AbortWithError(404, result.Error)
+
+		return &model.Member{}, result.Error
+	}
+
+	return &memberDetails, nil
+
+}
