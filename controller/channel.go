@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"net/http"
 	"os"
-	"reflect"
 	"spurtcms-graphql/graph/model"
 	"spurtcms-graphql/storage"
 	"strconv"
@@ -844,7 +843,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	var fileName, filePath string
 
-	if profiledata.CompanyLogo.IsSet() &&  profiledata.CompanyLogo.Value() != nil {
+	if profiledata.CompanyLogo.IsSet() && profiledata.CompanyLogo.Value() != nil {
 
 		storageType, _ := GetStorageType(db)
 
@@ -856,7 +855,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 			fmt.Printf("aws-S3 storage selected\n")
 
-			filePath = "media/" + fileName
+			filePath = "member/" + fileName
 
 			err = storage.UploadFileS3(storageType.Aws, profiledata.CompanyLogo.Value(), filePath)
 
@@ -909,42 +908,42 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	companyData["profile_slug"] = profiledata.ProfileSlug
 
-	if profiledata.CompanyLocation.IsSet() && profiledata.CompanyLocation.Value()!= nil{
+	if profiledata.CompanyLocation.IsSet() && profiledata.CompanyLocation.Value() != nil {
 
 		companyData["company_location"] = *profiledata.CompanyLocation.Value()
 	}
 
-	if profiledata.Website.IsSet() && profiledata.Website.Value() != nil{
+	if profiledata.Website.IsSet() && profiledata.Website.Value() != nil {
 
 		companyData["website"] = *profiledata.Website.Value()
 	}
 
-	if profiledata.Linkedin.IsSet() && profiledata.Linkedin.Value()!= nil{
+	if profiledata.Linkedin.IsSet() && profiledata.Linkedin.Value() != nil {
 
 		companyData["linkedin"] = *profiledata.Linkedin.Value()
 	}
 
-	if profiledata.Twitter.IsSet() && profiledata.Twitter.Value()!= nil{
+	if profiledata.Twitter.IsSet() && profiledata.Twitter.Value() != nil {
 
 		companyData["twitter"] = *profiledata.Twitter.Value()
 	}
 
-	if profiledata.SeoTitle.IsSet() && profiledata.SeoTitle.Value()!=nil{
+	if profiledata.SeoTitle.IsSet() && profiledata.SeoTitle.Value() != nil {
 
 		companyData["seo_title"] = *profiledata.SeoTitle.Value()
 	}
 
-	if profiledata.SeoDescription.IsSet() && profiledata.SeoDescription.Value()!= nil{
+	if profiledata.SeoDescription.IsSet() && profiledata.SeoDescription.Value() != nil {
 
 		companyData["seo_description"] = *profiledata.SeoDescription.Value()
 	}
 
-	if profiledata.SeoKeyword.IsSet() && profiledata.SeoKeyword.Value()!= nil{
+	if profiledata.SeoKeyword.IsSet() && profiledata.SeoKeyword.Value() != nil {
 
 		companyData["seo_keyword"] = *profiledata.SeoKeyword.Value()
 	}
 
-	if profiledata.About.IsSet() && profiledata.About.Value()!= nil{
+	if profiledata.About.IsSet() && profiledata.About.Value() != nil {
 
 		companyData["about"] = *profiledata.About.Value()
 	}
