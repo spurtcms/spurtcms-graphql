@@ -459,10 +459,19 @@ extend type Mutation{
 }
 
 input ProfileData{
-	website:         String
-	twitter:         String
-	linkedin:        String
-	memberProfile:   JSON!
+	companyName:      String!
+	profileName:      String!
+	profileSlug:      String!
+	companyLocation:  String
+	companyLogo:      Upload
+	about:            String
+	website:          String
+	twitter:          String
+	linkedin:         String
+	companyProfile:   JSON
+	seoTitle:         String
+	seoDescription:   String
+	seoKeyword:       String
 }
 
 input ClaimData{
@@ -23535,13 +23544,55 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"website", "twitter", "linkedin", "memberProfile"}
+	fieldsInOrder := [...]string{"companyName", "profileName", "profileSlug", "companyLocation", "companyLogo", "about", "website", "twitter", "linkedin", "companyProfile", "seoTitle", "seoDescription", "seoKeyword"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "companyName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyName"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CompanyName = data
+		case "profileName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileName"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.ProfileName = data
+		case "profileSlug":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileSlug"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.ProfileSlug = data
+		case "companyLocation":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyLocation"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CompanyLocation = graphql.OmittableOf(data)
+		case "companyLogo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyLogo"))
+			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CompanyLogo = graphql.OmittableOf(data)
+		case "about":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("about"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.About = graphql.OmittableOf(data)
 		case "website":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -23563,13 +23614,34 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 				return &it, err
 			}
 			it.Linkedin = graphql.OmittableOf(data)
-		case "memberProfile":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memberProfile"))
-			data, err := ec.unmarshalNJSON2string(ctx, v)
+		case "companyProfile":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyProfile"))
+			data, err := ec.unmarshalOJSON2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
-			it.MemberProfile = data
+			it.CompanyProfile = graphql.OmittableOf(data)
+		case "seoTitle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("seoTitle"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.SeoTitle = graphql.OmittableOf(data)
+		case "seoDescription":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("seoDescription"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.SeoDescription = graphql.OmittableOf(data)
+		case "seoKeyword":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("seoKeyword"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.SeoKeyword = graphql.OmittableOf(data)
 		}
 	}
 
@@ -28124,21 +28196,6 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) unmarshalNJSON2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNJSON2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) marshalNJob2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v model.Job) graphql.Marshaler {
 	return ec._Job(ctx, sel, &v)
 }
@@ -29087,6 +29144,22 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 	res := graphql.MarshalInt(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOJSON2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOJSON2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalString(*v)
 	return res
 }
 

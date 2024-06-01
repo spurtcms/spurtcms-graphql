@@ -196,10 +196,19 @@ extend type Mutation{
 }
 
 input ProfileData{
-	website:         String
-	twitter:         String
-	linkedin:        String
-	memberProfile:   JSON!
+	companyName:      String!
+	profileName:      String!
+	profileSlug:      String!
+	companyLocation:  String
+	companyLogo:      Upload
+	about:            String
+	website:          String
+	twitter:          String
+	linkedin:         String
+	companyProfile:   JSON
+	seoTitle:         String
+	seoDescription:   String
+	seoKeyword:       String
 }
 
 input ClaimData{

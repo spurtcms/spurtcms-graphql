@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"spurtcms-graphql/controller"
@@ -74,8 +73,6 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 	c.Set("token", token)
 
 	c.Set("tokenType", tokenType)
-
-	log.Println("ccccc",tokenType)
 
 	return next(ctx)
 }

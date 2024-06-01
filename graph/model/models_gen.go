@@ -469,10 +469,19 @@ type ProductSort struct {
 }
 
 type ProfileData struct {
-	Website       graphql.Omittable[*string] `json:"website,omitempty"`
-	Twitter       graphql.Omittable[*string] `json:"twitter,omitempty"`
-	Linkedin      graphql.Omittable[*string] `json:"linkedin,omitempty"`
-	MemberProfile string                     `json:"memberProfile"`
+	CompanyName     string                             `json:"companyName"`
+	ProfileName     string                             `json:"profileName"`
+	ProfileSlug     string                             `json:"profileSlug"`
+	CompanyLocation graphql.Omittable[*string]         `json:"companyLocation,omitempty"`
+	CompanyLogo     graphql.Omittable[*graphql.Upload] `json:"companyLogo,omitempty"`
+	About           graphql.Omittable[*string]         `json:"about,omitempty"`
+	Website         graphql.Omittable[*string]         `json:"website,omitempty"`
+	Twitter         graphql.Omittable[*string]         `json:"twitter,omitempty"`
+	Linkedin        graphql.Omittable[*string]         `json:"linkedin,omitempty"`
+	CompanyProfile  graphql.Omittable[*string]         `json:"companyProfile,omitempty"`
+	SeoTitle        graphql.Omittable[*string]         `json:"seoTitle,omitempty"`
+	SeoDescription  graphql.Omittable[*string]         `json:"seoDescription,omitempty"`
+	SeoKeyword      graphql.Omittable[*string]         `json:"seoKeyword,omitempty"`
 }
 
 type Query struct {
@@ -632,5 +641,10 @@ func (EcommerceCart) TableName() string {
 
 func(Category) TableName() string{
 
-return "tbl_categories"
+    return "tbl_categories"
+}
+
+func(ProfileData) TableName()string{
+
+	return "tbl_member_profiles"
 }

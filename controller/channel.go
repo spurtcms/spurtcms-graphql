@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"html/template"
 	"net/http"
 	"os"
+	"reflect"
 	"spurtcms-graphql/graph/model"
+	"spurtcms-graphql/storage"
 	"strconv"
 	"strings"
 	"time"
@@ -746,7 +748,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		convIds = append(convIds, convId)
 	}
 
-	_, notifyEmails, _ := GetNotifyAdminEmails(db,convIds)
+	_, notifyEmails, _ := GetNotifyAdminEmails(db, convIds)
 
 	var claimTemplate model.EmailTemplate
 
@@ -827,46 +829,153 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	token := c.GetString("token")
-
 	memberid := c.GetInt("memberid")
 
-	if token == "" || memberid == 0 {
+	if memberid == 0 {
 
 		c.AbortWithStatus(http.StatusUnauthorized)
 
-		return false, errors.New("login required")
+		return false, ErrLoginReq
 	}
 
-	var jsonData map[string]interface{}
+	companyData := make(map[string]interface{})
 
-	err := json.Unmarshal([]byte(profiledata.MemberProfile), &jsonData)
+	var err error
+
+	var fileName, filePath string
+
+	if profiledata.CompanyLogo.IsSet() &&  profiledata.CompanyLogo.Value() != nil {
+
+		storageType, _ := GetStorageType(db)
+
+		fileName = profiledata.CompanyLogo.Value().Filename
+
+		file := profiledata.CompanyLogo.Value().File
+
+		if storageType.SelectedType == "aws" {
+
+			fmt.Printf("aws-S3 storage selected\n")
+
+			filePath = "media/" + fileName
+
+			err = storage.UploadFileS3(storageType.Aws, profiledata.CompanyLogo.Value(), filePath)
+
+			if err != nil {
+
+				fmt.Printf("image upload failed %v\n", err)
+
+				return false, ErrUpload
+
+			}
+
+		} else if storageType.SelectedType == "local" {
+
+			fmt.Printf("local storage selected\n")
+
+			b64Data, err := IoReadSeekerToBase64(file)
+
+			if err != nil {
+
+				return false, err
+			}
+
+			endpoint := "gqlSaveLocal"
+
+			url := PathUrl + endpoint
+
+			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
+
+			if err != nil {
+
+				return false, ErrUpload
+			}
+
+		} else if storageType.SelectedType == "azure" {
+
+			fmt.Printf("azure storage selected")
+
+		} else if storageType.SelectedType == "drive" {
+
+			fmt.Println("drive storage selected")
+		}
+
+	}
+
+	companyData["company_logo"] = filePath
+
+	companyData["company_name"] = profiledata.CompanyName
+
+	companyData["profile_name"] = profiledata.ProfileName
+
+	companyData["profile_slug"] = profiledata.ProfileSlug
+
+	if profiledata.CompanyLocation.IsSet() && profiledata.CompanyLocation.Value()!= nil{
+
+		companyData["company_location"] = *profiledata.CompanyLocation.Value()
+	}
+
+	if profiledata.Website.IsSet() && profiledata.Website.Value() != nil{
+
+		companyData["website"] = *profiledata.Website.Value()
+	}
+
+	if profiledata.Linkedin.IsSet() && profiledata.Linkedin.Value()!= nil{
+
+		companyData["linkedin"] = *profiledata.Linkedin.Value()
+	}
+
+	if profiledata.Twitter.IsSet() && profiledata.Twitter.Value()!= nil{
+
+		companyData["twitter"] = *profiledata.Twitter.Value()
+	}
+
+	if profiledata.SeoTitle.IsSet() && profiledata.SeoTitle.Value()!=nil{
+
+		companyData["seo_title"] = *profiledata.SeoTitle.Value()
+	}
+
+	if profiledata.SeoDescription.IsSet() && profiledata.SeoDescription.Value()!= nil{
+
+		companyData["seo_description"] = *profiledata.SeoDescription.Value()
+	}
+
+	if profiledata.SeoKeyword.IsSet() && profiledata.SeoKeyword.Value()!= nil{
+
+		companyData["seo_keyword"] = *profiledata.SeoKeyword.Value()
+	}
+
+	if profiledata.About.IsSet() && profiledata.About.Value()!= nil{
+
+		companyData["about"] = *profiledata.About.Value()
+	}
+
+	if profiledata.CompanyProfile.IsSet() && profiledata.CompanyProfile.Value() != nil {
+
+		var jsonData map[string]interface{}
+
+		err := json.Unmarshal([]byte(*profiledata.CompanyProfile.Value()), &jsonData)
+
+		if err != nil {
+
+			return false, err
+		}
+
+		companyData["member_details"] = jsonData
+
+	}
+
+	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
 	if err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
 
-	currentTime, err := time.Parse("2006-01-02 15:04:05", time.Now().In(TimeZone).Format("2006-01-02 15:04:05"))
+	companyData["modified_on"] = currentTime
 
-	if err != nil {
+	companyData["modified_by"] = memberid
 
-		c.AbortWithError(http.StatusInternalServerError, err)
-
-		return false, err
-	}
-
-	memberProfileDetails := model.MemberProfile{
-		MemberDetails: profiledata.MemberProfile,
-		Linkedin:      profiledata.Linkedin.Value(),
-		Twitter:       profiledata.Twitter.Value(),
-		Website:       profiledata.Website.Value(),
-		ModifiedOn:    &currentTime,
-	}
-
-	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberid).UpdateColumns(map[string]interface{}{"member_details": memberProfileDetails.MemberDetails, "linkedin": memberProfileDetails.Linkedin, "twitter": memberProfileDetails.Twitter, "website": memberProfileDetails.Website, "modified_on": memberProfileDetails.ModifiedOn, "modified_by": memberid}).Error; err != nil {
+	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberid).UpdateColumns(companyData).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 

@@ -101,6 +101,8 @@ var (
 	ErrUpload             = errors.New("file upload failed")
 	ErrOldPass            = errors.New("old password mismatched")
 	ErrConfirmPass        = errors.New("new passowrd and confirmation password mismatched")
+	ErrSamePass           = errors.New("old password and new password should not be same")
+	ErrLoginReq           = errors.New("login required")
 )
 
 func init() {
@@ -322,4 +324,16 @@ func IoReadSeekerToBase64(file io.ReadSeeker)(string, error){
     base64Str := base64.StdEncoding.EncodeToString(buf.Bytes())
 
     return base64Str, nil
+}
+
+func CompareBcryptPassword (hashpass, oldpass string) error{
+
+	err := bcrypt.CompareHashAndPassword([]byte(hashpass), []byte(oldpass))
+
+	if err != nil {
+
+		return err
+	}
+
+	return nil
 }

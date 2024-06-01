@@ -3,15 +3,12 @@ package controller
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"os"
 	"spurtcms-graphql/graph/model"
 	"spurtcms-graphql/storage"
@@ -21,7 +18,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spurtcms/pkgcore/member"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -507,7 +503,7 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 			fmt.Printf("aws-S3 storage selected\n")
 
-			filePath = "media/" + fileName
+			filePath = "member/" + fileName
 
 			err = storage.UploadFileS3(storageType.Aws, memberdata.ProfileImage.Value(), filePath)
 
@@ -523,10 +519,6 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 			fmt.Printf("local storage selected\n")
 
-			client := http.Client{}
-
-			paramSetter := url.Values{}
-
 			b64Data, err := IoReadSeekerToBase64(file)
 
 			if err != nil {
@@ -534,56 +526,16 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 				return false, err
 			}
 
-			paramSetter.Add("imgFile", b64Data)
-
-			paramSetter.Add("imgFileName", fileName)
-
-			method := "POST"
-
 			endpoint := "gqlSaveLocal"
 
 			url := PathUrl + endpoint
 
-			uploadReq, err := http.NewRequest(method, url, bytes.NewBufferString(paramSetter.Encode()))
+			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
 
 			if err != nil {
-
-				return false, err
-			}
-
-			response, err := client.Do(uploadReq)
-
-			if err != nil || response.StatusCode != 200 {
 
 				return false, ErrUpload
 			}
-
-			defer response.Body.Close()
-
-			responseBytes, err := io.ReadAll(response.Body)
-
-			if err != nil {
-
-				return false, err
-			}
-
-			var responseData map[string]interface{}
-
-			err = json.Unmarshal(responseBytes, &responseData)
-
-			if err != nil {
-
-				return false, err
-			}
-
-			path, ok := responseData["StoragePath"].(string)
-
-			if !ok {
-
-				return false, ErrUpload
-			}
-
-			filePath = path
 
 		} else if storageType.SelectedType == "azure" {
 
@@ -857,7 +809,7 @@ func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, 
 
 	var loggedInMember member.TblMember
 
-	result := db.Where("id = ?", memberId).First(&loggedInMember)
+	result := db.Where("is_deleted = 0 and id = ?", memberId).First(&loggedInMember)
 
 	if result.Error != nil {
 
@@ -866,7 +818,7 @@ func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, 
 		return false, result.Error
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(loggedInMember.Password), []byte(oldPassword))
+	err := CompareBcryptPassword(loggedInMember.Password, oldPassword)
 
 	if err != nil {
 
@@ -874,12 +826,26 @@ func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, 
 
 	}
 
-	if newPassword != confirmPassword  {
+	if newPassword != confirmPassword {
 
 		return false, ErrConfirmPass
 	}
 
-	updateQuery := db.Model(&member.TblMember{}).Where("id = ?", memberId).Update("password", newPassword)
+	hasspass, err := HashingPassword(confirmPassword)
+
+	if err != nil {
+
+		return false, ErrPassHash
+	}
+
+	err = CompareBcryptPassword(hasspass, oldPassword)
+
+	if err == nil {
+
+		return false, ErrSamePass
+	}
+
+	updateQuery := db.Model(&member.TblMember{}).Where("id = ?", memberId).Update("password", hasspass)
 
 	if updateQuery.Error != nil {
 
