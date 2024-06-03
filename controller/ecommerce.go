@@ -3,8 +3,10 @@ package controller
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"spurtcms-graphql/graph/model"
+	"spurtcms-graphql/storage"
 	"strconv"
 	"strings"
 	"time"
@@ -954,66 +956,172 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 		return false, err
 	}
 
-	if customerInput.FirstName.Value() == nil || customerInput.MobileNo.Value() == nil || customerInput.Email.Value() == nil || customerInput.IsActive.Value() == nil {
+	customerDetails := make(map[string]interface{})
 
-		return false, ErrMandatory
+	memberDetails := make(map[string]interface{})
+
+	if customerInput.ProfileImage.IsSet() && customerInput.ProfileImage.Value() != nil {
+
+		var fileName, filePath string
+
+		storageType, _ := GetStorageType(db)
+
+		fileName = customerInput.ProfileImage.Value().Filename
+
+		file := customerInput.ProfileImage.Value().File
+
+		if storageType.SelectedType == "aws" {
+
+			fmt.Printf("aws-S3 storage selected\n")
+
+			filePath = "member/" + fileName
+
+			err := storage.UploadFileS3(storageType.Aws, customerInput.ProfileImage.Value(), filePath)
+
+			if err != nil {
+
+				fmt.Printf("image upload failed %v\n", err)
+
+				return false, ErrUpload
+
+			}
+
+		} else if storageType.SelectedType == "local" {
+
+			fmt.Printf("local storage selected\n")
+
+			b64Data, err := IoReadSeekerToBase64(file)
+
+			if err != nil {
+
+				return false, err
+			}
+
+			endpoint := "gqlSaveLocal"
+
+			url := PathUrl + endpoint
+
+			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
+
+			if err != nil {
+
+				return false, ErrUpload
+			}
+
+			fmt.Printf("local stored path: %v\n", filePath)
+
+		} else if storageType.SelectedType == "azure" {
+
+			fmt.Printf("azure storage selected")
+
+		} else if storageType.SelectedType == "drive" {
+
+			fmt.Println("drive storage selected")
+		}
+
+		customerDetails["profile_image"] = fileName
+
+		memberDetails["profile_image"] = fileName
+
+		customerDetails["profile_image_path"] = filePath
+
+		memberDetails["profile_image_path"] = filePath
+
 	}
 
-	var customerDetails model.CustomerDetails
+	customerDetails["first_name"] = customerInput.FirstName
 
-	customerDetails.FirstName = *customerInput.FirstName.Value()
+	memberDetails["first_name"] = customerInput.FirstName
 
-	customerDetails.LastName = customerInput.LastName.Value()
+	customerDetails["email"] = customerInput.Email
 
-	customerDetails.MobileNo = *customerInput.MobileNo.Value()
+	memberDetails["email"] = customerInput.Email
 
-	customerDetails.Email = *customerInput.Email.Value()
+	if customerInput.LastName.IsSet() && customerInput.LastName.Value() != nil {
 
-	if customerInput.Username.IsSet() && *customerInput.Username.Value() != "" {
+		customerDetails["last_name"] = *customerInput.LastName.Value()
 
-		customerDetails.Username = *customerInput.Username.Value()
-
+		memberDetails["last_name"] = *customerInput.LastName.Value()
 	}
 
-	customerDetails.IsActive = *customerInput.IsActive.Value()
+	if customerInput.MobileNo.IsSet() && customerInput.MobileNo.Value() != nil {
 
-	customerDetails.StreetAddress = customerInput.StreetAddress.Value()
+		customerDetails["mobile_no"] = *customerInput.MobileNo.Value()
 
-	customerDetails.City = customerInput.City.Value()
+		memberDetails["mobile_no"] = *customerInput.MobileNo.Value()
+	}
 
-	customerDetails.Country = customerInput.Country.Value()
+	if customerInput.Username.IsSet() && customerInput.Username.Value() != nil {
 
-	customerDetails.State = customerInput.State.Value()
+		customerDetails["username"] = *customerInput.Username.Value()
 
-	customerDetails.ZipCode = customerInput.ZipCode.Value()
+		memberDetails["username"] = *customerInput.Username.Value()
+	}
+
+	if customerInput.IsActive.IsSet() && customerInput.IsActive.Value() != nil {
+
+		customerDetails["is_active"] = *customerInput.IsActive.Value()
+
+		memberDetails["is_active"] = *customerInput.IsActive.Value()
+	}
+
+	if customerInput.StreetAddress.IsSet() && customerInput.StreetAddress.Value() != nil {
+
+		customerDetails["street_address"] = *customerInput.StreetAddress.Value()
+	}
+
+	if customerInput.City.IsSet() && customerInput.City.Value() != nil {
+
+		customerDetails["city"] = *customerInput.City.Value()
+	}
+
+	if customerInput.Country.IsSet() && customerInput.Country.Value() != nil {
+
+		customerDetails["country"] = *customerInput.Country.Value()
+	}
+
+	if customerInput.State.IsSet() && customerInput.State.Value() != nil {
+
+		customerDetails["state"] = *customerInput.State.Value()
+	}
+
+	if customerInput.ZipCode.IsSet() && customerInput.ZipCode.Value() != nil {
+
+		customerDetails["zip_code"] = *customerInput.ZipCode.Value()
+	}
+
+	if customerInput.Password.IsSet() && customerInput.Password.Value() != nil && *customerInput.Password.Value() != "" {
+
+		hashpass, err := HashingPassword(*customerInput.Password.Value())
+
+		if err != nil {
+
+			return false, ErrPassHash
+		}
+
+		customerDetails["password"] = hashpass
+
+		memberDetails["password"] = hashpass
+	}
 
 	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
-	customerDetails.ModifiedOn = &currentTime
+	customerDetails["modified_on"] = currentTime
 
-	if customerInput.Password.Value() == nil || *customerInput.Password.Value() == "" {
+	memberDetails["modified_on"] = currentTime
 
-		if err := db.Debug().Table("tbl_ecom_customers").Omit("password").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName, "last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo, "is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username, "street_address": customerDetails.StreetAddress, "city": customerDetails.City, "state": customerDetails.State, "country": customerDetails.Country, "modified_on": customerDetails.ModifiedOn, "zip_code": customerDetails.ZipCode}).Error; err != nil {
+	customerDetails["modified_by"] = memberid
 
-			return false, err
-		}
+	memberDetails["modified_by"] = memberid
 
-		if err := db.Debug().Table("tbl_members").Omit("password").Where("is_deleted = 0 and id = ?", memberid).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName, "last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo, "is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username, "modified_on": customerDetails.ModifiedOn}).Error; err != nil {
+	if err := db.Debug().Table("tbl_ecom_customers").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(&customerDetails).Error; err != nil {
 
-			return false, err
-		}
+		return false, err
+	}
 
-	} else {
+	if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?", memberid).UpdateColumns(&memberDetails).Error; err != nil {
 
-		if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName, "last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo, "is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username, "street_address": customerDetails.StreetAddress, "city": customerDetails.City, "state": customerDetails.State, "country": customerDetails.Country, "modified_on": customerDetails.ModifiedOn, "password": customerDetails.Password, "zip_code": customerDetails.ZipCode}).Error; err != nil {
-
-			return false, err
-		}
-
-		if err := db.Table("tbl_members").Where("is_deleted = 0 and id = ?", memberid).UpdateColumns(map[string]interface{}{"first_name": customerDetails.FirstName, "last_name": customerDetails.LastName, "mobile_no": customerDetails.MobileNo, "is_active": customerDetails.IsActive, "email": customerDetails.Email, "username": customerDetails.Username, "modified_on": customerDetails.ModifiedOn, "password": customerDetails.Password}).Error; err != nil {
-
-			return false, err
-		}
+		return false, err
 	}
 
 	return true, nil
@@ -1049,4 +1157,29 @@ func UpdateProductViewCount(db *gorm.DB, ctx context.Context, productID *int, pr
 	}
 
 	return true, nil
+}
+
+func EcommerceOrderStatusNames(db *gorm.DB,ctx context.Context) ([]model.OrderStatusNames, error) {
+
+	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	memberid := c.GetInt("memberid")
+
+	if memberid == 0 {
+
+		err := errors.New("unauthorized access")
+
+		c.AbortWithError(http.StatusUnauthorized, err)
+
+		return []model.OrderStatusNames{}, err
+	}
+
+	var orderStatus []model.OrderStatusNames
+
+	if err := db.Debug().Table("tbl_ecom_status").Find(&orderStatus).Error;err!= nil{
+
+		return []model.OrderStatusNames{}, err
+	}
+
+	return orderStatus, nil
 }

@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 )
 
-func UploadImageToAdminLocal(b64Data,fileName,adminUrl string,) (string, error){
+func UploadImageToAdminLocal(b64Data, fileName, adminUrl string) (string, error) {
 
 	client := http.Client{}
 
@@ -30,9 +31,16 @@ func UploadImageToAdminLocal(b64Data,fileName,adminUrl string,) (string, error){
 
 	response, err := client.Do(uploadReq)
 
-	if err != nil || response.StatusCode != 200 {
+	if err != nil {
 
 		return "", err
+	}
+
+	if response.StatusCode != 200{
+
+		fmt.Println("response status",response.StatusCode)
+
+		return  "", errors.New("failed to store file in admin panel local")
 	}
 
 	defer response.Body.Close()
@@ -55,12 +63,13 @@ func UploadImageToAdminLocal(b64Data,fileName,adminUrl string,) (string, error){
 
 	path, ok := responseData["StoragePath"].(string)
 
+	fmt.Printf("path %v\n", path)
+
 	if !ok {
 
-		return "", errors.New("failed to get storage path in admin panel")
+		return "", errors.New("failed to get storage path")
 	}
 
 	return path, nil
 
 }
-

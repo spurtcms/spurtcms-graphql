@@ -63,3 +63,8 @@ func (r *queryResolver) EcommerceProductOrderDetails(ctx context.Context, produc
 func (r *queryResolver) EcommerceCustomerDetails(ctx context.Context) (*model.CustomerDetails, error) {
 	return EcommerceCustomerDetails(r.DB, ctx)
 }
+
+// EcommerceOrderStatusNames is the resolver for the ecommerceOrderStatusNames field.
+func (r *queryResolver) EcommerceOrderStatusNames(ctx context.Context) ([]model.OrderStatusNames, error) {
+	return EcommerceOrderStatusNames(r.DB, ctx)
+}

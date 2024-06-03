@@ -159,3 +159,7 @@ func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, 
 func GetMemberDetails(db *gorm.DB,ctx context.Context) (*model.Member, error) {
 	return controller.GetMemberDetails(db,ctx)
 }
+
+func EcommerceOrderStatusNames(db *gorm.DB,ctx context.Context) ([]model.OrderStatusNames, error) {
+	return controller.EcommerceOrderStatusNames(db,ctx)
+}

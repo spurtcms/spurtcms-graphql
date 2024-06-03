@@ -841,9 +841,9 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	var err error
 
-	var fileName, filePath string
-
 	if profiledata.CompanyLogo.IsSet() && profiledata.CompanyLogo.Value() != nil {
+
+		var fileName, filePath string
 
 		storageType, _ := GetStorageType(db)
 
@@ -898,9 +898,8 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 			fmt.Println("drive storage selected")
 		}
 
+		companyData["company_logo"] = filePath
 	}
-
-	companyData["company_logo"] = filePath
 
 	companyData["company_name"] = profiledata.CompanyName
 

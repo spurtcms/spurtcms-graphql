@@ -403,6 +403,18 @@ type OrderStatus struct {
 	CreatedOn   time.Time `json:"createdOn"`
 }
 
+type OrderStatusNames struct {
+	ID          int        `json:"id"`
+	Status      string     `json:"status"`
+	Description *string    `json:"description,omitempty"`
+	IsActive    int        `json:"isActive"`
+	CreatedBy   int        `json:"createdBy"`
+	CreatedOn   time.Time  `json:"createdOn"`
+	ModifiedBy  *int       `json:"modifiedBy,omitempty"`
+	ModifiedOn  *time.Time `json:"modifiedOn,omitempty"`
+	IsDeleted   int        `json:"isDeleted"`
+}
+
 type OrderSummary struct {
 	SubTotal       string                  `json:"subTotal"`
 	ShippingAmount graphql.Omittable[*int] `json:"shippingAmount,omitempty"`
@@ -585,14 +597,14 @@ type CustomerDetails struct {
 }
 
 type CustomerInput struct {
-	FirstName     graphql.Omittable[*string] `json:"firstName,omitempty"`
+	FirstName     string `json:"firstName"`
 	LastName      graphql.Omittable[*string] `json:"lastName,omitempty"`
 	MobileNo      graphql.Omittable[*string] `json:"mobileNo,omitempty"`
-	Email         graphql.Omittable[*string] `json:"email,omitempty"`
+	Email         string `json:"email"`
 	Username      graphql.Omittable[*string] `json:"username,omitempty"`
 	Password      graphql.Omittable[*string] `json:"password,omitempty"`
 	IsActive      graphql.Omittable[*int]    `json:"isActive,omitempty"`
-	ProfileImage  graphql.Omittable[*string] `json:"profileImage,omitempty"`
+	ProfileImage  graphql.Omittable[*graphql.Upload] `json:"profileImage,omitempty"`
 	City          graphql.Omittable[*string] `json:"city,omitempty"`
 	State         graphql.Omittable[*string] `json:"state,omitempty"`
 	Country       graphql.Omittable[*string] `json:"country,omitempty"`

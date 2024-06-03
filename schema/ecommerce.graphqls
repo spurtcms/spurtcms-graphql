@@ -150,6 +150,18 @@ type EcomOrderedProductDetails{
 	OrderStatuses:  [OrderStatus!]!
 }
 
+type OrderStatusNames{
+	id:              Int!
+	status:          String!
+	description:     String
+	isActive:        Int!
+	createdBy:       Int!
+	createdOn:       Time!
+	modifiedBy:      Int
+	modifiedOn:      Time
+	isDeleted:       Int!
+}
+
 extend type Query{
     ecommerceProductList(limit: Int!,offset: Int!,filter: ProductFilter,sort: ProductSort): EcommerceProducts! 
 	ecommerceProductDetails(productId: Int,productSlug: String): EcommerceProduct!
@@ -157,6 +169,7 @@ extend type Query{
 	ecommerceProductOrdersList(limit: Int!,offset: Int!,filter: orderFilter,sort: orderSort): EcommerceProducts! @auth
 	ecommerceProductOrderDetails(productId: Int,productSlug: String, orderId : Int!): EcomOrderedProductDetails! @auth
 	ecommerceCustomerDetails: customerDetails! @auth
+	ecommerceOrderStatusNames: [OrderStatusNames!]! @auth
 }
 
 extend type Mutation{
@@ -220,14 +233,14 @@ input OrderSummary{
 }
 
 input customerInput{
-	firstName:        String
+	firstName:        String!
 	lastName:         String
 	mobileNo:         String
-	email:            String
+	email:            String!
 	username:         String
 	password:         String
 	isActive:         Int
-	profileImage:     String
+	profileImage:     Upload
 	city:             String
 	state:            String
 	country:          String

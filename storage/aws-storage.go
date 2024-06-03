@@ -2,7 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,42 +12,15 @@ import (
 )
 
 // create session
-func CreateS3Session(AwsCredentials map[string]interface{}) (ses *s3.S3, err error) {
+func CreateS3Session(awsSession *session.Session) (ses *s3.S3) {
 
-	var awsId, awsKey, awsRegion string
+	svc := s3.New(awsSession)
 
-	if AwsCredentials != nil {
-
-		awsId = AwsCredentials["AccessId"].(string)
-
-		awsKey = AwsCredentials["AccessKey"].(string)
-
-		awsRegion = AwsCredentials["Region"].(string)
-
-		// awsBucket =  AwsCredentials["BucketName"].(string)
-
-	}
-
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(awsRegion),
-		Credentials: credentials.NewStaticCredentials(awsId, awsKey, ""),
-	})
-
-	if err != nil {
-
-		log.Println("Error creating session: ", err)
-
-		return nil, err
-
-	}
-
-	svc := s3.New(sess)
-
-	return svc, nil
+	return svc
 
 }
 
-func CreateS3Sess(AwsCredentials map[string]interface{}) *session.Session {
+func CreateAwsSession(AwsCredentials map[string]interface{}) *session.Session {
 
 	var awsId, awsKey, awsRegion string
 
@@ -76,7 +48,7 @@ func CreateS3Sess(AwsCredentials map[string]interface{}) *session.Session {
 /*upload files to s3 */
 func UploadFileS3(AwsCredentials map[string]interface{}, upload *graphql.Upload, filePath string) error {
 
-	session := CreateS3Sess(AwsCredentials)
+	session := CreateAwsSession(AwsCredentials)
 
 	awsBucket := AwsCredentials["BucketName"].(string)
 
@@ -100,4 +72,31 @@ func UploadFileS3(AwsCredentials map[string]interface{}, upload *graphql.Upload,
 	fmt.Printf("file uploaded to, %s\n", aws.StringValue(&result.Location))
 
 	return nil
+}
+
+func CheckS3FileExistence(AwsCredentials map[string]interface{}, fileName string) (bool, error) {
+
+	session := CreateAwsSession(AwsCredentials)
+
+	s3Svc := CreateS3Session(session)
+
+	awsBucket := AwsCredentials["BucketName"].(string)
+
+	// HeadObject to check if the file exists
+	obj, err := s3Svc.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(awsBucket),
+		Key:    aws.String(fileName),
+	})
+
+	fmt.Println("checking", obj)
+
+	if err != nil {
+
+		fmt.Printf("s3 storage file exist error: %v\n", err)
+
+		return false, err
+	}
+
+	return true, nil
+
 }

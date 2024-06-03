@@ -36,5 +36,5 @@ func (r *queryResolver) MemberProfileDetails(ctx context.Context) (*model.Member
 
 // GetMemberDetails is the resolver for the getMemberDetails field.
 func (r *queryResolver) GetMemberDetails(ctx context.Context) (*model.Member, error) {
-	return GetMemberDetails(r.DB,ctx)
+	return GetMemberDetails(r.DB, ctx)
 }

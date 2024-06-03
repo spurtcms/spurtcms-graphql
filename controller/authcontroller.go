@@ -489,9 +489,9 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	var err error
 
-	var fileName, filePath string
-
 	if memberdata.ProfileImage.IsSet() && memberdata.ProfileImage.Value() != nil {
+
+		var fileName, filePath string
 
 		storageType, _ := GetStorageType(db)
 
@@ -537,6 +537,8 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 				return false, ErrUpload
 			}
 
+			log.Printf("local stored path: %v\n", filePath)
+
 		} else if storageType.SelectedType == "azure" {
 
 			fmt.Printf("azure storage selected")
@@ -546,11 +548,11 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 			fmt.Println("drive storage selected")
 		}
 
+		memberData["profile_image"] = fileName
+
+		memberData["profile_image_path"] = filePath
+
 	}
-
-	memberData["profile_image"] = fileName
-
-	memberData["profile_image_path"] = filePath
 
 	memberData["first_name"] = memberdata.FirstName
 
@@ -858,7 +860,7 @@ func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, 
 	return true, nil
 }
 
-func GetMemberDetails(db *gorm.DB,ctx context.Context) (*model.Member, error) {
+func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -885,6 +887,31 @@ func GetMemberDetails(db *gorm.DB,ctx context.Context) (*model.Member, error) {
 		c.AbortWithError(404, result.Error)
 
 		return &model.Member{}, result.Error
+	}
+
+	if memberDetails.ProfileImagePath != "" {
+
+		storageType, _ := GetStorageType(db)
+
+		awsCreds := storageType.Aws
+
+		isExist, _ := storage.CheckS3FileExistence(awsCreds, memberDetails.ProfileImagePath)
+
+		var modifiedPath string
+
+		if isExist {
+
+			s3FileServeEndpoint := "image-resize"
+
+			modifiedPath = PathUrl + s3FileServeEndpoint + "?name=" + strings.TrimPrefix(memberDetails.ProfileImagePath, "/")
+
+		} else {
+
+			modifiedPath = PathUrl + strings.TrimPrefix(memberDetails.ProfileImagePath, "/")
+		}
+
+		memberDetails.ProfileImagePath = modifiedPath
+
 	}
 
 	return &memberDetails, nil

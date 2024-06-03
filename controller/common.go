@@ -265,7 +265,7 @@ func HashingPassword(pass string) (string, error) {
 		return "", err
 	}
 
-	return string(passbyte),nil
+	return string(passbyte), nil
 }
 
 func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]auth.TblUser, []string, error) {
@@ -289,44 +289,44 @@ func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]auth.TblUser, []string
 	return adminDetails, adminEmails, nil
 }
 
-func GetStorageType(db *gorm.DB)(StorageType,error){
+func GetStorageType(db *gorm.DB) (StorageType, error) {
 
 	var storageType StorageType
 
-	if err := db.Debug().Table("tbl_storage_types").First(&storageType).Error;err != nil{
+	if err := db.Debug().Table("tbl_storage_types").First(&storageType).Error; err != nil {
 
-		return StorageType{},err
+		return StorageType{}, err
 	}
 
 	return storageType, nil
 }
 
-func IoReadSeekerToBase64(file io.ReadSeeker)(string, error){
+func IoReadSeekerToBase64(file io.ReadSeeker) (string, error) {
 
 	_, err := file.Seek(0, io.SeekStart)
 
-    if err != nil {
-		
-        return "", err
-    }
+	if err != nil {
 
-    // Read the data into a buffer
-    var buf bytes.Buffer
+	    return "", err
+	}
 
-    _, err = io.Copy(&buf, file)
+	// Read the data into a buffer
+	var buf bytes.Buffer
 
-    if err != nil {
+	_, err = io.Copy(&buf, file)
 
-        return "", err
-    }
+	if err != nil {
 
-    // Encode the buffer to a base64 string
-    base64Str := base64.StdEncoding.EncodeToString(buf.Bytes())
+	    return "", err
+	}
 
-    return base64Str, nil
+	// Encode the buffer to a base64 string
+	base64Str := base64.StdEncoding.EncodeToString(buf.Bytes())
+
+	return base64Str, nil
 }
 
-func CompareBcryptPassword (hashpass, oldpass string) error{
+func CompareBcryptPassword(hashpass, oldpass string) error {
 
 	err := bcrypt.CompareHashAndPassword([]byte(hashpass), []byte(oldpass))
 
