@@ -42,7 +42,7 @@ func init() {
 		file, err = os.Create(LogFile)
 
 		if err != nil {
-			fmt.Println("Failed to create log file: %v", err)
+			fmt.Printf("Failed to create log file: %v", err)
 		}
 
 		fmt.Println("Created new log file.")
@@ -53,7 +53,7 @@ func init() {
 
 	if err != nil {
 
-		fmt.Println("Failed to open log file: %v", err)
+		fmt.Printf("Failed to open log file: %v", err)
 	}
 
 	log.SetOutput(file)

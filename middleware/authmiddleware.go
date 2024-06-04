@@ -22,7 +22,7 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	if !ok {
 
-		controller.ErrorLog.Printf("Auth context error: %s", ok)
+		controller.ErrorLog.Printf("Auth context error: %v", ok)
 	}
 
 	token := c.GetHeader("Authorization")
