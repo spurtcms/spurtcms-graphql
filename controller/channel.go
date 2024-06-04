@@ -861,6 +861,8 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 			if err != nil {
 
+				ErrorLog.Printf("company profile logo update failed in s3 error: %s", err)
+
 				fmt.Printf("image upload failed %v\n", err)
 
 				return false, ErrUpload
@@ -875,6 +877,8 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 			if err != nil {
 
+				ErrorLog.Printf("base64 conversion error: %s", err)
+
 				return false, err
 			}
 
@@ -885,6 +889,8 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
 
 			if err != nil {
+
+				ErrorLog.Printf("company profile logo upload failed in admin panel local error: %s", err)
 
 				return false, ErrUpload
 			}
@@ -955,6 +961,8 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 		if err != nil {
 
+			ErrorLog.Printf("company profile update error: %s", err)
+
 			return false, err
 		}
 
@@ -1015,6 +1023,8 @@ func UpdateChannelEntryViewCount(db *gorm.DB, ctx context.Context, entryId *int,
 	isUpdated, err := chanAuth.UpdateChannelEntryViewCount(entryId, slug)
 
 	if !isUpdated || err != nil {
+
+		ErrorLog.Printf("channel entry update view count error: %s", err)
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 

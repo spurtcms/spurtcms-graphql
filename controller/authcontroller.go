@@ -687,16 +687,33 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*,tbl_members.is_active").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberid).First(&memberProfile).Error; err != nil {
 
-		// ErrorLog.Printf("get memberProfileDetails data error: %s", err)
+		ErrorLog.Printf("get memberProfileDetails data error: %s", err)
 
 		c.AbortWithError(http.StatusUnprocessableEntity, err)
 
 		return &model.MemberProfile{}, err
 	}
 
-	if memberProfile.CompanyLogo != nil && *memberProfile.CompanyLogo == "" {
+	if memberProfile.CompanyLogo != nil && *memberProfile.CompanyLogo != "" {
 
-		logoPath := PathUrl + strings.TrimPrefix(*memberProfile.CompanyLogo, "/")
+		var logoPath string
+
+		storageType, _ := GetStorageType(db)
+
+		awsCreds := storageType.Aws
+
+		isExist, _ := storage.CheckS3FileExistence(awsCreds, *memberProfile.CompanyLogo)
+
+		if isExist {
+
+			s3FileServeEndpoint := "image-resize"
+
+			logoPath = PathUrl + s3FileServeEndpoint + "?name=" + strings.TrimPrefix(*memberProfile.CompanyLogo, "/")
+
+		} else {
+
+			logoPath = PathUrl + strings.TrimPrefix(*memberProfile.CompanyLogo, "/")
+		}
 
 		memberProfile.CompanyLogo = &logoPath
 	}
@@ -706,13 +723,13 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
 
-	// if !ok {
+	if !ok {
 
-	// 	ErrorLog.Printf("getmemberProfileDetails context error: %v", ok)
+		ErrorLog.Printf("getmemberProfileDetails context error: %v", ok)
 
-	// }
+	}
 
 	tokenType := c.GetString("tokenType")
 
@@ -733,7 +750,7 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	if err := query.First(&memberProfile).Error; err != nil {
 
-		// ErrorLog.Printf("getmemberProfileDetails data error: %s", err)
+		ErrorLog.Printf("getmemberProfileDetails data error: %s", err)
 
 		return &model.MemberProfile{}, err
 	}
@@ -761,7 +778,23 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	if memberProfile.CompanyLogo != "" {
 
-		profileLogo = PathUrl + strings.TrimPrefix(memberProfile.CompanyLogo, "/")
+		storageType, _ := GetStorageType(db)
+
+		awsCreds := storageType.Aws
+
+		isExist, _ := storage.CheckS3FileExistence(awsCreds, memberProfile.CompanyLogo)
+
+		if isExist {
+
+			s3FileServeEndpoint := "image-resize"
+
+			profileLogo = PathUrl + s3FileServeEndpoint + "?name=" + strings.TrimPrefix(memberProfile.CompanyLogo, "/")
+
+		} else {
+
+			profileLogo = PathUrl + strings.TrimPrefix(memberProfile.CompanyLogo, "/")
+		}
+
 	}
 
 	MemberProfile := model.MemberProfile{
@@ -801,7 +834,7 @@ func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, 
 
 		err := errors.New("unauthorized access")
 
-		// ErrorLog.Printf("memberProfileDetails context error: %s", err)
+		ErrorLog.Printf("memberProfileDetails context error: %s", err)
 
 		c.AbortWithError(http.StatusUnauthorized, err)
 
@@ -870,7 +903,7 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 
 		err := errors.New("unauthorized access")
 
-		// ErrorLog.Printf("memberProfileDetails context error: %s", err)
+		ErrorLog.Printf("memberProfileDetails context error: %s", err)
 
 		c.AbortWithError(http.StatusUnauthorized, err)
 

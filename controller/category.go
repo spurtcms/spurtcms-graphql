@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"spurtcms-graphql/graph/model"
+	"spurtcms-graphql/storage"
 	"strconv"
 	"strings"
 
@@ -25,13 +26,13 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 	selectGroupRemove := ""
 
-	if categoryGroupId!=nil {
+	if categoryGroupId != nil {
 
 		category_string = `WHERE id = ` + strconv.Itoa(*categoryGroupId)
 
 		selectGroupRemove = `AND id != ` + strconv.Itoa(*categoryGroupId)
 
-	}else if categoryGroupSlug!=nil{
+	} else if categoryGroupSlug != nil {
 
 		slugStrings := strings.Split(*categoryGroupSlug, "-")
 
@@ -51,14 +52,14 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 				}
 			}
 
-		}else{
+		} else {
 
 			finalSlug_string = *categoryGroupSlug
 		}
 
-		category_string = `WHERE id = (select id from tbl_categories where is_deleted = 0 and category_slug = '`+finalSlug_string+`')`
+		category_string = `WHERE id = (select id from tbl_categories where is_deleted = 0 and category_slug = '` + finalSlug_string + `')`
 
-		selectGroupRemove = `AND id != (select id from tbl_categories where is_deleted = 0 and category_slug = '`+finalSlug_string+`')` 
+		selectGroupRemove = `AND id != (select id from tbl_categories where is_deleted = 0 and category_slug = '` + finalSlug_string + `')`
 
 	}
 
@@ -100,15 +101,17 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 	if err := db.Raw(` ` + res + `SELECT distinct(cat_tree.id),cat_tree.* FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0 order by id desc ` + limit_offString).Find(&categories).Error; err != nil {
 
-		c.AbortWithError(http.StatusInternalServerError,err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return &model.CategoriesList{}, err
 	}
 
 	if err := db.Raw(` ` + res + ` SELECT count(distinct(cat_tree.id)) FROM cat_tree where is_deleted = 0 ` + selectGroupRemove + outerlevel + ` and parent_id != 0  group by id order by id desc`).Count(&count).Error; err != nil {
 
-		c.AbortWithError(http.StatusInternalServerError,err)
-		
+		ErrorLog.Printf("category list retrieval query error: %s", err)
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
 		return &model.CategoriesList{}, err
 	}
 
@@ -142,7 +145,9 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 				if err != nil {
 
-					c.AbortWithError(http.StatusInternalServerError,err)
+					ErrorLog.Printf("checking entries mapped to categories error: %s", err)
+
+					c.AbortWithError(http.StatusInternalServerError, err)
 
 					return &model.CategoriesList{}, err
 				}
@@ -161,24 +166,40 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 					final_categoriesList = append(final_categoriesList, category)
 				}
 
-			}else {
+			} else {
 
 				var modified_path string
-	
+
 				if category.ImagePath != "" {
-	
-					modified_path = PathUrl + strings.TrimPrefix(category.ImagePath, "/")
+
+					storageType, _ := GetStorageType(db)
+
+					awsCreds := storageType.Aws
+
+					isExist, _ := storage.CheckS3FileExistence(awsCreds, category.ImagePath)
+
+					if isExist {
+
+						s3FileServeEndpoint := "image-resize"
+
+						modified_path = PathUrl + s3FileServeEndpoint + "?name=" + strings.TrimPrefix(category.ImagePath, "/")
+
+					} else {
+
+						modified_path = PathUrl + strings.TrimPrefix(category.ImagePath, "/")
+					}
+
 				}
-	
+
 				category.ImagePath = modified_path
-	
+
 				final_categoriesList = append(final_categoriesList, category)
-	
+
 			}
-	
+
 			seenCategory[category.ID] = true
 
-		} 
+		}
 
 	}
 

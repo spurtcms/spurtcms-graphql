@@ -59,7 +59,7 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	if err != nil {
 
-		// controller.ErrorLog.Printf("Verify token error: %s", err)
+		controller.ErrorLog.Printf("Verify token error: %s", err)
 
 		c.AbortWithError(http.StatusUnauthorized, err)
 

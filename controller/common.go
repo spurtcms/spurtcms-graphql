@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/smtp"
 	"os"
+	"spurtcms-graphql/logger"
 	"strconv"
 	"strings"
 	"time"
@@ -26,11 +27,6 @@ import (
 type key string
 
 const ContextKey key = "ginContext"
-
-var (
-	ErrorLog *log.Logger
-	WarnLog  *log.Logger
-)
 
 type MailConfig struct {
 	Emails         []string
@@ -84,6 +80,8 @@ var (
 	OwndeskLoginTemplate        = "OwndeskLogin"
 	OwndeskClaimnowTemplate     = "OwndeskClaimRequest"
 	LocalLoginType              = "member"
+	ErrorLog                     *log.Logger
+	WarnLog                      *log.Logger
 )
 
 var (
@@ -117,6 +115,10 @@ func init() {
 	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
 
 	TimeZone, _ = time.LoadLocation(os.Getenv("TIME_ZONE"))
+
+	ErrorLog = logger.ErrorLOG()
+	
+	WarnLog = logger.WarnLOG()
 
 	ProfileImagePath = "Uploads/ProfileImages/"
 
