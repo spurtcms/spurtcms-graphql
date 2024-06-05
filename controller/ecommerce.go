@@ -1176,7 +1176,7 @@ func EcommerceOrderStatusNames(db *gorm.DB,ctx context.Context) ([]model.OrderSt
 
 	var orderStatus []model.OrderStatusNames
 
-	if err := db.Debug().Table("tbl_ecom_status").Find(&orderStatus).Error;err!= nil{
+	if err := db.Debug().Table("tbl_ecom_statuses").Find(&orderStatus).Error;err!= nil{
 
 		return []model.OrderStatusNames{}, err
 	}

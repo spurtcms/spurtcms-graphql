@@ -3,14 +3,14 @@ package controller
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"io"
 	"log"
-	"math/rand"
 	"net/smtp"
 	"os"
 	"spurtcms-graphql/logger"
-	"strconv"
+	"spurtcms-graphql/storage"
 	"strings"
 	"time"
 
@@ -80,8 +80,8 @@ var (
 	OwndeskLoginTemplate        = "OwndeskLogin"
 	OwndeskClaimnowTemplate     = "OwndeskClaimRequest"
 	LocalLoginType              = "member"
-	ErrorLog                     *log.Logger
-	WarnLog                      *log.Logger
+	ErrorLog                    *log.Logger
+	WarnLog                     *log.Logger
 )
 
 var (
@@ -117,7 +117,7 @@ func init() {
 	TimeZone, _ = time.LoadLocation(os.Getenv("TIME_ZONE"))
 
 	ErrorLog = logger.ErrorLOG()
-	
+
 	WarnLog = logger.WarnLOG()
 
 	ProfileImagePath = "Uploads/ProfileImages/"
@@ -171,58 +171,6 @@ func GetAuthorizationWithoutToken(db *gorm.DB) *auth.Authorization {
 	auth := spurtcore.NewInstance(&auth.Option{DB: db, Token: "", Secret: os.Getenv("JWT_SECRET")})
 
 	return &auth
-}
-
-func StoreImageBase64ToLocal(imageData, storagePath, storingName string) (string, string, error) {
-
-	extEndIndex := strings.Index(imageData, ";base64,")
-
-	base64data := imageData[strings.IndexByte(imageData, ',')+1:]
-
-	var ext = imageData[11:extEndIndex]
-
-	randomNum := strconv.Itoa(rand.Intn(900000) + 100000)
-
-	imageName := storingName + "-" + randomNum + "." + ext
-
-	err := os.MkdirAll(storagePath, 0755)
-
-	if err != nil {
-
-		log.Println(err)
-
-		return "", "", err
-	}
-
-	storageDestination := storagePath + imageName
-
-	decode, err := base64.StdEncoding.DecodeString(base64data)
-
-	if err != nil {
-
-		log.Println(err)
-
-		return "", "", err
-	}
-
-	file, err := os.Create(storageDestination)
-
-	if err != nil {
-
-		log.Println(err)
-
-		return "", "", err
-
-	}
-	if _, err := file.Write(decode); err != nil {
-
-		log.Println(err)
-
-		return "", "", err
-
-	}
-
-	return imageName, storageDestination, nil
 }
 
 func SendMail(config MailConfig, html_content string, channel chan error) {
@@ -309,7 +257,7 @@ func IoReadSeekerToBase64(file io.ReadSeeker) (string, error) {
 
 	if err != nil {
 
-	    return "", err
+		return "", err
 	}
 
 	// Read the data into a buffer
@@ -319,7 +267,7 @@ func IoReadSeekerToBase64(file io.ReadSeeker) (string, error) {
 
 	if err != nil {
 
-	    return "", err
+		return "", err
 	}
 
 	// Encode the buffer to a base64 string
@@ -338,4 +286,42 @@ func CompareBcryptPassword(hashpass, oldpass string) error {
 	}
 
 	return nil
+}
+
+func GetFilePathsRelatedToStorageTypes(db *gorm.DB,path string) string {
+
+	storageType, _ := GetStorageType(db)
+
+	awsCreds := storageType.Aws
+
+	isExist, _ := storage.CheckS3FileExistence(awsCreds, path)
+
+	if isExist {
+
+		s3FileServeEndpoint := "image-resize"
+
+		s3Path := PathUrl + s3FileServeEndpoint + "?name=" + strings.TrimPrefix(path, "/")
+
+		return s3Path
+
+	} 
+
+	localPath := PathUrl + strings.TrimPrefix(path, "/")
+
+	return localPath
+}
+
+func ConvertByteToJson(byteData []byte) (map[string]interface{},error){
+
+	var jsonMap map[string]interface{}
+
+	err := json.Unmarshal(byteData,&jsonMap)
+
+	if err != nil{
+
+		return map[string]interface{}{}, err
+	}
+
+	return jsonMap,nil
+
 }
