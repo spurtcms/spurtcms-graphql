@@ -3,7 +3,6 @@ package graph
 import (
 	"context"
 	"spurtcms-graphql/controller"
-	"spurtcms-graphql/dbconfig"
 	"spurtcms-graphql/graph/model"
 
 	"gorm.io/gorm"
@@ -17,7 +16,7 @@ type Resolver struct {
 }
 
 func NewResolver() *Resolver {
-	return &Resolver{DB: dbconfig.SetupDB()}
+	return &Resolver{DB: controller.DB}
 }
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {

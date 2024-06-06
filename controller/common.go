@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/smtp"
 	"os"
+	"spurtcms-graphql/dbconfig"
 	"spurtcms-graphql/logger"
 	"spurtcms-graphql/storage"
 	"strings"
@@ -22,6 +23,8 @@ import (
 	"gorm.io/gorm"
 
 	spurtcore "github.com/spurtcms/pkgcore"
+
+	memberpkg "github.com/spurtcms/member"
 )
 
 type key string
@@ -82,6 +85,7 @@ var (
 	LocalLoginType              = "member"
 	ErrorLog                    *log.Logger
 	WarnLog                     *log.Logger
+	DB                          = dbconfig.SetupDB()
 )
 
 var (
@@ -155,6 +159,16 @@ func init() {
 	}
 
 	MemberRegisterPermission = os.Getenv("ALLOW_MEMBER_REGISTER")
+
+}
+
+func GetMemberPackageSetup(db *gorm.DB)(*memberpkg.Member){
+
+	memberConfig := memberpkg.Config{DB: db,}
+
+	memberSetup :=  memberpkg.MemberSetup(memberConfig)
+
+	return memberSetup
 
 }
 
@@ -325,3 +339,4 @@ func ConvertByteToJson(byteData []byte) (map[string]interface{},error){
 	return jsonMap,nil
 
 }
+

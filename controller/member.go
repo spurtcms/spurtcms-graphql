@@ -1114,7 +1114,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	// memberid := c.GetInt("memberid")
+	// memberAuth := GetMemberInstanceWithoutAuth()
 
 	verify_chan := make(chan error)
 
