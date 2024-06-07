@@ -7,6 +7,8 @@ require (
 	github.com/aws/aws-sdk-go v1.53.12
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
+	github.com/spurtcms/auth v0.0.6
+	github.com/spurtcms/member v0.0.7
 	github.com/spurtcms/pkgcontent v1.1.15
 	github.com/spurtcms/pkgcore v1.0.84
 	github.com/vektah/gqlparser/v2 v2.5.11
@@ -35,7 +37,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect
-	github.com/jackc/pgx/v5 v5.5.1 // indirect
+	github.com/jackc/pgx/v5 v5.5.5 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -52,9 +54,7 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sosodev/duration v1.2.0 // indirect
-	github.com/spurtcms/auth v0.0.0-20240415142453-2abf782563fe // indirect
-	github.com/spurtcms/member v0.0.6 // indirect
-	github.com/spurtcms/team-roles v0.0.0-20240415142624-666b8897005b // indirect
+	github.com/spurtcms/team-roles v0.0.5 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/urfave/cli/v2 v2.27.1 // indirect

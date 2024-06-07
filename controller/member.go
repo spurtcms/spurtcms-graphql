@@ -20,6 +20,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
+
+	memberPkg "github.com/spurtcms/member"
 )
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
@@ -283,7 +285,21 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails, ecomModule *int) (bool, error) {
 
-	var memberSettings model.MemberSettings
+	var (
+		fileName, filePath string
+
+		profileName  = input.FirstName
+
+		err error
+
+		ecomMod int = *ecomModule
+
+		memberSettings model.MemberSettings
+
+		memberDetails memberPkg.MemberCreationUpdation
+
+		memberProfile memberPkg.MemberprofilecreationUpdation
+	)
 
 	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
 
@@ -297,95 +313,19 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	Mem.Auth = GetAuthorizationWithoutToken(db)
-
-	var (
-		// imageName, imagePath string
-
-		err error
-
-		ecomMod int = *ecomModule
-	)
-
-	// if input.ProfileImage.IsSet() {
-
-	// 	imageName, imagePath, err = StoreImageBase64ToLocal(*input.ProfileImage.Value(), ProfileImagePath, "PROFILE")
-
-	// 	if err != nil {
-
-	// 		c.AbortWithError(http.StatusInternalServerError, err)
-
-	// 		return false, err
-	// 	}
-
-	// }
-
-	var memberDetails member.MemberCreation
-
-	if input.Mobile.IsSet() {
-
-		memberDetails.MobileNo = *input.Mobile.Value()
-	}
-
-	// if imageName != "" && imagePath != "" {
-
-	// 	memberDetails.ProfileImage = imageName
-
-	// 	memberDetails.ProfileImagePath = imagePath
-	// }
-
-	if input.LastName.IsSet() {
-
-		memberDetails.LastName = *input.LastName.Value()
-
-	}
-
-	var hashpass string
-
-	if input.Password.IsSet() {
-
-		hashpass, err = HashingPassword(*input.Password.Value())
-
-		if err != nil {
-
-			return false, ErrPassHash
-		}
-
-		memberDetails.Password = hashpass
-	}
-
-	if input.Username.IsSet() {
+	if input.Username.IsSet() && input.Username.Value() != nil {
 
 		memberDetails.Username = *input.Username.Value()
 
-		_, isMemberExists, err := Mem.CheckUsernameInMember(0, *input.Username.Value())
+		_, err := memberPkg.Membermodel.CheckNameInMember(0, *input.Username.Value(), db)
 
-		if isMemberExists || err == nil {
+		if err == nil {
 
-			err = errors.New("member already exists")
+			err = errors.New("member username already exists")
 
-			c.AbortWithError(422, err)
+			c.AbortWithError(400, err)
 
-			return isMemberExists, err
-		}
-
-		if ecomMod == 1 {
-
-			var count int64
-
-			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and username = ?", *input.Username.Value()).Count(&count).Error; err != nil {
-
-				return false, err
-			}
-
-			if count > 0 {
-
-				err = errors.New("customer already exists")
-
-				c.AbortWithError(422, err)
-
-				return false, err
-			}
+			return false, err
 		}
 
 	}
@@ -394,54 +334,156 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		memberDetails.Email = input.Email
 
-		_, isMemberExists, err := Mem.CheckEmailInMember(0, input.Email)
+		err := memberPkg.Membermodel.CheckEmailInMember(&memberPkg.TblMember{}, input.Email, 0, db)
 
-		if isMemberExists || err == nil {
+		if err == nil {
 
-			err = errors.New("member already exists")
+			err = errors.New("member email already exists")
 
 			c.AbortWithError(http.StatusBadRequest, err)
 
-			return isMemberExists, err
+			return false, err
 		}
 
-		if ecomMod == 1 {
+	}
 
-			var count int64
+	if input.Mobile.IsSet() && input.Mobile.Value() != nil {
 
-			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and email = ?", input.Email).Count(&count).Error; err != nil {
+		memberDetails.MobileNo = *input.Mobile.Value()
+
+		err := memberPkg.Membermodel.CheckNumberInMember(&memberPkg.TblMember{}, *input.Mobile.Value(), 0, db)
+
+		if err == nil {
+
+			err = errors.New("member mobile number  already exists")
+
+			c.AbortWithError(http.StatusBadRequest, err)
+
+			return false, err
+		}
+	}
+
+	if input.ProfileImage.IsSet() && input.ProfileImage.Value() != nil {
+
+		storageType, _ := GetStorageType(db)
+
+		fileName = input.ProfileImage.Value().Filename
+
+		file := input.ProfileImage.Value().File
+
+		if storageType.SelectedType == "aws" {
+
+			fmt.Printf("aws-S3 storage selected\n")
+
+			filePath = "member/" + fileName
+
+			err = storage.UploadFileS3(storageType.Aws, input.ProfileImage.Value(), filePath)
+
+			if err != nil {
+
+				fmt.Printf("image upload failed %v\n", err)
+
+				return false, ErrUpload
+
+			}
+
+		} else if storageType.SelectedType == "local" {
+
+			fmt.Printf("local storage selected\n")
+
+			b64Data, err := IoReadSeekerToBase64(file)
+
+			if err != nil {
 
 				return false, err
 			}
 
-			if count > 0 {
+			endpoint := "gqlSaveLocal"
 
-				err = errors.New("customer already exists")
+			url := PathUrl + endpoint
 
-				c.AbortWithError(422, err)
+			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
 
-				return false, err
+			if err != nil {
+
+				return false, ErrUpload
 			}
+
+			log.Printf("local stored path: %v\n", filePath)
+
+		} else if storageType.SelectedType == "azure" {
+
+			fmt.Printf("azure storage selected")
+
+		} else if storageType.SelectedType == "drive" {
+
+			fmt.Println("drive storage selected")
 		}
 
+	}
+
+	if fileName != "" && filePath != "" {
+
+		memberDetails.ProfileImage = fileName
+
+		memberDetails.ProfileImagePath = filePath
+	}
+
+	if input.LastName.IsSet() && input.LastName.Value() != nil {
+
+		memberDetails.LastName = *input.LastName.Value()
+
+		profileName = input.FirstName + " " + *input.LastName.Value()
+
+	}
+
+	if input.Password.IsSet() && input.Password.Value() != nil {
+
+		memberDetails.Password = *input.Password.Value()
+	}
+
+	if input.IsActive.IsSet() && input.IsActive.Value() != nil {
+
+		memberDetails.IsActive = *input.IsActive.Value()
 	}
 
 	memberDetails.FirstName = input.FirstName
 
-	memberData, isRegistered, err := Mem.MemberRegister(memberDetails)
+	memberDetails.GroupId = 1
 
-	if !isRegistered || err != nil {
+	memberInstance := GetMemberInstance()
+
+	registeredMember, err := memberInstance.CreateMember(memberDetails)
+
+	if err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
-		return isRegistered, err
+		return false, err
 	}
 
-	if isRegistered && ecomMod == 1 {
+	memberProfile.ProfileName = profileName
 
-		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+	memberProfile.ProfileSlug = strings.ReplaceAll(profileName," ","-")
+
+	memberProfile.MemberId = registeredMember.Id
+
+	memberProfile.CreatedBy = registeredMember.Id
+
+	err = memberInstance.CreateMemberProfile(memberProfile)
+
+	if err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false,err
+	}
+
+	if ecomMod == 1 {
 
 		is_deleted := 0
+
+		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
 		var ecomCustomer = model.CustomerDetails{
 			FirstName:        memberDetails.FirstName,
@@ -453,8 +495,8 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			ProfileImage:     &memberDetails.ProfileImage,
 			ProfileImagePath: &memberDetails.ProfileImagePath,
 			CreatedOn:        createdOn,
-			Password:         hashpass,
-			MemberID:         &memberData.Id,
+			Password:         registeredMember.Password,
+			MemberID:         &registeredMember.Id,
 			IsDeleted:        &is_deleted,
 		}
 
@@ -462,7 +504,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 			c.AbortWithError(http.StatusInternalServerError, err)
 
-			return isRegistered, err
+			return false,err
 		}
 	}
 
@@ -489,8 +531,6 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 	memberData := make(map[string]interface{})
 
 	var err error
-
-	// fmt.Println("chkkk",memberdata.ProfileImage.Value().Filename)
 
 	if memberdata.ProfileImage.IsSet() && memberdata.ProfileImage.Value() != nil {
 
@@ -603,15 +643,9 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	}
 
-	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+	memberInstance := GetMemberInstance()
 
-	memberData["modified_on"] = &currentTime
-
-	memberData["modified_by"] = &memberid
-
-	query := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?", memberid)
-
-	if err = query.UpdateColumns(memberData).Error; err != nil {
+	if err = memberInstance.MemberFlexibleUpdate(memberData, memberid, memberid); err != nil {
 
 		return false, err
 	}
@@ -678,7 +712,7 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 		err := errors.New("unauthorized access")
 
-		ErrorLog.Printf("memberProfileDetails context error: %s", err)
+		ErrorLog.Printf("unauthorized error: %s", err)
 
 		c.AbortWithError(http.StatusUnauthorized, err)
 
@@ -686,106 +720,24 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 	}
 
-	var memberProfile model.MemberProfile
+	memberInstance := GetMemberInstance()
 
-	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*,tbl_members.is_active").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberid).First(&memberProfile).Error; err != nil {
+	memberProfile, err := memberInstance.GetMemberProfileByMemberId(memberid)
 
-		ErrorLog.Printf("get memberProfileDetails data error: %s", err)
+	if err != nil {
 
-		c.AbortWithError(http.StatusUnprocessableEntity, err)
-
-		return &model.MemberProfile{}, err
-	}
-
-	if memberProfile.CompanyLogo != nil && *memberProfile.CompanyLogo != "" {
-
-		logoPath := GetFilePathsRelatedToStorageTypes(db,*memberProfile.CompanyLogo)
-
-		memberProfile.CompanyLogo = &logoPath
-	}
-
-	interfaceVal :=  memberProfile.MemberDetails.(*interface{})
-
-	byteVal  := (*interfaceVal).([]byte)
-
-	if memberProfile.MemberDetails != nil{
-
-		jsonData,err := ConvertByteToJson(byteVal)
-
-		if err != nil{
-
-			ErrorLog.Printf("byte to json conversion error: %s", err)
-
-			return &model.MemberProfile{},err
-		}
-
-		memberProfile.MemberDetails = jsonData
-	}
-
-	return &memberProfile, nil
-}
-
-func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
-
-	c, ok := ctx.Value(ContextKey).(*gin.Context)
-
-	if !ok {
-
-		ErrorLog.Printf("getmemberProfileDetails context error: %v", ok)
-
-	}
-
-	tokenType := c.GetString("tokenType")
-
-	memberid := c.GetInt("memberid")
-
-	var memberProfile member.TblMemberProfile
-
-	query := db.Select("tbl_member_profiles.*").Table("tbl_member_profiles").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_member_profiles.is_deleted = 0")
-
-	if id != nil {
-
-		query = query.Where("tbl_member_profiles.member_id = ?", *id)
-
-	} else if profileSlug != nil {
-
-		query = query.Where("tbl_member_profiles.profile_slug = ?", *profileSlug)
-	}
-
-	if err := query.First(&memberProfile).Error; err != nil {
-
-		ErrorLog.Printf("getmemberProfileDetails data error: %s", err)
+		ErrorLog.Printf("memberProfileDetails context error: %s", err)
 
 		return &model.MemberProfile{}, err
 	}
-
-	var memberDetails model.Member
-
-	if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?", memberProfile.MemberId).First(&memberDetails).Error; err != nil {
-
-		return &model.MemberProfile{}, err
-	}
-
-	if memberDetails.IsActive == 0 && memberDetails.ID != 0 {
-
-		if memberid != 0 && tokenType == LocalLoginType {
-
-			return &model.MemberProfile{}, ErrMemberInactive
-
-		} else if memberid == 0 {
-
-			return &model.MemberProfile{}, ErrMemberInactive
-		}
-	}
-
-	var profileLogo string
 
 	if memberProfile.CompanyLogo != "" {
 
-		profileLogo = GetFilePathsRelatedToStorageTypes(db,memberProfile.CompanyLogo)
+		memberProfile.CompanyLogo = GetFilePathsRelatedToStorageTypes(db, memberProfile.CompanyLogo)
+
 	}
 
-	MemberProfile := model.MemberProfile{
+	conv_memProfile := &model.MemberProfile{
 		ID:              &memberProfile.Id,
 		MemberID:        &memberProfile.MemberId,
 		ProfileName:     &memberProfile.ProfileName,
@@ -794,7 +746,7 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 		MemberDetails:   &memberProfile.MemberDetails,
 		CompanyName:     &memberProfile.CompanyName,
 		CompanyLocation: &memberProfile.CompanyLocation,
-		CompanyLogo:     &profileLogo,
+		CompanyLogo:     &memberProfile.CompanyLogo,
 		About:           &memberProfile.About,
 		SeoTitle:        &memberProfile.SeoTitle,
 		SeoDescription:  &memberProfile.SeoDescription,
@@ -807,6 +759,84 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 		Twitter:         &memberProfile.Twitter,
 		Website:         &memberProfile.Website,
 		ClaimStatus:     &memberProfile.ClaimStatus,
+	}
+
+	return conv_memProfile, nil
+}
+
+func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
+
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+
+		ErrorLog.Printf("gin instance retrieval context error: %v", ok)
+
+	}
+
+	tokenType := c.GetString("tokenType")
+
+	memberid := c.GetInt("memberid")
+
+	memberInstance := GetMemberInstanceWithoutAuth()
+
+	var memberDetailedProfile memberPkg.Tblmember
+
+	var err error
+
+	if id != nil && *id != 0 {
+
+		memberDetailedProfile, err = memberInstance.GetMemberAndProfileData(0, "", *id, "")
+
+	} else if profileSlug != nil && *profileSlug != "" {
+
+		memberDetailedProfile, err = memberInstance.GetMemberAndProfileData(0, "", 0, *profileSlug)
+	}
+
+	if err != nil {
+
+		return &model.MemberProfile{}, err
+	}
+
+	if memberDetailedProfile.IsActive == 0 && memberDetailedProfile.Id != 0 {
+
+		if memberid != 0 && tokenType == LocalLoginType {
+
+			return &model.MemberProfile{}, ErrMemberInactive
+
+		} else if memberid == 0 {
+
+			return &model.MemberProfile{}, ErrMemberInactive
+		}
+	}
+
+	if memberDetailedProfile.TblMemberProfile.CompanyLogo != "" {
+
+		memberDetailedProfile.TblMemberProfile.CompanyLogo = GetFilePathsRelatedToStorageTypes(db, memberDetailedProfile.TblMemberProfile.CompanyLogo)
+	}
+
+	MemberProfile := model.MemberProfile{
+		ID:              &memberDetailedProfile.TblMemberProfile.Id,
+		MemberID:        &memberDetailedProfile.TblMemberProfile.MemberId,
+		ProfileName:     &memberDetailedProfile.TblMemberProfile.ProfileName,
+		ProfileSlug:     &memberDetailedProfile.TblMemberProfile.ProfileSlug,
+		ProfilePage:     &memberDetailedProfile.TblMemberProfile.ProfilePage,
+		MemberDetails:   &memberDetailedProfile.TblMemberProfile.MemberDetails,
+		CompanyName:     &memberDetailedProfile.TblMemberProfile.CompanyName,
+		CompanyLocation: &memberDetailedProfile.TblMemberProfile.CompanyLocation,
+		CompanyLogo:     &memberDetailedProfile.TblMemberProfile.CompanyLogo,
+		About:           &memberDetailedProfile.TblMemberProfile.About,
+		SeoTitle:        &memberDetailedProfile.TblMemberProfile.SeoTitle,
+		SeoDescription:  &memberDetailedProfile.TblMemberProfile.SeoDescription,
+		SeoKeyword:      &memberDetailedProfile.TblMemberProfile.SeoKeyword,
+		CreatedBy:       &memberDetailedProfile.TblMemberProfile.CreatedBy,
+		CreatedOn:       &memberDetailedProfile.TblMemberProfile.CreatedOn,
+		ModifiedOn:      &memberDetailedProfile.TblMemberProfile.ModifiedOn,
+		ModifiedBy:      &memberDetailedProfile.TblMemberProfile.ModifiedBy,
+		Linkedin:        &memberDetailedProfile.TblMemberProfile.Linkedin,
+		Twitter:         &memberDetailedProfile.TblMemberProfile.Twitter,
+		Website:         &memberDetailedProfile.TblMemberProfile.Website,
+		ClaimStatus:     &memberDetailedProfile.TblMemberProfile.ClaimStatus,
 	}
 
 	return &MemberProfile, nil
@@ -830,52 +860,11 @@ func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, 
 
 	}
 
-	var loggedInMember member.TblMember
+	memberInstance := GetMemberInstance()
 
-	result := db.Where("is_deleted = 0 and id = ?", memberId).First(&loggedInMember)
+	if err := memberInstance.MemberPasswordUpdate(newPassword, confirmPassword, oldPassword, memberId, memberId); err != nil {
 
-	if result.Error != nil {
-
-		c.AbortWithError(404, result.Error)
-
-		return false, result.Error
-	}
-
-	err := CompareBcryptPassword(loggedInMember.Password, oldPassword)
-
-	if err != nil {
-
-		return false, ErrOldPass
-
-	}
-
-	if newPassword != confirmPassword {
-
-		return false, ErrConfirmPass
-	}
-
-	hasspass, err := HashingPassword(confirmPassword)
-
-	if err != nil {
-
-		return false, ErrPassHash
-	}
-
-	err = CompareBcryptPassword(hasspass, oldPassword)
-
-	if err == nil {
-
-		return false, ErrSamePass
-	}
-
-	updateQuery := db.Model(&member.TblMember{}).Where("id = ?", memberId).Update("password", hasspass)
-
-	if updateQuery.Error != nil {
-
-		c.AbortWithError(404, updateQuery.Error)
-
-		return false, updateQuery.Error
-
+		return false, err
 	}
 
 	return true, nil
@@ -899,24 +888,40 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 
 	}
 
-	var memberDetails model.Member
+	memberInstance := GetMemberInstance()
 
-	result := db.Table("tbl_members").Where("is_deleted = 0 and id = ?", memberId).First(&memberDetails)
+	memberDetails, err := memberInstance.GetMemberDetails(memberId)
 
-	if result.Error != nil {
+	if err != nil {
 
-		c.AbortWithError(404, result.Error)
-
-		return &model.Member{}, result.Error
+		return &model.Member{}, err
 	}
 
 	if memberDetails.ProfileImagePath != "" {
 
-		memberDetails.ProfileImagePath = GetFilePathsRelatedToStorageTypes(db,memberDetails.ProfileImagePath)
+		memberDetails.ProfileImagePath = GetFilePathsRelatedToStorageTypes(db, memberDetails.ProfileImagePath)
 
 	}
 
-	return &memberDetails, nil
+	conv_Member := model.Member{
+		ID:               memberDetails.Id,
+		FirstName:        memberDetails.FirstName,
+		LastName:         memberDetails.LastName,
+		Email:            memberDetails.Email,
+		MobileNo:         memberDetails.MobileNo,
+		IsActive:         memberDetails.IsActive,
+		ProfileImage:     memberDetails.ProfileImage,
+		ProfileImagePath: memberDetails.ProfileImagePath,
+		CreatedOn:        memberDetails.CreatedOn,
+		CreatedBy:        memberDetails.CreatedBy,
+		ModifiedOn:       &memberDetails.ModifiedOn,
+		ModifiedBy:       &memberDetails.ModifiedBy,
+		MemberGroupID:    memberDetails.MemberGroupId,
+		Password:         &memberDetails.Password,
+		Username:         &memberDetails.Username,
+	}
+
+	return &conv_Member, nil
 
 }
 
@@ -1066,20 +1071,9 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	}
 
-	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+	memberInstance := GetMemberInstance()
 
-	if err != nil {
-
-		return false, err
-	}
-
-	companyData["modified_on"] = currentTime
-
-	companyData["modified_by"] = memberid
-
-	if err := db.Debug().Table("tbl_member_profiles").Where("tbl_member_profiles.is_deleted = 0 and tbl_member_profiles.member_id = ?", memberid).UpdateColumns(companyData).Error; err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
+	if err = memberInstance.MemberProfileFlexibleUpdate(companyData, memberid, memberid); err != nil {
 
 		return false, err
 	}
@@ -1094,20 +1088,11 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, pro
 		return false, nil
 	}
 
-	var profileId int
+	memberInstance := GetMemberInstanceWithoutAuth()
 
-	db.Debug().Table("tbl_member_profiles").Select("id").Where("is_deleted = 0 and LOWER(profile_slug) = ?", profileSlug).Scan(&profileId)
+	slugPresence := memberInstance.CheckProfileSlug(profileSlug, profileID)
 
-	if profileId != 0 && profileId == profileID {
-
-		return true, nil
-
-	} else if profileId == 0 {
-
-		return true, nil
-	}
-
-	return false, nil
+	return slugPresence, nil
 }
 
 func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, profileId *int, profileSlug *string) (bool, error) {

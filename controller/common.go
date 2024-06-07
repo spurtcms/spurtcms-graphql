@@ -85,7 +85,7 @@ var (
 	LocalLoginType              = "member"
 	ErrorLog                    *log.Logger
 	WarnLog                     *log.Logger
-	DB                          = dbconfig.SetupDB()
+	DB                          *gorm.DB
 )
 
 var (
@@ -115,6 +115,8 @@ func init() {
 
 		log.Fatalf("Error loading .env file")
 	}
+
+	DB = dbconfig.SetupDB()
 
 	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
 
