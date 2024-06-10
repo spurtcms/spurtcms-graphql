@@ -2,23 +2,24 @@ package controller
 
 import (
 	"os"
-	"sync"
 
 	newauth "github.com/spurtcms/auth"
+	ecomPkg "github.com/spurtcms/ecommerce"
 	memberPkg "github.com/spurtcms/member"
+	"github.com/spurtcms/team"
+	teampkg "github.com/spurtcms/team"
 )
 
 var (
 	NewAuth *newauth.Auth
-	// NewTeam            *team.Teams
-	// NewRole            *role.PermissionConfig
-	// ChannelConfig      *chn.Channel
-	// CategoryConfig     *cat.Categories
-	MemberConfig *memberPkg.Member
-	// MemberaccessConfig *memaccess.AccessControl
+	TeamConfig             *team.Teams
+	// NewRole             *role.PermissionConfig
+	// ChannelConfig       *chn.Channel
+	// CategoryConfig      *cat.Categories
+	MemberConfig           *memberPkg.Member
+	// MemberaccessConfig  *memaccess.AccessControl
+	EcomConfig             *ecomPkg.Ecommerce
 )
-
-var lock = &sync.Mutex{}
 
 // AuthCofing
 func AuthConfig() *newauth.Auth {
@@ -53,4 +54,40 @@ func GetMemberInstanceWithoutAuth() *memberPkg.Member {
 	})
 
 	return MemberConfig
+}
+
+func GetEcomInstance() *ecomPkg.Ecommerce{
+
+	EcomConfig = ecomPkg.EcommerceSetup(ecomPkg.Config{
+		AuthEnable: true,
+		PermissionEnable: true,
+		DB: DB,
+		Auth: NewAuth,
+	})
+
+	return EcomConfig
+}
+
+func GetEcomInstanceWithoutAuth() *ecomPkg.Ecommerce{
+
+	EcomConfig = ecomPkg.EcommerceSetup(ecomPkg.Config{
+		AuthEnable: false,
+		PermissionEnable: true,
+		DB: DB,
+		Auth: NewAuth,
+	})
+
+	return EcomConfig
+}
+
+func GetTeamInstance() *team.Teams{
+
+	TeamConfig = teampkg.TeamSetup(teampkg.Config{
+		DB: DB,
+		AuthEnable: true,
+		PermissionEnable: true,
+		Auth: NewAuth,
+	})
+
+	return TeamConfig
 }

@@ -18,17 +18,21 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	authPkg "github.com/spurtcms/auth"
 	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 
 	memberPkg "github.com/spurtcms/member"
+	// ecomPkg "github.com/spurtcms/ecommerce"
 )
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
-	var memberSettings model.MemberSettings
+	memberInstance := GetMemberInstanceWithoutAuth()
 
-	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
+	memberSettings, err := memberInstance.GetMemberSettings()
+
+	if err != nil{
 
 		return false, err
 	}
@@ -40,20 +44,15 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	Mem.Auth = GetAuthorizationWithoutToken(db)
 
-	member_details, err := Mem.GraphqlMemberLogin(email)
+	memberDetails, err :=  memberInstance.GetMemberAndProfileData(0,email,0,"")
+
+	if memberDetails.IsActive != 1{
+
+		return false, ErrMemberInactive
+	}
 
 	if gorm.ErrRecordNotFound == err {
-
-		var loginEnquiryTemplate model.EmailTemplate
-
-		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_name = ?", OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error; err != nil {
-
-			c.AbortWithError(http.StatusInternalServerError, err)
-
-			return false, err
-		}
 
 		var convIds []int
 
@@ -67,6 +66,15 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		}
 
 		_, notifyEmails, _ := GetNotifyAdminEmails(db, convIds)
+
+		var loginEnquiryTemplate model.EmailTemplate
+
+		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_name = ?", OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error; err != nil {
+
+			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return false, err
+		}
 
 		var admin_mail_data = MailConfig{Emails: notifyEmails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginEnquiryTemplate.TemplateSubject}
 
@@ -133,18 +141,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, ErrInvalidMail
 	}
 
-	if member_details.IsActive == 0 && member_details.Id != 0 {
+	if memberDetails.IsActive != 1{
 
 		return false, ErrMemberInactive
-	}
-
-	var memberProfileData member.TblMemberProfile
-
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", member_details.Id).First(&memberProfileData).Error; err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
-
-		return false, err
 	}
 
 	channel := make(chan error)
@@ -153,20 +152,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	otp := rand.Intn(900000) + 100000
 
-	current_time := time.Now()
+	expiryTime,err := memberInstance.Auth.UpdateMemberOTP(authPkg.OTP{Length: 6,Duration: 5 * time.Minute,MemberId: memberDetails.Id})
 
-	otp_expiry_time := current_time.UTC().Add(5 * time.Minute).Format("2006-01-02 15:04:05")
-
-	mail_expiry_time := current_time.In(TimeZone).Add(5 * time.Minute).Format("02 Jan 2006 03:04 PM")
-
-	err = Mem.StoreGraphqlMemberOtp(otp, member_details.Id, otp_expiry_time)
-
-	if err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
-
-		return false, err
-	}
+	mail_expiry_time := expiryTime.In(TimeZone).Format("02 Jan 2006 03:04 PM")
 
 	var loginTemplate model.EmailTemplate
 
@@ -179,8 +167,8 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	dataReplacer := strings.NewReplacer(
 		"{OwndeskLogo}", EmailImagePath.Owndesk,
-		"{Username}", member_details.Username,
-		"{CompanyName}", memberProfileData.CompanyName,
+		"{Username}", memberDetails.Username,
+		"{CompanyName}", memberDetails.TblMemberProfile.CompanyName,
 		"{Otp}", strconv.Itoa(otp),
 		"{OtpExpiryTime}", mail_expiry_time,
 		"{OwndeskFacebookLink}", SocialMediaLinks.Facebook,
@@ -229,7 +217,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	var sendMails []string
 
-	sendMails = append(sendMails, member_details.Email)
+	sendMails = append(sendMails, memberDetails.Email)
 
 	mail_data := MailConfig{Emails: sendMails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginTemplate.TemplateSubject}
 
@@ -250,36 +238,54 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	memberInstance := GetMemberInstanceWithoutAuth()
 
-	Mem.Auth = GetAuthorizationWithoutToken(db)
+	member,err := memberInstance.Auth.CheckMemberLogin(authPkg.MemberLoginCheck{Email: email,OTP: otp,EmailWithOTP: true})
 
-	currentTime := time.Now().UTC()
-
-	memberDetails, token, err := Mem.VerifyLoginOtp(email, otp, currentTime, LocalLoginType)
-
-	if err != nil {
+	if err != nil{
 
 		return &model.LoginDetails{}, err
 	}
 
-	var memberProfileDetails model.MemberProfile
+	token, err := authPkg.CreateMemberToken(member.Id,member.MemberGroupId,os.Getenv("JWT_SECRET"),LocalLoginType)
 
-	if err := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_member_profiles.is_deleted = 0 and tbl_members.is_deleted = 0 and  tbl_members.is_active =1 and tbl_member_profiles.member_id = ?", memberDetails.Id).First(&memberProfileDetails).Error; err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
+	if err != nil{
 
 		return &model.LoginDetails{}, err
 	}
 
-	if memberProfileDetails.CompanyLogo != nil && *memberProfileDetails.CompanyLogo != "" {
+	memberProfile,err := memberInstance.GetMemberProfileByMemberId(member.Id)
 
-		logoPath := PathUrl + strings.TrimPrefix(*memberProfileDetails.CompanyLogo, "/")
+	if memberProfile.CompanyLogo != "" {
 
-		memberProfileDetails.CompanyLogo = &logoPath
+		memberProfile.CompanyLogo = GetFilePathsRelatedToStorageTypes(db, memberProfile.CompanyLogo)
 	}
 
-	return &model.LoginDetails{MemberProfileData: memberProfileDetails, Token: token}, nil
+	conv_memProfile := model.MemberProfile{
+		ID:              &memberProfile.Id,
+		MemberID:        &memberProfile.MemberId,
+		ProfileName:     &memberProfile.ProfileName,
+		ProfileSlug:     &memberProfile.ProfileSlug,
+		ProfilePage:     &memberProfile.ProfilePage,
+		MemberDetails:   &memberProfile.MemberDetails,
+		CompanyName:     &memberProfile.CompanyName,
+		CompanyLocation: &memberProfile.CompanyLocation,
+		CompanyLogo:     &memberProfile.CompanyLogo,
+		About:           &memberProfile.About,
+		SeoTitle:        &memberProfile.SeoTitle,
+		SeoDescription:  &memberProfile.SeoDescription,
+		SeoKeyword:      &memberProfile.SeoKeyword,
+		CreatedBy:       &memberProfile.CreatedBy,
+		CreatedOn:       &memberProfile.CreatedOn,
+		ModifiedOn:      &memberProfile.ModifiedOn,
+		ModifiedBy:      &memberProfile.ModifiedBy,
+		Linkedin:        &memberProfile.Linkedin,
+		Twitter:         &memberProfile.Twitter,
+		Website:         &memberProfile.Website,
+		ClaimStatus:     &memberProfile.ClaimStatus,
+	}
+
+	return &model.LoginDetails{MemberProfileData: conv_memProfile, Token: token}, nil
 
 }
 
@@ -294,14 +300,16 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		ecomMod int = *ecomModule
 
-		memberSettings model.MemberSettings
-
 		memberDetails memberPkg.MemberCreationUpdation
 
 		memberProfile memberPkg.MemberprofilecreationUpdation
 	)
 
-	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
+	memberInstance := GetMemberInstance()
+
+	memberSettings, err := memberInstance.GetMemberSettings()
+
+	if err != nil{
 
 		return false, err
 	}
@@ -451,8 +459,6 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	memberDetails.GroupId = 1
 
-	memberInstance := GetMemberInstance()
-
 	registeredMember, err := memberInstance.CreateMember(memberDetails)
 
 	if err != nil {
@@ -480,6 +486,12 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 	}
 
 	if ecomMod == 1 {
+
+		// ecomConfig := GetEcomInstanceWithoutAuth()
+
+		// ecomConfig.CreateCustomer(ecomPkg.CreateCustomerReq{
+		// 	MemberId: ,
+		// })
 
 		is_deleted := 0
 
@@ -1099,34 +1111,33 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	// memberAuth := GetMemberInstanceWithoutAuth()
+	memberInstance := GetMemberInstanceWithoutAuth()
 
 	verify_chan := make(chan error)
 
-	var MemberProfile model.MemberProfile
+	var(
 
-	profileQuery := db.Debug().Table("tbl_member_profiles").Select("tbl_member_profiles.*,tbl_members.is_active").Joins("inner join tbl_members on tbl_members.id = tbl_member_profiles.member_id").Where("tbl_members.is_deleted = 0 and tbl_members.is_active = 1 and tbl_member_profiles.is_deleted = 0")
+	 MemberDetails memberPkg.Tblmember
 
-	if profileId != nil {
+	 err error
 
-		profileQuery = profileQuery.Where("tbl_member_profiles.id= ?", *profileId)
+	)
 
-	} else if profileSlug != nil {
+	if *profileId != 0{
 
-		profileQuery = profileQuery.Where("tbl_member_profiles.profile_slug= ?", *profileSlug)
+		MemberDetails, err = memberInstance.GetMemberAndProfileData(0,"",*profileId,"")
+
+	}else if *profileSlug != ""{
+
+		MemberDetails, err = memberInstance.GetMemberAndProfileData(0,"",0,*profileSlug)
 	}
 
-	if err := profileQuery.First(&MemberProfile).Error; err != nil {
-
-		return false, err
-	}
-
-	if *MemberProfile.ClaimStatus == 1 {
+	if MemberDetails.TblMemberProfile.ClaimStatus == 1 {
 
 		return false, ErrclaimAlready
 	}
 
-	if *MemberProfile.IsActive != 1 {
+	if MemberDetails.IsActive != 1 {
 
 		return false, ErrMemberInactive
 	}
@@ -1163,7 +1174,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	dataReplacer := strings.NewReplacer(
 		"{OwndeskLogo}", EmailImagePath.Owndesk,
 		"{Username}", "Admin",
-		"{CompanyName}", *MemberProfile.CompanyName,
+		"{CompanyName}", MemberDetails.TblMemberProfile.CompanyName,
 		"{ProfileName}", profileData.ProfileName,
 		"{ProfileSlug}", profileData.ProfileSlug,
 		"{WorkMail}", profileData.WorkMail,
@@ -1206,7 +1217,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	modifiedSubject := strings.TrimSuffix(claimTemplate.TemplateSubject, "{CompanyName}") + *MemberProfile.CompanyName
+	modifiedSubject := strings.TrimSuffix(claimTemplate.TemplateSubject, "{CompanyName}") + MemberDetails.TblMemberProfile.CompanyName
 
 	mail_data := MailConfig{Emails: notifyEmails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: modifiedSubject}
 
@@ -1220,8 +1231,8 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	} else {
 
-		c.AbortWithError(http.StatusInternalServerError, <-verify_chan)
+		c.AbortWithError(500, <-verify_chan)
 
-		return false, nil
+		return false, <-verify_chan
 	}
 }

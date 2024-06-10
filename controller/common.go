@@ -25,6 +25,9 @@ import (
 	spurtcore "github.com/spurtcms/pkgcore"
 
 	memberpkg "github.com/spurtcms/member"
+
+	teampkg "github.com/spurtcms/team"
+
 )
 
 type key string
@@ -66,6 +69,7 @@ type StorageType struct {
 }
 
 var (
+	DB                             *gorm.DB
 	Mem                            member.MemberAuth
 	Auth                           *auth.Authorization
 	TimeZone                       *time.Location
@@ -83,9 +87,9 @@ var (
 	OwndeskLoginTemplate        = "OwndeskLogin"
 	OwndeskClaimnowTemplate     = "OwndeskClaimRequest"
 	LocalLoginType              = "member"
+	TokenExpiryTime             = 1
 	ErrorLog                    *log.Logger
 	WarnLog                     *log.Logger
-	DB                          *gorm.DB
 )
 
 var (
@@ -164,11 +168,11 @@ func init() {
 
 }
 
-func GetMemberPackageSetup(db *gorm.DB)(*memberpkg.Member){
+func GetMemberPackageSetup(db *gorm.DB) *memberpkg.Member {
 
-	memberConfig := memberpkg.Config{DB: db,}
+	memberConfig := memberpkg.Config{DB: db}
 
-	memberSetup :=  memberpkg.MemberSetup(memberConfig)
+	memberSetup := memberpkg.MemberSetup(memberConfig)
 
 	return memberSetup
 
@@ -234,15 +238,15 @@ func HashingPassword(pass string) (string, error) {
 	return string(passbyte), nil
 }
 
-func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]auth.TblUser, []string, error) {
+func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]teampkg.TblUser, []string, error) {
 
-	Mem.Auth = GetAuthorizationWithoutToken(db)
+	teamInstance := GetTeamInstance()
 
-	adminDetails, err := Mem.GetAdminDetails(adminIds)
+	_,adminDetails,err := teamInstance.GetUserById(0,adminIds)
 
 	if err != nil {
 
-		return []auth.TblUser{}, []string{}, err
+		return []teampkg.TblUser{}, []string{}, err
 	}
 
 	var adminEmails []string
@@ -304,7 +308,7 @@ func CompareBcryptPassword(hashpass, oldpass string) error {
 	return nil
 }
 
-func GetFilePathsRelatedToStorageTypes(db *gorm.DB,path string) string {
+func GetFilePathsRelatedToStorageTypes(db *gorm.DB, path string) string {
 
 	storageType, _ := GetStorageType(db)
 
@@ -320,25 +324,24 @@ func GetFilePathsRelatedToStorageTypes(db *gorm.DB,path string) string {
 
 		return s3Path
 
-	} 
+	}
 
 	localPath := PathUrl + strings.TrimPrefix(path, "/")
 
 	return localPath
 }
 
-func ConvertByteToJson(byteData []byte) (map[string]interface{},error){
+func ConvertByteToJson(byteData []byte) (map[string]interface{}, error) {
 
 	var jsonMap map[string]interface{}
 
-	err := json.Unmarshal(byteData,&jsonMap)
+	err := json.Unmarshal(byteData, &jsonMap)
 
-	if err != nil{
+	if err != nil {
 
 		return map[string]interface{}{}, err
 	}
 
-	return jsonMap,nil
+	return jsonMap, nil
 
 }
-

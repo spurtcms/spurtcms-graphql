@@ -1,6 +1,8 @@
 module spurtcms-graphql
 
-go 1.19
+go 1.22.2
+
+toolchain go1.22.4
 
 require (
 	github.com/99designs/gqlgen v0.17.45
@@ -8,14 +10,16 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
 	github.com/spurtcms/auth v0.0.6
+	github.com/spurtcms/ecommerce v0.0.1
 	github.com/spurtcms/member v0.0.7
 	github.com/spurtcms/pkgcontent v1.1.15
 	github.com/spurtcms/pkgcore v1.0.84
+	github.com/spurtcms/team v0.0.4
 	github.com/vektah/gqlparser/v2 v2.5.11
 	golang.org/x/crypto v0.21.0
 	gorm.io/datatypes v1.2.0
-	gorm.io/driver/postgres v1.5.4
-	gorm.io/gorm v1.25.9
+	gorm.io/driver/postgres v1.5.7
+	gorm.io/gorm v1.25.10
 )
 
 require (
