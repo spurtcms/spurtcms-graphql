@@ -11,83 +11,111 @@ import (
 )
 
 var (
-	NewAuth *newauth.Auth
-	TeamConfig             *team.Teams
-	// NewRole             *role.PermissionConfig
-	// ChannelConfig       *chn.Channel
-	// CategoryConfig      *cat.Categories
-	MemberConfig           *memberPkg.Member
-	// MemberaccessConfig  *memaccess.AccessControl
-	EcomConfig             *ecomPkg.Ecommerce
+	AuthInstance                *newauth.Auth
+	TeamAuthInstance            *team.Teams
+	MemberAuthInstance          *memberPkg.Member
+	EcomAuthInstance            *ecomPkg.Ecommerce
+	EcomInstance                *ecomPkg.Ecommerce
+	MemberInstance              *memberPkg.Member
+	TeamInstance                *team.Teams
+	// NewRole                  *role.PermissionConfig
+	// ChannelConfig            *chn.Channel
+	// CategoryConfig           *cat.Categories
+	// MemberaccessConfig       *memaccess.AccessControl
 )
+
+func init(){
+
+	AuthConfig()
+
+	GetMemberInstance()
+
+	GetMemberInstanceWithoutAuth()
+	
+	GetEcomInstance()
+
+	GetEcomInstanceWithoutAuth()
+
+	GetTeamInstance()
+
+	GetTeamInstanceWithoutAuth()
+}
 
 // AuthCofing
 func AuthConfig() *newauth.Auth {
 
-	NewAuth = newauth.AuthSetup(newauth.Config{
+	AuthInstance = newauth.AuthSetup(newauth.Config{
 		SecretKey: os.Getenv("JWT_SECRET"),
 		DB:        DB,
 	})
 
-	return NewAuth
+	return AuthInstance
 }
 
 func GetMemberInstance() *memberPkg.Member {
 
-	MemberConfig = memberPkg.MemberSetup(memberPkg.Config{
+	MemberAuthInstance = memberPkg.MemberSetup(memberPkg.Config{
 		DB:               DB,
 		AuthEnable:       true,
 		PermissionEnable: true,
-		Auth:             NewAuth,
+		Auth:             AuthInstance,
 	})
 
-	return MemberConfig
+	return MemberAuthInstance
 }
 
 func GetMemberInstanceWithoutAuth() *memberPkg.Member {
 
-	MemberConfig = memberPkg.MemberSetup(memberPkg.Config{
+	MemberInstance = memberPkg.MemberSetup(memberPkg.Config{
 		DB:               DB,
-		AuthEnable:       false,
-		PermissionEnable: true,
-		Auth:             NewAuth,
+		Auth:             AuthInstance,
 	})
 
-	return MemberConfig
+	return MemberInstance
 }
 
 func GetEcomInstance() *ecomPkg.Ecommerce{
 
-	EcomConfig = ecomPkg.EcommerceSetup(ecomPkg.Config{
+	EcomAuthInstance = ecomPkg.EcommerceSetup(ecomPkg.Config{
 		AuthEnable: true,
 		PermissionEnable: true,
 		DB: DB,
-		Auth: NewAuth,
+		Auth: AuthInstance,
 	})
 
-	return EcomConfig
+	return EcomAuthInstance
 }
 
 func GetEcomInstanceWithoutAuth() *ecomPkg.Ecommerce{
 
-	EcomConfig = ecomPkg.EcommerceSetup(ecomPkg.Config{
+	EcomInstance = ecomPkg.EcommerceSetup(ecomPkg.Config{
 		AuthEnable: false,
 		PermissionEnable: true,
 		DB: DB,
-		Auth: NewAuth,
+		Auth: AuthInstance,
 	})
 
-	return EcomConfig
+	return EcomInstance
 }
 
 func GetTeamInstance() *team.Teams{
 
-	TeamConfig = teampkg.TeamSetup(teampkg.Config{
+	TeamAuthInstance = teampkg.TeamSetup(teampkg.Config{
 		DB: DB,
 		AuthEnable: true,
 		PermissionEnable: true,
-		Auth: NewAuth,
+		Auth: AuthInstance,
 	})
 
-	return TeamConfig
+	return TeamAuthInstance
+}
+
+func GetTeamInstanceWithoutAuth() *team.Teams{
+
+	TeamInstance = teampkg.TeamSetup(teampkg.Config{
+		DB: DB,
+		Auth: AuthInstance,
+	})
+
+	return TeamInstance
 }

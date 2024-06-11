@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
@@ -19,20 +18,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 	authPkg "github.com/spurtcms/auth"
-	"github.com/spurtcms/pkgcore/member"
 	"gorm.io/gorm"
 
+	ecomPkg "github.com/spurtcms/ecommerce"
 	memberPkg "github.com/spurtcms/member"
-	// ecomPkg "github.com/spurtcms/ecommerce"
 )
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
-	memberInstance := GetMemberInstanceWithoutAuth()
+	memberSettings, err := MemberInstance.GetMemberSettings()
 
-	memberSettings, err := memberInstance.GetMemberSettings()
-
-	if err != nil{
+	if err != nil {
 
 		return false, err
 	}
@@ -42,12 +38,11 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, ErrMemberLoginPerm
 	}
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	// c, _ := ctx.Value(ContextKey).(*gin.Context)
 
+	memberDetails, err := MemberInstance.GetMemberAndProfileData(0, email, 0, "")
 
-	memberDetails, err :=  memberInstance.GetMemberAndProfileData(0,email,0,"")
-
-	if memberDetails.IsActive != 1{
+	if memberDetails.IsActive != 1 {
 
 		return false, ErrMemberInactive
 	}
@@ -70,8 +65,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		var loginEnquiryTemplate model.EmailTemplate
 
 		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_name = ?", OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error; err != nil {
-
-			c.AbortWithError(http.StatusInternalServerError, err)
 
 			return false, err
 		}
@@ -106,8 +99,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		if err != nil {
 
-			c.AbortWithError(http.StatusInternalServerError, err)
-
 			return false, err
 		}
 
@@ -117,8 +108,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		if err := tmpl.Execute(&template_buffers, gin.H{"body": htmlBody}); err != nil {
 
-			c.AbortWithError(http.StatusInternalServerError, err)
-
 			return false, err
 		}
 
@@ -127,8 +116,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		go SendMail(admin_mail_data, admin_content, channel)
 
 		if <-channel != nil {
-
-			c.AbortWithError(http.StatusInternalServerError, <-channel)
 
 			return false, <-channel
 
@@ -141,26 +128,25 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, ErrInvalidMail
 	}
 
-	if memberDetails.IsActive != 1{
+	if memberDetails.IsActive != 1 {
 
 		return false, ErrMemberInactive
 	}
 
 	channel := make(chan error)
 
-	// rand.Seed(time.Now().UnixNano())
+	otp, expiryTime, err := MemberInstance.Auth.UpdateMemberOTP(authPkg.OTP{Length: 6, Duration: 5 * time.Minute, MemberId: memberDetails.Id})
 
-	otp := rand.Intn(900000) + 100000
+	if err != nil {
 
-	expiryTime,err := memberInstance.Auth.UpdateMemberOTP(authPkg.OTP{Length: 6,Duration: 5 * time.Minute,MemberId: memberDetails.Id})
+		return false, err
+	}
 
 	mail_expiry_time := expiryTime.In(TimeZone).Format("02 Jan 2006 03:04 PM")
 
 	var loginTemplate model.EmailTemplate
 
 	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_name = ?", OwndeskLoginTemplate).First(&loginTemplate).Error; err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
@@ -192,8 +178,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if err != nil {
 
-		c.AbortWithError(http.StatusInternalServerError, err)
-
 		return false, err
 	}
 
@@ -201,16 +185,12 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if err != nil {
 
-		c.AbortWithError(http.StatusInternalServerError, err)
-
 		return false, err
 	}
 
 	var template_buffer bytes.Buffer
 
 	if err := tmpl.Execute(&template_buffer, gin.H{"body": htmlBody}); err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
@@ -227,8 +207,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if <-channel != nil {
 
-		c.AbortWithError(http.StatusServiceUnavailable, <-channel)
-
 		return false, <-channel
 
 	}
@@ -238,23 +216,21 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails, error) {
 
-	memberInstance := GetMemberInstanceWithoutAuth()
+	member, err := AuthInstance.CheckMemberLogin(authPkg.MemberLoginCheck{Email: email, OTP: otp, EmailWithOTP: true})
 
-	member,err := memberInstance.Auth.CheckMemberLogin(authPkg.MemberLoginCheck{Email: email,OTP: otp,EmailWithOTP: true})
-
-	if err != nil{
+	if err != nil {
 
 		return &model.LoginDetails{}, err
 	}
 
-	token, err := authPkg.CreateMemberToken(member.Id,member.MemberGroupId,os.Getenv("JWT_SECRET"),LocalLoginType)
+	token, err := authPkg.CreateMemberToken(member.Id, member.MemberGroupId, os.Getenv("JWT_SECRET"), LocalLoginType)
 
-	if err != nil{
+	if err != nil {
 
 		return &model.LoginDetails{}, err
 	}
 
-	memberProfile,err := memberInstance.GetMemberProfileByMemberId(member.Id)
+	memberProfile, err := MemberInstance.GetMemberProfileByMemberId(member.Id)
 
 	if memberProfile.CompanyLogo != "" {
 
@@ -294,7 +270,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 	var (
 		fileName, filePath string
 
-		profileName  = input.FirstName
+		profileName = input.FirstName
 
 		err error
 
@@ -305,11 +281,9 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 		memberProfile memberPkg.MemberprofilecreationUpdation
 	)
 
-	memberInstance := GetMemberInstance()
+	memberSettings, err := MemberInstance.GetMemberSettings()
 
-	memberSettings, err := memberInstance.GetMemberSettings()
-
-	if err != nil{
+	if err != nil {
 
 		return false, err
 	}
@@ -325,9 +299,9 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		memberDetails.Username = *input.Username.Value()
 
-		_, err := memberPkg.Membermodel.CheckNameInMember(0, *input.Username.Value(), db)
+		isExist, err := MemberInstance.CheckNameInMember(0, *input.Username.Value())
 
-		if err == nil {
+		if !isExist || err == nil {
 
 			err = errors.New("member username already exists")
 
@@ -342,9 +316,9 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		memberDetails.Email = input.Email
 
-		err := memberPkg.Membermodel.CheckEmailInMember(&memberPkg.TblMember{}, input.Email, 0, db)
+		isExist, err := MemberInstance.CheckEmailInMember(0, input.Email)
 
-		if err == nil {
+		if !isExist || err == nil {
 
 			err = errors.New("member email already exists")
 
@@ -359,9 +333,9 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		memberDetails.MobileNo = *input.Mobile.Value()
 
-		err := memberPkg.Membermodel.CheckNumberInMember(&memberPkg.TblMember{}, *input.Mobile.Value(), 0, db)
+		isExist, err := MemberInstance.CheckNumberInMember(0, *input.Mobile.Value())
 
-		if err == nil {
+		if !isExist || err == nil {
 
 			err = errors.New("member mobile number  already exists")
 
@@ -459,7 +433,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	memberDetails.GroupId = 1
 
-	registeredMember, err := memberInstance.CreateMember(memberDetails)
+	registeredMember, err := MemberInstance.CreateMember(memberDetails)
 
 	if err != nil {
 
@@ -470,54 +444,44 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	memberProfile.ProfileName = profileName
 
-	memberProfile.ProfileSlug = strings.ReplaceAll(profileName," ","-")
+	memberProfile.ProfileSlug = strings.ReplaceAll(profileName, " ", "-")
 
 	memberProfile.MemberId = registeredMember.Id
 
 	memberProfile.CreatedBy = registeredMember.Id
 
-	err = memberInstance.CreateMemberProfile(memberProfile)
+	err = MemberInstance.CreateMemberProfile(memberProfile)
 
 	if err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
-		return false,err
+		return false, err
 	}
 
 	if ecomMod == 1 {
 
-		// ecomConfig := GetEcomInstanceWithoutAuth()
+		ecomInstance := GetEcomInstanceWithoutAuth()
 
-		// ecomConfig.CreateCustomer(ecomPkg.CreateCustomerReq{
-		// 	MemberId: ,
-		// })
-
-		is_deleted := 0
-
-		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
-
-		var ecomCustomer = model.CustomerDetails{
-			FirstName:        memberDetails.FirstName,
-			LastName:         &memberDetails.LastName,
-			Username:         memberDetails.Username,
-			MobileNo:         memberDetails.MobileNo,
-			Email:            input.Email,
-			IsActive:         memberDetails.IsActive,
-			ProfileImage:     &memberDetails.ProfileImage,
-			ProfileImagePath: &memberDetails.ProfileImagePath,
-			CreatedOn:        createdOn,
+		if err := ecomInstance.CreateCustomer(ecomPkg.CreateCustomerReq{
+			MemberId:         registeredMember.Id,
+			FirstName:        registeredMember.FirstName,
+			LastName:         registeredMember.LastName,
+			Email:            registeredMember.Email,
+			MobileNo:         registeredMember.MobileNo,
+			Username:         registeredMember.Username,
 			Password:         registeredMember.Password,
-			MemberID:         &registeredMember.Id,
-			IsDeleted:        &is_deleted,
-		}
-
-		if err := db.Table("tbl_ecom_customers").Create(&ecomCustomer).Error; err != nil {
+			IsActive:         registeredMember.IsActive,
+			ProfileImage:     registeredMember.ProfileImage,
+			ProfileImagePath: registeredMember.ProfileImagePath,
+			CreatedBy:        registeredMember.Id,
+		}); err != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, err)
 
-			return false,err
+			return false, err
 		}
+
 	}
 
 	return true, nil
@@ -553,6 +517,8 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 		fileName = memberdata.ProfileImage.Value().Filename
 
 		file := memberdata.ProfileImage.Value().File
+
+		fmt.Println("echhkk", storageType.SelectedType)
 
 		if storageType.SelectedType == "aws" {
 
@@ -655,9 +621,7 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	}
 
-	memberInstance := GetMemberInstance()
-
-	if err = memberInstance.MemberFlexibleUpdate(memberData, memberid, memberid); err != nil {
+	if err = MemberInstance.MemberFlexibleUpdate(memberData, memberid, memberid); err != nil {
 
 		return false, err
 	}
@@ -668,9 +632,13 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string) (string, error) {
 
-	var memberSettings model.MemberSettings
+	// c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
+	memberInstance := GetMemberInstanceWithoutAuth()
+
+	memberSettings, err := memberInstance.GetMemberSettings()
+
+	if err != nil {
 
 		return "", err
 	}
@@ -680,30 +648,28 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 		return "", ErrMemberLoginPerm
 	}
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	var member authPkg.TblMember
 
-	Mem.Auth = GetAuthorizationWithoutToken(db)
+	if username != nil && *username != "" {
 
-	var memberLogin member.MemberLogin
+		member, err = memberInstance.Auth.CheckMemberLogin(authPkg.MemberLoginCheck{Username: *username, Password: password, UsernameWithPassword: true})
 
-	if username != nil {
+	} else if email != nil && *email != "" {
 
-		memberLogin.Username = *username
+		member, err = memberInstance.Auth.CheckMemberLogin(authPkg.MemberLoginCheck{Email: *email, Password: password, EmailwithPassword: true})
 
-	} else if email != nil {
-
-		memberLogin.Emailid = *email
 	}
-
-	memberLogin.Password = password
-
-	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"), LocalLoginType)
 
 	if err != nil {
 
-		c.AbortWithError(http.StatusUnauthorized, err)
+		return "", err
+	}
 
-		log.Println(err)
+	token, err := authPkg.CreateMemberToken(member.Id, member.MemberGroupId, os.Getenv("JWT_SECRET"), LocalLoginType)
+
+	if err != nil {
+
+		return "", err
 	}
 
 	return token, err
@@ -1115,21 +1081,19 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	verify_chan := make(chan error)
 
-	var(
+	var (
+		MemberDetails memberPkg.Tblmember
 
-	 MemberDetails memberPkg.Tblmember
-
-	 err error
-
+		err error
 	)
 
-	if *profileId != 0{
+	if *profileId != 0 {
 
-		MemberDetails, err = memberInstance.GetMemberAndProfileData(0,"",*profileId,"")
+		MemberDetails, err = memberInstance.GetMemberAndProfileData(0, "", *profileId, "")
 
-	}else if *profileSlug != ""{
+	} else if *profileSlug != "" {
 
-		MemberDetails, err = memberInstance.GetMemberAndProfileData(0,"",0,*profileSlug)
+		MemberDetails, err = memberInstance.GetMemberAndProfileData(0, "", 0, *profileSlug)
 	}
 
 	if MemberDetails.TblMemberProfile.ClaimStatus == 1 {
