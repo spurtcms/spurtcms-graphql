@@ -58,7 +58,10 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sosodev/duration v1.2.0 // indirect
-	github.com/spurtcms/team-roles v0.0.5 // indirect
+	github.com/spurtcms/categories v0.0.4 // indirect
+	github.com/spurtcms/channels v0.0.10 // indirect
+	github.com/spurtcms/member-access v0.0.1 // indirect
+	github.com/spurtcms/team-roles v0.0.6 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/urfave/cli/v2 v2.27.1 // indirect

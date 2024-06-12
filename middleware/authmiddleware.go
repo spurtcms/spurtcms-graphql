@@ -3,16 +3,12 @@ package middleware
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"spurtcms-graphql/controller"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gin-gonic/gin"
-
-	"github.com/spurtcms/pkgcore/auth"
 )
 
 // Implement the AuthMiddleware function
@@ -49,13 +45,7 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	}
 
-	currentTime := time.Now().In(controller.TimeZone).Unix()
-
-	currentTime1 := time.Now().Unix()
-
-	fmt.Println("log", controller.TimeZone, currentTime, currentTime1)
-
-	memberid, groupid, tokenType, err := auth.VerifyTokenWithExpiryTime(token, os.Getenv("JWT_SECRET"), currentTime)
+	memberid, groupid, tokenType, err := controller.AuthInstance.MemberVerifyToken(token, os.Getenv("JWT_SECRET"))
 
 	if err != nil {
 

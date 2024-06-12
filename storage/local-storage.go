@@ -40,7 +40,7 @@ func UploadImageToAdminLocal(b64Data, fileName, adminUrl string) (string, error)
 
 		fmt.Println("response status",response.StatusCode)
 
-		return  "", errors.New("failed to store file in admin panel local")
+		return  "", errors.New("failed to upload file in admin panel local")
 	}
 
 	defer response.Body.Close()

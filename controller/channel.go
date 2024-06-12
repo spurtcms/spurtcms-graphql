@@ -6,6 +6,7 @@ import (
 	"spurtcms-graphql/graph/model"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spurtcms/channels"
 	channel "github.com/spurtcms/pkgcontent/channels"
 
 	// "github.com/spurtcms/pkgcore/member"
@@ -14,17 +15,17 @@ import (
 
 func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.ChannelDetails, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	// c, ok := ctx.Value(ContextKey).(*gin.Context)
 
-	token, _ := c.Get("token")
+	// if !ok {
 
-	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
+	// 	ErrorLog.Printf("Gin instance retrieval context error: %v", ok)
 
-	channelList, count, err := channelAuth.GetGraphqlChannelList(limit, offset)
+	// }
+
+	channelList,channelCount, err := ChannelInstance.ListChannel(limit,offset,channels.Filter{},true,false)
 
 	if err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return &model.ChannelDetails{}, err
 	}
@@ -49,18 +50,30 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 		conv_channelList = append(conv_channelList, conv_channel)
 	}
 
-	return &model.ChannelDetails{Channellist: conv_channelList, Count: int(count)}, nil
+	return &model.ChannelDetails{Channellist: conv_channelList, Count: channelCount}, nil
 
 }
 
 // this function provides the published channel entries list under a channel and channel entry details for a particular channeel entry by using its id
 func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string, requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+
+		ErrorLog.Printf("Gin instance retrieval context error: %v", ok)
+	}
 
 	token, _ := c.Get("token")
 
 	// memberid := c.GetInt("memberid")
+
+	// if categoryChildId != 0 || categoryChildSlug != "0"{
+
+
+	// }
+
+	ChannelInstance.ChannelEntriesList(channels.Entries{Limit: limit,Offset: offset,ChannelId: *channelID,Keyword: *title,Status: "Published",CategoryId: *categoryChildId,CategorySlug:  *categorySlug,})
 
 	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
 

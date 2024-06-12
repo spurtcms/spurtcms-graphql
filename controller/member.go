@@ -461,9 +461,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	if ecomMod == 1 {
 
-		ecomInstance := GetEcomInstanceWithoutAuth()
-
-		if err := ecomInstance.CreateCustomer(ecomPkg.CreateCustomerReq{
+		if err := EcomInstance.CreateCustomer(ecomPkg.CreateCustomerReq{
 			MemberId:         registeredMember.Id,
 			FirstName:        registeredMember.FirstName,
 			LastName:         registeredMember.LastName,
@@ -496,11 +494,11 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	if memberid == 0 {
 
-		err := errors.New("unauthorized access")
+		ErrorLog.Printf("Unauthorize error: %s", ErrUnauthorize)
 
-		c.AbortWithError(http.StatusUnauthorized, err)
+		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorize)
 
-		return false, err
+		return false, ErrUnauthorize
 
 	}
 
@@ -517,8 +515,6 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 		fileName = memberdata.ProfileImage.Value().Filename
 
 		file := memberdata.ProfileImage.Value().File
-
-		fmt.Println("echhkk", storageType.SelectedType)
 
 		if storageType.SelectedType == "aws" {
 
@@ -621,7 +617,7 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	}
 
-	if err = MemberInstance.MemberFlexibleUpdate(memberData, memberid, memberid); err != nil {
+	if err = MemberAuthInstance.MemberFlexibleUpdate(memberData, memberid, memberid); err != nil {
 
 		return false, err
 	}
@@ -634,9 +630,7 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 	// c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	memberInstance := GetMemberInstanceWithoutAuth()
-
-	memberSettings, err := memberInstance.GetMemberSettings()
+	memberSettings, err := MemberInstance.GetMemberSettings()
 
 	if err != nil {
 
@@ -652,11 +646,11 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 	if username != nil && *username != "" {
 
-		member, err = memberInstance.Auth.CheckMemberLogin(authPkg.MemberLoginCheck{Username: *username, Password: password, UsernameWithPassword: true})
+		member, err = AuthInstance.CheckMemberLogin(authPkg.MemberLoginCheck{Username: *username, Password: password, UsernameWithPassword: true})
 
 	} else if email != nil && *email != "" {
 
-		member, err = memberInstance.Auth.CheckMemberLogin(authPkg.MemberLoginCheck{Email: *email, Password: password, EmailwithPassword: true})
+		member, err = AuthInstance.CheckMemberLogin(authPkg.MemberLoginCheck{Email: *email, Password: password, EmailwithPassword: true})
 
 	}
 
@@ -688,19 +682,15 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 	if memberid == 0 {
 
-		err := errors.New("unauthorized access")
+		ErrorLog.Printf("Unauthorize error: %s", ErrUnauthorize)
 
-		ErrorLog.Printf("unauthorized error: %s", err)
+		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorize)
 
-		c.AbortWithError(http.StatusUnauthorized, err)
-
-		return &model.MemberProfile{}, err
+		return &model.MemberProfile{}, ErrUnauthorize
 
 	}
 
-	memberInstance := GetMemberInstance()
-
-	memberProfile, err := memberInstance.GetMemberProfileByMemberId(memberid)
+	memberProfile, err := MemberAuthInstance.GetMemberProfileByMemberId(memberid)
 
 	if err != nil {
 
@@ -748,7 +738,7 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	if !ok {
 
-		ErrorLog.Printf("gin instance retrieval context error: %v", ok)
+		ErrorLog.Printf("Gin instance retrieval context error: %v", ok)
 
 	}
 
@@ -756,19 +746,17 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	memberid := c.GetInt("memberid")
 
-	memberInstance := GetMemberInstanceWithoutAuth()
-
 	var memberDetailedProfile memberPkg.Tblmember
 
 	var err error
 
 	if id != nil && *id != 0 {
 
-		memberDetailedProfile, err = memberInstance.GetMemberAndProfileData(0, "", *id, "")
+		memberDetailedProfile, err = MemberInstance.GetMemberAndProfileData(0, "", *id, "")
 
 	} else if profileSlug != nil && *profileSlug != "" {
 
-		memberDetailedProfile, err = memberInstance.GetMemberAndProfileData(0, "", 0, *profileSlug)
+		memberDetailedProfile, err = MemberInstance.GetMemberAndProfileData(0, "", 0, *profileSlug)
 	}
 
 	if err != nil {
@@ -822,25 +810,27 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, newPassword string, confirmPassword string) (bool, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+
+		ErrorLog.Printf("Gin instance retrieval context error: %v", ok)
+
+	}
 
 	memberId := c.GetInt("memberid")
 
 	if memberId == 0 {
 
-		err := errors.New("unauthorized access")
+		ErrorLog.Printf("Unauthorize error: %s", ErrUnauthorize)
 
-		ErrorLog.Printf("memberProfileDetails context error: %s", err)
+		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorize)
 
-		c.AbortWithError(http.StatusUnauthorized, err)
-
-		return false, err
+		return false, ErrUnauthorize
 
 	}
 
-	memberInstance := GetMemberInstance()
-
-	if err := memberInstance.MemberPasswordUpdate(newPassword, confirmPassword, oldPassword, memberId, memberId); err != nil {
+	if err := MemberAuthInstance.MemberPasswordUpdate(newPassword, confirmPassword, oldPassword, memberId, memberId); err != nil {
 
 		return false, err
 	}
@@ -850,25 +840,27 @@ func MemberPasswordUpdate(db *gorm.DB, ctx context.Context, oldPassword string, 
 
 func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+
+		ErrorLog.Printf("Gin instance retrieval context error: %v", ok)
+
+	}
 
 	memberId := c.GetInt("memberid")
 
 	if memberId == 0 {
 
-		err := errors.New("unauthorized access")
+		ErrorLog.Printf("Unauthorize error: %s", ErrUnauthorize)
 
-		ErrorLog.Printf("memberProfileDetails context error: %s", err)
+		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorize)
 
-		c.AbortWithError(http.StatusUnauthorized, err)
-
-		return &model.Member{}, err
+		return &model.Member{}, ErrUnauthorize
 
 	}
 
-	memberInstance := GetMemberInstance()
-
-	memberDetails, err := memberInstance.GetMemberDetails(memberId)
+	memberDetails, err := MemberInstance.GetMemberDetails(memberId)
 
 	if err != nil {
 
@@ -905,7 +897,13 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 
 func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.ProfileData) (bool, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+
+		ErrorLog.Printf("Gin instance retrieval context error: %v", ok)
+
+	}
 
 	memberid := c.GetInt("memberid")
 
@@ -976,7 +974,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 		} else if storageType.SelectedType == "azure" {
 
-			fmt.Printf("azure storage selected")
+			fmt.Printf("azure storage selected\n")
 
 		} else if storageType.SelectedType == "drive" {
 
@@ -1049,9 +1047,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	}
 
-	memberInstance := GetMemberInstance()
-
-	if err = memberInstance.MemberProfileFlexibleUpdate(companyData, memberid, memberid); err != nil {
+	if err = MemberAuthInstance.MemberProfileFlexibleUpdate(companyData, memberid, memberid); err != nil {
 
 		return false, err
 	}
@@ -1066,34 +1062,37 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, pro
 		return false, nil
 	}
 
-	memberInstance := GetMemberInstanceWithoutAuth()
-
-	slugPresence := memberInstance.CheckProfileSlug(profileSlug, profileID)
+	slugPresence := MemberInstance.CheckProfileSlug(profileSlug, profileID)
 
 	return slugPresence, nil
 }
 
 func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, profileId *int, profileSlug *string) (bool, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	// c, ok := ctx.Value(ContextKey).(*gin.Context)
 
-	memberInstance := GetMemberInstanceWithoutAuth()
+	// if !ok {
+
+	// 	ErrorLog.Printf("Gin instance retrieval context error: %v", ok)
+
+	// }
 
 	verify_chan := make(chan error)
 
 	var (
+
 		MemberDetails memberPkg.Tblmember
 
 		err error
 	)
 
-	if *profileId != 0 {
+	if profileId != nil && *profileId != 0 {
 
-		MemberDetails, err = memberInstance.GetMemberAndProfileData(0, "", *profileId, "")
+		MemberDetails, err = MemberInstance.GetMemberAndProfileData(0, "", *profileId, "")
 
-	} else if *profileSlug != "" {
+	} else if profileSlug != nil &&  *profileSlug != "" {
 
-		MemberDetails, err = memberInstance.GetMemberAndProfileData(0, "", 0, *profileSlug)
+		MemberDetails, err = MemberInstance.GetMemberAndProfileData(0, "", 0, *profileSlug)
 	}
 
 	if MemberDetails.TblMemberProfile.ClaimStatus == 1 {
@@ -1106,9 +1105,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, ErrMemberInactive
 	}
 
-	var memberSettings model.MemberSettings
+	memberSettings, err := MemberInstance.GetMemberSettings()
 
-	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
+	if err != nil {
 
 		return false, err
 	}
@@ -1129,8 +1128,6 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	var claimTemplate model.EmailTemplate
 
 	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_name = ?", OwndeskClaimnowTemplate).First(&claimTemplate).Error; err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
@@ -1167,16 +1164,12 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	if err != nil {
 
-		c.AbortWithError(http.StatusInternalServerError, err)
-
 		return false, err
 	}
 
 	var template_buffers bytes.Buffer
 
 	if err := tmpl.Execute(&template_buffers, gin.H{"body": htmlBody}); err != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
@@ -1189,14 +1182,10 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	go SendMail(mail_data, html_content, verify_chan)
 
-	if <-verify_chan == nil {
-
-		return true, nil
-
-	} else {
-
-		c.AbortWithError(500, <-verify_chan)
+	if <-verify_chan != nil {
 
 		return false, <-verify_chan
 	}
+
+	return true, nil
 }

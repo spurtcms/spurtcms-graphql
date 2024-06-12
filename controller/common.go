@@ -109,6 +109,7 @@ var (
 	ErrConfirmPass        = errors.New("new passowrd and confirmation password mismatched")
 	ErrSamePass           = errors.New("old password and new password should not be same")
 	ErrLoginReq           = errors.New("login required")
+	ErrUnauthorize        = errors.New("unauthorized access")
 )
 
 func init() {
@@ -240,9 +241,7 @@ func HashingPassword(pass string) (string, error) {
 
 func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]teampkg.TblUser, []string, error) {
 
-	teamInstance := GetTeamInstance()
-
-	_,adminDetails,err := teamInstance.GetUserById(0,adminIds)
+	_,adminDetails,err := TeamInstance.GetUserById(0,adminIds)
 
 	if err != nil {
 

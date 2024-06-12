@@ -2,24 +2,24 @@ package controller
 
 import (
 	"os"
-
-	newauth "github.com/spurtcms/auth"
+	authPkg "github.com/spurtcms/auth"
 	ecomPkg "github.com/spurtcms/ecommerce"
 	memberPkg "github.com/spurtcms/member"
-	"github.com/spurtcms/team"
-	teampkg "github.com/spurtcms/team"
+	teamPkg "github.com/spurtcms/team"
+    chanPkg  "github.com/spurtcms/channels"
 )
 
 var (
-	AuthInstance                *newauth.Auth
-	TeamAuthInstance            *team.Teams
+	AuthInstance                *authPkg.Auth
+	TeamAuthInstance            *teamPkg.Teams
 	MemberAuthInstance          *memberPkg.Member
 	EcomAuthInstance            *ecomPkg.Ecommerce
 	EcomInstance                *ecomPkg.Ecommerce
 	MemberInstance              *memberPkg.Member
-	TeamInstance                *team.Teams
+	TeamInstance                *teamPkg.Teams
+	ChannelInstance             *chanPkg.Channel
+	ChannelAuthInstance         *chanPkg.Channel
 	// NewRole                  *role.PermissionConfig
-	// ChannelConfig            *chn.Channel
 	// CategoryConfig           *cat.Categories
 	// MemberaccessConfig       *memaccess.AccessControl
 )
@@ -42,9 +42,9 @@ func init(){
 }
 
 // AuthCofing
-func AuthConfig() *newauth.Auth {
+func AuthConfig() *authPkg.Auth {
 
-	AuthInstance = newauth.AuthSetup(newauth.Config{
+	AuthInstance = authPkg.AuthSetup(authPkg.Config{
 		SecretKey: os.Getenv("JWT_SECRET"),
 		DB:        DB,
 	})
@@ -57,7 +57,7 @@ func GetMemberInstance() *memberPkg.Member {
 	MemberAuthInstance = memberPkg.MemberSetup(memberPkg.Config{
 		DB:               DB,
 		AuthEnable:       true,
-		PermissionEnable: true,
+		PermissionEnable: false,
 		Auth:             AuthInstance,
 	})
 
@@ -78,7 +78,7 @@ func GetEcomInstance() *ecomPkg.Ecommerce{
 
 	EcomAuthInstance = ecomPkg.EcommerceSetup(ecomPkg.Config{
 		AuthEnable: true,
-		PermissionEnable: true,
+		PermissionEnable: false,
 		DB: DB,
 		Auth: AuthInstance,
 	})
@@ -89,8 +89,6 @@ func GetEcomInstance() *ecomPkg.Ecommerce{
 func GetEcomInstanceWithoutAuth() *ecomPkg.Ecommerce{
 
 	EcomInstance = ecomPkg.EcommerceSetup(ecomPkg.Config{
-		AuthEnable: false,
-		PermissionEnable: true,
 		DB: DB,
 		Auth: AuthInstance,
 	})
@@ -98,24 +96,48 @@ func GetEcomInstanceWithoutAuth() *ecomPkg.Ecommerce{
 	return EcomInstance
 }
 
-func GetTeamInstance() *team.Teams{
+func GetTeamInstance() *teamPkg.Teams{
 
-	TeamAuthInstance = teampkg.TeamSetup(teampkg.Config{
+	TeamAuthInstance = teamPkg.TeamSetup(teamPkg.Config{
 		DB: DB,
 		AuthEnable: true,
-		PermissionEnable: true,
+		PermissionEnable: false,
 		Auth: AuthInstance,
 	})
 
 	return TeamAuthInstance
 }
 
-func GetTeamInstanceWithoutAuth() *team.Teams{
+func GetTeamInstanceWithoutAuth() *teamPkg.Teams{
 
-	TeamInstance = teampkg.TeamSetup(teampkg.Config{
+	TeamInstance = teamPkg.TeamSetup(teamPkg.Config{
 		DB: DB,
 		Auth: AuthInstance,
 	})
 
 	return TeamInstance
+}
+
+func GetChannelInstance() *chanPkg.Channel{
+
+	ChannelAuthInstance =  chanPkg.ChannelSetup(chanPkg.Config{
+		DB: DB,
+		AuthEnable: true,
+		PermissionEnable: false,
+		Auth: AuthInstance,
+	})
+
+	return ChannelAuthInstance
+}
+
+func GetChannelInstanceWithoutAuth() *chanPkg.Channel{
+
+	ChannelInstance =  chanPkg.ChannelSetup(chanPkg.Config{
+		DB: DB,
+		AuthEnable: true,
+		PermissionEnable: false,
+		Auth: AuthInstance,
+	})
+
+	return ChannelInstance
 }
