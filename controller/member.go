@@ -38,14 +38,14 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	sendMailData, err := GetEmailConfigurations(db)
 
-	fmt.Println("mail data", sendMailData)
-
-	if err != nil{
+	if err != nil {
 
 		return false, err
 	}
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
+
+	channel := make(chan error)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
 
@@ -55,7 +55,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		var loginEnquiryTemplate model.EmailTemplate
 
-		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_name = ?", OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error; err != nil {
+		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_slug = ?", OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error; err != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -112,8 +112,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 			return false, err
 		}
 
-		channel := make(chan error)
-
 		var template_buffers bytes.Buffer
 
 		if err := tmpl.Execute(&template_buffers, gin.H{"body": htmlBody}); err != nil {
@@ -125,16 +123,17 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		admin_content := template_buffers.String()
 
+		log.Println("mail data", sendMailData)
+
 		go SendMail(sendMailData, admin_content, channel)
 
 		if <-channel != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, <-channel)
-
+	
 			return false, <-channel
-
 		}
-
+	
 		return false, ErrInvalidMail
 
 	} else if err != nil {
@@ -155,8 +154,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		return false, err
 	}
-
-	channel := make(chan error)
 
 	// rand.Seed(time.Now().UnixNano())
 
@@ -179,7 +176,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	var loginTemplate model.EmailTemplate
 
-	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_name = ?", OwndeskLoginTemplate).First(&loginTemplate).Error; err != nil {
+	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_slug = ?", OwndeskLoginTemplate).First(&loginTemplate).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -250,10 +247,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if <-channel != nil {
 
-		c.AbortWithError(http.StatusServiceUnavailable, <-channel)
+		c.AbortWithError(http.StatusInternalServerError, <-channel)
 
 		return false, <-channel
-
 	}
 
 	return true, nil
@@ -712,24 +708,24 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 	if memberProfile.CompanyLogo != nil && *memberProfile.CompanyLogo != "" {
 
-		logoPath := GetFilePathsRelatedToStorageTypes(db,*memberProfile.CompanyLogo)
+		logoPath := GetFilePathsRelatedToStorageTypes(db, *memberProfile.CompanyLogo)
 
 		memberProfile.CompanyLogo = &logoPath
 	}
 
-	interfaceVal :=  memberProfile.MemberDetails.(*interface{})
+	interfaceVal := memberProfile.MemberDetails.(*interface{})
 
-	byteVal  := (*interfaceVal).([]byte)
+	byteVal := (*interfaceVal).([]byte)
 
-	if memberProfile.MemberDetails != nil{
+	if memberProfile.MemberDetails != nil {
 
-		jsonData,err := ConvertByteToJson(byteVal)
+		jsonData, err := ConvertByteToJson(byteVal)
 
-		if err != nil{
+		if err != nil {
 
 			ErrorLog.Printf("byte to json conversion error: %s", err)
 
-			return &model.MemberProfile{},err
+			return &model.MemberProfile{}, err
 		}
 
 		memberProfile.MemberDetails = jsonData
@@ -795,7 +791,7 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	if memberProfile.CompanyLogo != "" {
 
-		profileLogo = GetFilePathsRelatedToStorageTypes(db,memberProfile.CompanyLogo)
+		profileLogo = GetFilePathsRelatedToStorageTypes(db, memberProfile.CompanyLogo)
 	}
 
 	MemberProfile := model.MemberProfile{
@@ -925,7 +921,7 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 
 	if memberDetails.ProfileImagePath != "" {
 
-		memberDetails.ProfileImagePath = GetFilePathsRelatedToStorageTypes(db,memberDetails.ProfileImagePath)
+		memberDetails.ProfileImagePath = GetFilePathsRelatedToStorageTypes(db, memberDetails.ProfileImagePath)
 
 	}
 
@@ -1168,12 +1164,10 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	sendMailData, err := GetEmailConfigurations(db)
 
-	if err != nil{
+	if err != nil {
 
 		return false, err
 	}
-
-	fmt.Println("mail data", sendMailData)
 
 	var convIds []int
 
@@ -1192,7 +1186,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	var claimTemplate model.EmailTemplate
 
-	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_name = ?", OwndeskClaimnowTemplate).First(&claimTemplate).Error; err != nil {
+	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_slug = ?", OwndeskClaimnowTemplate).First(&claimTemplate).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -1251,16 +1245,16 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	html_content := template_buffers.String()
 
+	fmt.Println("mail data", sendMailData)
+
 	go SendMail(sendMailData, html_content, verify_chan)
 
-	if <-verify_chan == nil {
-
-		return true, nil
-
-	} else {
+	if <-verify_chan != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, <-verify_chan)
 
-		return false, nil
+		return false, <-verify_chan
 	}
+
+	return true, nil
 }

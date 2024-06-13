@@ -35,8 +35,10 @@ type MailConfig struct {
 	Emails         []string
 	MailUsername   string
 	MailPassword   string
+	SmtpPort       string
+	SmtpHost       string
 	Subject        string
-	AdditionalData map[string]interface{}
+	TimeOut        time.Duration
 }
 
 type MailImages struct {
@@ -66,9 +68,9 @@ type StorageType struct {
 }
 
 type EmailConfiguration struct {
-	Id           int               
+	Id           int
 	StmpConfig   datatypes.JSONMap `gorm:"type:jsonb"`
-	SelectedType string            
+	SelectedType string
 }
 
 var (
@@ -81,22 +83,19 @@ var (
 	MemberFieldTypeId              = 14
 	PathUrl                        string
 	EmailImageUrlPrefix            string
-	SmtpPort, SmtpHost             string
-	// OwndeskChannelId               = 108
-	EmailImagePath              MailImages
-	SocialMediaLinks            SocialMedias
-	OwndeskLoginEnquiryTemplate = "OwndeskLoginEnquiry"
-	OwndeskLoginTemplate        = "OwndeskLogin"
-	OwndeskClaimnowTemplate     = "OwndeskClaimRequest"
-	LocalLoginType              = "member"
-	ErrorLog                    *log.Logger
-	WarnLog                     *log.Logger
-	DB                        *gorm.DB
+	EmailImagePath                 MailImages
+	SocialMediaLinks               SocialMedias
+	OwndeskLoginEnquiryTemplate    = "owndeskloginenquiry"
+	OwndeskLoginTemplate           = "owndesklogin"
+	OwndeskClaimnowTemplate        = "owndeskclaimrequest"
+	LocalLoginType                 = "member"
+	ErrorLog                       *log.Logger
+	WarnLog                        *log.Logger
+	DB                             *gorm.DB
 )
 
 var (
 	ErrInvalidMail        = errors.New("your email is not yet registered in our owndesk platform")
-	ErrSendMail           = errors.New("failed to send unauthorized login attempt mail to admin")
 	ErrclaimAlready       = errors.New("member profile is already claimed")
 	ErrEmptyProfileSlug   = errors.New("profile slug should not be empty")
 	ErrProfileSlugExist   = errors.New("profile slug already exists")
@@ -111,6 +110,7 @@ var (
 	ErrConfirmPass        = errors.New("new passowrd and confirmation password mismatched")
 	ErrSamePass           = errors.New("old password and new password should not be same")
 	ErrLoginReq           = errors.New("login required")
+	ErrSendMailFail       = errors.New("failed to send mail with smtp configurations")
 )
 
 func init() {
@@ -143,10 +143,6 @@ func init() {
 		PathUrl = os.Getenv("LOCAL_URL")
 	}
 
-	SmtpHost = os.Getenv("SMTP_HOST")
-
-	SmtpPort = os.Getenv("SMTP_PORT")
-
 	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
 
 	EmailImagePath = MailImages{
@@ -170,11 +166,11 @@ func init() {
 
 }
 
-func GetMemberPackageSetup(db *gorm.DB)(*memberpkg.Member){
+func GetMemberPackageSetup(db *gorm.DB) *memberpkg.Member {
 
-	memberConfig := memberpkg.Config{DB: db,}
+	memberConfig := memberpkg.Config{DB: db}
 
-	memberSetup :=  memberpkg.MemberSetup(memberConfig)
+	memberSetup := memberpkg.MemberSetup(memberConfig)
 
 	return memberSetup
 
@@ -205,7 +201,7 @@ func SendMail(config MailConfig, html_content string, channel chan error) {
 	to := config.Emails
 
 	// Authentication
-	auth := smtp.PlainAuth("", from, password, SmtpHost)
+	auth := smtp.PlainAuth("", from, password, config.SmtpHost)
 
 	subject := "Subject:" + config.Subject + " \n"
 
@@ -214,11 +210,9 @@ func SendMail(config MailConfig, html_content string, channel chan error) {
 	msg := []byte(subject + mime + html_content)
 
 	// Sending email
-	err := smtp.SendMail(SmtpHost+":"+SmtpPort, auth, from, to, msg)
+	err := smtp.SendMail(config.SmtpHost+":"+config.SmtpPort, auth, from, to, msg)
 
 	if err != nil {
-
-		log.Println(err)
 
 		channel <- err
 
@@ -310,7 +304,7 @@ func CompareBcryptPassword(hashpass, oldpass string) error {
 	return nil
 }
 
-func GetFilePathsRelatedToStorageTypes(db *gorm.DB,path string) string {
+func GetFilePathsRelatedToStorageTypes(db *gorm.DB, path string) string {
 
 	storageType, _ := GetStorageType(db)
 
@@ -326,54 +320,63 @@ func GetFilePathsRelatedToStorageTypes(db *gorm.DB,path string) string {
 
 		return s3Path
 
-	} 
+	}
 
 	localPath := PathUrl + strings.TrimPrefix(path, "/")
 
 	return localPath
 }
 
-func ConvertByteToJson(byteData []byte) (map[string]interface{},error){
+func ConvertByteToJson(byteData []byte) (map[string]interface{}, error) {
 
 	var jsonMap map[string]interface{}
 
-	err := json.Unmarshal(byteData,&jsonMap)
+	err := json.Unmarshal(byteData, &jsonMap)
 
-	if err != nil{
+	if err != nil {
 
 		return map[string]interface{}{}, err
 	}
 
-	return jsonMap,nil
+	return jsonMap, nil
 
 }
 
-func GetEmailConfigurations(db *gorm.DB)(MailConfig,error){
+func GetEmailConfigurations(db *gorm.DB) (MailConfig, error) {
 
 	var email_configs EmailConfiguration
 
-	if err := db.Debug().Table("tbl_email_configurations").First(&email_configs).Error;err!= nil{
+	if err := db.Debug().Table("tbl_email_configurations").First(&email_configs).Error; err != nil {
 
 		return MailConfig{}, err
 	}
 
 	var sendMailData MailConfig
 
-	if email_configs.SelectedType == "environment"{
+	if email_configs.SelectedType == "environment" {
 
-		sendMailData.MailUsername  =  os.Getenv("MAIL_USERNAME")
+		sendMailData.MailUsername = os.Getenv("MAIL_USERNAME")
 
-		sendMailData.MailPassword  =  os.Getenv("MAIL_PASSWORD")
+		sendMailData.MailPassword = os.Getenv("MAIL_PASSWORD")
 
-	}else if email_configs.SelectedType == "smtp"{
+		sendMailData.SmtpHost = os.Getenv("SMTP_HOST")
 
-		sendMailData.MailUsername  =  email_configs.StmpConfig["Mail"].(string)
+		sendMailData.SmtpPort = os.Getenv("SMTP_PORT")
 
-		sendMailData.MailPassword  =  email_configs.StmpConfig["Password"].(string)
+	} else if email_configs.SelectedType == "smtp" {
+
+		sendMailData.MailUsername = email_configs.StmpConfig["Mail"].(string)
+
+		sendMailData.MailPassword = email_configs.StmpConfig["Password"].(string)
+
+		sendMailData.SmtpHost = email_configs.StmpConfig["Host"].(string)
+
+		sendMailData.SmtpPort = email_configs.StmpConfig["Port"].(string)
 
 	}
 
-	return sendMailData,nil
+	sendMailData.TimeOut = 5 * time.Second
+
+	return sendMailData, nil
 
 }
-
