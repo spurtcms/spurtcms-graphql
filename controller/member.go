@@ -36,6 +36,15 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, ErrMemberLoginPerm
 	}
 
+	sendMailData, err := GetEmailConfigurations(db)
+
+	fmt.Println("mail data", sendMailData)
+
+	if err != nil{
+
+		return false, err
+	}
+
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	Mem.Auth = GetAuthorizationWithoutToken(db)
@@ -66,7 +75,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		_, notifyEmails, _ := GetNotifyAdminEmails(db, convIds)
 
-		var admin_mail_data = MailConfig{Emails: notifyEmails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginEnquiryTemplate.TemplateSubject}
+		sendMailData.Emails = notifyEmails
+
+		sendMailData.Subject = loginEnquiryTemplate.TemplateSubject
 
 		dataReplacer := strings.NewReplacer(
 			"{OwndeskLogo}", EmailImagePath.Owndesk,
@@ -114,7 +125,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		admin_content := template_buffers.String()
 
-		go SendMail(admin_mail_data, admin_content, channel)
+		go SendMail(sendMailData, admin_content, channel)
 
 		if <-channel != nil {
 
@@ -229,11 +240,13 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	sendMails = append(sendMails, member_details.Email)
 
-	mail_data := MailConfig{Emails: sendMails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginTemplate.TemplateSubject}
+	sendMailData.Emails = sendMails
+
+	sendMailData.Subject = loginTemplate.TemplateSubject
 
 	html_content := template_buffer.String()
 
-	go SendMail(mail_data, html_content, channel)
+	go SendMail(sendMailData, html_content, channel)
 
 	if <-channel != nil {
 
@@ -1153,6 +1166,15 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
+	sendMailData, err := GetEmailConfigurations(db)
+
+	if err != nil{
+
+		return false, err
+	}
+
+	fmt.Println("mail data", sendMailData)
+
 	var convIds []int
 
 	adminIds := strings.Split(memberSettings.NotificationUsers, ",")
@@ -1165,6 +1187,8 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	}
 
 	_, notifyEmails, _ := GetNotifyAdminEmails(db, convIds)
+
+	sendMailData.Emails = notifyEmails
 
 	var claimTemplate model.EmailTemplate
 
@@ -1223,11 +1247,11 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	modifiedSubject := strings.TrimSuffix(claimTemplate.TemplateSubject, "{CompanyName}") + *MemberProfile.CompanyName
 
-	mail_data := MailConfig{Emails: notifyEmails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: modifiedSubject}
+	sendMailData.Subject = modifiedSubject
 
 	html_content := template_buffers.String()
 
-	go SendMail(mail_data, html_content, verify_chan)
+	go SendMail(sendMailData, html_content, verify_chan)
 
 	if <-verify_chan == nil {
 

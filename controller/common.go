@@ -65,6 +65,12 @@ type StorageType struct {
 	SelectedType string
 }
 
+type EmailConfiguration struct {
+	Id           int               
+	StmpConfig   datatypes.JSONMap `gorm:"type:jsonb"`
+	SelectedType string            
+}
+
 var (
 	Mem                            member.MemberAuth
 	Auth                           *auth.Authorization
@@ -339,6 +345,35 @@ func ConvertByteToJson(byteData []byte) (map[string]interface{},error){
 	}
 
 	return jsonMap,nil
+
+}
+
+func GetEmailConfigurations(db *gorm.DB)(MailConfig,error){
+
+	var email_configs EmailConfiguration
+
+	if err := db.Debug().Table("tbl_email_configurations").First(&email_configs).Error;err!= nil{
+
+		return MailConfig{}, err
+	}
+
+	var sendMailData MailConfig
+
+	if email_configs.SelectedType == "environment"{
+
+		sendMailData.MailUsername  =  os.Getenv("MAIL_USERNAME")
+
+		sendMailData.MailPassword  =  os.Getenv("MAIL_PASSWORD")
+
+	}else if email_configs.SelectedType == "smtp"{
+
+		sendMailData.MailUsername  =  email_configs.StmpConfig["Mail"].(string)
+
+		sendMailData.MailPassword  =  email_configs.StmpConfig["Password"].(string)
+
+	}
+
+	return sendMailData,nil
 
 }
 
