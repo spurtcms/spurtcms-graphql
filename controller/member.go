@@ -1193,9 +1193,15 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
+	if claimTemplate.IsActive!=1{
+
+		return false, fmt.Errorf("%v - %v",claimTemplate.TemplateName,ErrInactiveTemplate)
+	}
+
 	dataReplacer := strings.NewReplacer(
 		"{OwndeskLogo}", EmailImagePath.Owndesk,
-		"{Username}", "Admin",
+		"{Username}", "OwnDesk Admin",
+		"{ClaimerName}", profileData.PersonName,
 		"{CompanyName}", *MemberProfile.CompanyName,
 		"{ProfileName}", profileData.ProfileName,
 		"{ProfileSlug}", profileData.ProfileSlug,
@@ -1245,15 +1251,60 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	html_content := template_buffers.String()
 
-	fmt.Println("mail data", sendMailData)
-
 	go SendMail(sendMailData, html_content, verify_chan)
 
 	if <-verify_chan != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, <-verify_chan)
 
-		return false, <-verify_chan
+		return false, ErrClaimMail
+	}
+
+	var claimSubmitTemplate model.EmailTemplate
+
+	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_slug = ?", OwndeskClaimSubmitTemplate).First(&claimSubmitTemplate).Error; err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	if claimSubmitTemplate.IsActive!=1{
+
+		return false, fmt.Errorf("%v - %v",claimSubmitTemplate.TemplateName,ErrInactiveTemplate)
+	}
+
+	sendMailData.Subject = claimSubmitTemplate.TemplateSubject
+
+	var claimerMail []string
+
+	claimerMail = append(claimerMail, profileData.WorkMail)
+
+	sendMailData.Emails = claimerMail
+
+	integratedBody = dataReplacer.Replace(claimSubmitTemplate.TemplateMessage)
+
+	htmlBody = template.HTML(integratedBody)
+
+	// Reset the buffer before the second execution
+    template_buffers.Reset()
+
+	if err := tmpl.Execute(&template_buffers, gin.H{"body": htmlBody}); err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return false, err
+	}
+
+	html_content = template_buffers.String()
+
+	go SendMail(sendMailData,html_content,verify_chan)
+
+	if <-verify_chan != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, <-verify_chan)
+
+		return false, ErrClaimSubmitMail
 	}
 
 	return true, nil

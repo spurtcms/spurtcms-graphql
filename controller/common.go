@@ -88,6 +88,7 @@ var (
 	OwndeskLoginEnquiryTemplate    = "owndeskloginenquiry"
 	OwndeskLoginTemplate           = "owndesklogin"
 	OwndeskClaimnowTemplate        = "owndeskclaimrequest"
+	OwndeskClaimSubmitTemplate     = "owndeskclaimsubmit"
 	LocalLoginType                 = "member"
 	ErrorLog                       *log.Logger
 	WarnLog                        *log.Logger
@@ -111,6 +112,10 @@ var (
 	ErrSamePass           = errors.New("old password and new password should not be same")
 	ErrLoginReq           = errors.New("login required")
 	ErrSendMailFail       = errors.New("failed to send mail with smtp configurations")
+	ErrClaimMail          = errors.New("failed to send claim request mail to the admin")
+	ErrClaimSubmitMail    = errors.New("failed to send claim request submission status mail to the user")
+	ErrInactiveTemplate   = errors.New("mail template is inactive")
+
 )
 
 func init() {
