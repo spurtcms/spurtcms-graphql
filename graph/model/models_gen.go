@@ -322,6 +322,7 @@ type Member struct {
 	Group            []MemberGroup `json:"group,omitempty" gorm:"-"`
 	Password         *string       `json:"password,omitempty"`
 	Username         *string       `json:"username,omitempty"`
+	StorageType      *string       `json:"storageType,omitempty"`
 }
 
 type MemberDetails struct {
@@ -372,6 +373,7 @@ type MemberProfile struct {
 	ModifiedBy      *int        `json:"modifiedBy,omitempty"`
 	ClaimStatus     *int        `json:"claimStatus,omitempty"`
 	IsActive        *int        `json:"IsActive,omitempty"`
+	StorageType     *string     `json:"storageType,omitempty"`
 }
 
 type MemberSettings struct {
@@ -494,6 +496,7 @@ type ProfileData struct {
 	SeoTitle        graphql.Omittable[*string]         `json:"seoTitle,omitempty"`
 	SeoDescription  graphql.Omittable[*string]         `json:"seoDescription,omitempty"`
 	SeoKeyword      graphql.Omittable[*string]         `json:"seoKeyword,omitempty"`
+	CompanyB64Logo  graphql.Omittable[*InputB64Data]   `json:"companyB64Logo,omitempty"`
 }
 
 type Query struct {
@@ -610,6 +613,11 @@ type CustomerInput struct {
 	Country       graphql.Omittable[*string] `json:"country,omitempty"`
 	ZipCode       graphql.Omittable[*string] `json:"zipCode,omitempty"`
 	StreetAddress graphql.Omittable[*string] `json:"streetAddress,omitempty"`
+}
+
+type InputB64Data struct {
+	Base64Data string `json:"base64Data"`
+	ImageName  string `json:"imageName"`
 }
 
 type OrderFilter struct {

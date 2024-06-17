@@ -209,6 +209,12 @@ input ProfileData{
 	seoTitle:         String
 	seoDescription:   String
 	seoKeyword:       String
+	companyB64Logo:   inputB64Data
+}
+
+input inputB64Data{
+   base64Data: String!
+   imageName:  String!
 }
 
 input ClaimData{

@@ -62,6 +62,11 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 			return false, err
 		}
 
+		if loginEnquiryTemplate.IsActive != 1 {
+
+			return false, fmt.Errorf("%v - %v", loginEnquiryTemplate.TemplateName, ErrInactiveTemplate)
+		}
+
 		var convIds []int
 
 		adminIds := strings.Split(memberSettings.NotificationUsers, ",")
@@ -130,10 +135,10 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		if <-channel != nil {
 
 			c.AbortWithError(http.StatusInternalServerError, <-channel)
-	
+
 			return false, <-channel
 		}
-	
+
 		return false, ErrInvalidMail
 
 	} else if err != nil {
@@ -181,6 +186,11 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
+	}
+
+	if loginTemplate.IsActive != 1 {
+
+		return false, fmt.Errorf("%v - %v", loginTemplate.TemplateName, ErrInactiveTemplate)
 	}
 
 	dataReplacer := strings.NewReplacer(
@@ -281,9 +291,18 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	if memberProfileDetails.CompanyLogo != nil && *memberProfileDetails.CompanyLogo != "" {
 
-		logoPath := PathUrl + strings.TrimPrefix(*memberProfileDetails.CompanyLogo, "/")
+		var profileLogo string
 
-		memberProfileDetails.CompanyLogo = &logoPath
+		if memberProfileDetails.StorageType != nil && *memberProfileDetails.StorageType == "local" {
+
+			profileLogo = PathUrl + strings.TrimPrefix(*memberProfileDetails.CompanyLogo, "/")
+
+		} else if  memberProfileDetails.StorageType != nil && *memberProfileDetails.StorageType == "aws" {
+
+			profileLogo = PathUrl + "image-resize?name=" + *memberProfileDetails.CompanyLogo
+		}
+
+		memberProfileDetails.CompanyLogo = &profileLogo
 	}
 
 	return &model.LoginDetails{MemberProfileData: memberProfileDetails, Token: token}, nil
@@ -564,6 +583,8 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 		memberData["profile_image_path"] = filePath
 
+		memberData["storage_type"] = storageType.SelectedType
+
 	}
 
 	memberData["first_name"] = memberdata.FirstName
@@ -708,7 +729,16 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 	if memberProfile.CompanyLogo != nil && *memberProfile.CompanyLogo != "" {
 
-		logoPath := GetFilePathsRelatedToStorageTypes(db, *memberProfile.CompanyLogo)
+		var logoPath string
+
+		if memberProfile.StorageType != nil && *memberProfile.StorageType == "local" {
+
+			logoPath = PathUrl + strings.TrimPrefix(*memberProfile.CompanyLogo, "/")
+
+		} else if memberProfile.StorageType != nil && *memberProfile.StorageType == "aws" {
+
+		    logoPath = PathUrl + "image-resize?name=" + *memberProfile.CompanyLogo
+		}
 
 		memberProfile.CompanyLogo = &logoPath
 	}
@@ -791,7 +821,14 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	if memberProfile.CompanyLogo != "" {
 
-		profileLogo = GetFilePathsRelatedToStorageTypes(db, memberProfile.CompanyLogo)
+		if memberProfile.StorageType == "local" {
+
+			profileLogo = PathUrl + strings.TrimPrefix(memberProfile.CompanyLogo, "/")
+
+		} else if memberProfile.StorageType == "aws" {
+
+			profileLogo = PathUrl + "image-resize?name=" + memberProfile.CompanyLogo
+		}
 	}
 
 	MemberProfile := model.MemberProfile{
@@ -921,7 +958,18 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 
 	if memberDetails.ProfileImagePath != "" {
 
-		memberDetails.ProfileImagePath = GetFilePathsRelatedToStorageTypes(db, memberDetails.ProfileImagePath)
+		var profileImage string
+
+		if memberDetails.StorageType != nil && *memberDetails.StorageType == "local"{
+
+			profileImage = PathUrl + strings.TrimPrefix( memberDetails.ProfileImagePath,"/")
+
+		}else if memberDetails.StorageType != nil && *memberDetails.StorageType == "aws"{
+
+			profileImage = PathUrl + "image-resize?name=" + memberDetails.ProfileImagePath
+		}
+
+		memberDetails.ProfileImagePath = profileImage
 
 	}
 
@@ -946,7 +994,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	var err error
 
-	if profiledata.CompanyLogo.IsSet() && profiledata.CompanyLogo.Value() != nil {
+	if profiledata.CompanyLogo.IsSet() && profiledata.CompanyLogo.Value() != nil && profiledata.CompanyLogo.Value().File != nil {
 
 		var fileName, filePath string
 
@@ -1010,6 +1058,9 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		}
 
 		companyData["company_logo"] = filePath
+
+		companyData["storage_type"] = storageType.SelectedType
+
 	}
 
 	companyData["company_name"] = profiledata.CompanyName
@@ -1193,9 +1244,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	if claimTemplate.IsActive!=1{
+	if claimTemplate.IsActive != 1 {
 
-		return false, fmt.Errorf("%v - %v",claimTemplate.TemplateName,ErrInactiveTemplate)
+		return false, fmt.Errorf("%v - %v", claimTemplate.TemplateName, ErrInactiveTemplate)
 	}
 
 	dataReplacer := strings.NewReplacer(
@@ -1269,9 +1320,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, err
 	}
 
-	if claimSubmitTemplate.IsActive!=1{
+	if claimSubmitTemplate.IsActive != 1 {
 
-		return false, fmt.Errorf("%v - %v",claimSubmitTemplate.TemplateName,ErrInactiveTemplate)
+		return false, fmt.Errorf("%v - %v", claimSubmitTemplate.TemplateName, ErrInactiveTemplate)
 	}
 
 	sendMailData.Subject = claimSubmitTemplate.TemplateSubject
@@ -1287,7 +1338,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	htmlBody = template.HTML(integratedBody)
 
 	// Reset the buffer before the second execution
-    template_buffers.Reset()
+	template_buffers.Reset()
 
 	if err := tmpl.Execute(&template_buffers, gin.H{"body": htmlBody}); err != nil {
 
@@ -1298,7 +1349,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	html_content = template_buffers.String()
 
-	go SendMail(sendMailData,html_content,verify_chan)
+	go SendMail(sendMailData, html_content, verify_chan)
 
 	if <-verify_chan != nil {
 

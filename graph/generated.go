@@ -126,6 +126,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputRequireData,
 		ec.unmarshalInputapplicationInput,
 		ec.unmarshalInputcustomerInput,
+		ec.unmarshalInputinputB64Data,
 		ec.unmarshalInputorderFilter,
 		ec.unmarshalInputorderProduct,
 		ec.unmarshalInputorderSort,
@@ -474,6 +475,12 @@ input ProfileData{
 	seoTitle:         String
 	seoDescription:   String
 	seoKeyword:       String
+	companyB64Logo:   inputB64Data
+}
+
+input inputB64Data{
+   base64Data: String!
+   imageName:  String!
 }
 
 input ClaimData{
@@ -24129,7 +24136,7 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"companyName", "profileName", "profileSlug", "companyLocation", "companyLogo", "about", "website", "twitter", "linkedin", "companyProfile", "seoTitle", "seoDescription", "seoKeyword"}
+	fieldsInOrder := [...]string{"companyName", "profileName", "profileSlug", "companyLocation", "companyLogo", "about", "website", "twitter", "linkedin", "companyProfile", "seoTitle", "seoDescription", "seoKeyword", "companyB64Logo"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -24227,6 +24234,13 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 				return &it, err
 			}
 			it.SeoKeyword = graphql.OmittableOf(data)
+		case "companyB64Logo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyB64Logo"))
+			data, err := ec.unmarshalOinputB64Data2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐInputB64Data(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CompanyB64Logo = graphql.OmittableOf(data)
 		}
 	}
 
@@ -24511,6 +24525,40 @@ func (ec *executionContext) unmarshalInputcustomerInput(ctx context.Context, obj
 				return &it, err
 			}
 			it.StreetAddress = graphql.OmittableOf(data)
+		}
+	}
+
+	return &it, nil
+}
+
+func (ec *executionContext) unmarshalInputinputB64Data(ctx context.Context, obj interface{}) (*model.InputB64Data, error) {
+	var it model.InputB64Data
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"base64Data", "imageName"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "base64Data":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("base64Data"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Base64Data = data
+		case "imageName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("imageName"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.ImageName = data
 		}
 	}
 
@@ -30344,6 +30392,14 @@ func (ec *executionContext) marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 		return graphql.Null
 	}
 	return ec.___Type(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOinputB64Data2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐInputB64Data(ctx context.Context, v interface{}) (*model.InputB64Data, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputinputB64Data(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOorderFilter2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐOrderFilter(ctx context.Context, v interface{}) (*model.OrderFilter, error) {
