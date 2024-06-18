@@ -9,12 +9,12 @@ require (
 	github.com/aws/aws-sdk-go v1.53.12
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
-	github.com/spurtcms/auth v0.0.6
+	github.com/spurtcms/auth v0.0.8
 	github.com/spurtcms/ecommerce v0.0.1
-	github.com/spurtcms/member v0.0.7
+	github.com/spurtcms/member v0.0.13
 	github.com/spurtcms/pkgcontent v1.1.15
 	github.com/spurtcms/pkgcore v1.0.84
-	github.com/spurtcms/team v0.0.4
+	github.com/spurtcms/team v0.0.6
 	github.com/vektah/gqlparser/v2 v2.5.11
 	golang.org/x/crypto v0.21.0
 	gorm.io/datatypes v1.2.0

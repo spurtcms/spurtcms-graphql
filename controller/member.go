@@ -1062,7 +1062,12 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, pro
 		return false, nil
 	}
 
-	slugPresence := MemberInstance.CheckProfileSlug(profileSlug, profileID)
+	slugPresence, err := MemberInstance.CheckProfileSlug(profileSlug, profileID)
+
+	if err != nil{
+
+		return false, err
+	}
 
 	return slugPresence, nil
 }
