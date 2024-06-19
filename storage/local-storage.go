@@ -10,7 +10,7 @@ import (
 	"net/url"
 )
 
-func UploadImageToAdminLocal(b64Data, fileName, adminUrl string) (string, error) {
+func UploadImageToAdminLocal(b64Data, fileName, adminUrl, filePath string) (string, error) {
 
 	client := http.Client{}
 
@@ -19,6 +19,8 @@ func UploadImageToAdminLocal(b64Data, fileName, adminUrl string) (string, error)
 	paramSetter.Add("imgFile", b64Data)
 
 	paramSetter.Add("imgFileName", fileName)
+
+	paramSetter.Add("imgPath", filePath)
 
 	method := "POST"
 
@@ -36,11 +38,11 @@ func UploadImageToAdminLocal(b64Data, fileName, adminUrl string) (string, error)
 		return "", err
 	}
 
-	if response.StatusCode != 200{
+	if response.StatusCode != 200 {
 
-		fmt.Println("response status",response.StatusCode)
+		fmt.Println("response status", response.StatusCode)
 
-		return  "", errors.New("failed to store file in admin panel local")
+		return "", errors.New("failed to store file in admin panel local")
 	}
 
 	defer response.Body.Close()

@@ -95,7 +95,8 @@ type MemberProfile{
 	modifiedOn:        Time 
 	modifiedBy:        Int 
 	claimStatus:       Int 
-	IsActive:          Int    
+	IsActive:          Int 
+	storageType:      String   
 }
 
 
@@ -200,7 +201,7 @@ input ProfileData{
 	profileName:      String!
 	profileSlug:      String!
 	companyLocation:  String
-	companyLogo:      Upload
+	companyLogo:      String
 	about:            String
 	website:          String
 	twitter:          String
@@ -209,12 +210,6 @@ input ProfileData{
 	seoTitle:         String
 	seoDescription:   String
 	seoKeyword:       String
-	companyB64Logo:   inputB64Data
-}
-
-input inputB64Data{
-   base64Data: String!
-   imageName:  String!
 }
 
 input ClaimData{

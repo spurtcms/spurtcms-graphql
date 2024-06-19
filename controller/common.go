@@ -12,6 +12,7 @@ import (
 	"spurtcms-graphql/dbconfig"
 	"spurtcms-graphql/logger"
 	"spurtcms-graphql/storage"
+	"strconv"
 	"strings"
 	"time"
 
@@ -384,4 +385,17 @@ func GetEmailConfigurations(db *gorm.DB) (MailConfig, error) {
 
 	return sendMailData, nil
 
+}
+
+func GenerateFileName(imageData string) (fileName string) {
+
+	extEndIndex := strings.Index(imageData, ";base64,")
+
+	var ext = imageData[11:extEndIndex]
+
+	rand_num := strconv.Itoa(int(time.Now().Unix()))
+
+	imageName := "IMG-" + rand_num + "." + ext
+
+	return imageName
 }

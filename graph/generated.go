@@ -126,7 +126,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputRequireData,
 		ec.unmarshalInputapplicationInput,
 		ec.unmarshalInputcustomerInput,
-		ec.unmarshalInputinputB64Data,
 		ec.unmarshalInputorderFilter,
 		ec.unmarshalInputorderProduct,
 		ec.unmarshalInputorderSort,
@@ -361,7 +360,8 @@ type MemberProfile{
 	modifiedOn:        Time 
 	modifiedBy:        Int 
 	claimStatus:       Int 
-	IsActive:          Int    
+	IsActive:          Int 
+	storageType:      String   
 }
 
 
@@ -466,7 +466,7 @@ input ProfileData{
 	profileName:      String!
 	profileSlug:      String!
 	companyLocation:  String
-	companyLogo:      Upload
+	companyLogo:      String
 	about:            String
 	website:          String
 	twitter:          String
@@ -475,12 +475,6 @@ input ProfileData{
 	seoTitle:         String
 	seoDescription:   String
 	seoKeyword:       String
-	companyB64Logo:   inputB64Data
-}
-
-input inputB64Data{
-   base64Data: String!
-   imageName:  String!
 }
 
 input ClaimData{
@@ -848,6 +842,7 @@ type Member{
     group:            [MemberGroup!]
     password:         String
     username:         String
+    storageType:      String
 }
 
 type MemberGroup{
@@ -890,7 +885,7 @@ input MemberDetails{
     email:             String!
     password:          String
     isActive:          Int
-    profileImage:      Upload
+    profileImage:      String
     profileImagePath:  String
     username:          String
     groupId:           Int 
@@ -4998,6 +4993,8 @@ func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx contex
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
 			case "IsActive":
 				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
+			case "storageType":
+				return ec.fieldContext_MemberProfile_storageType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -11726,6 +11723,8 @@ func (ec *executionContext) fieldContext_LoginDetails_memberProfileData(ctx cont
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
 			case "IsActive":
 				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
+			case "storageType":
+				return ec.fieldContext_MemberProfile_storageType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -12474,6 +12473,47 @@ func (ec *executionContext) _Member_username(ctx context.Context, field graphql.
 }
 
 func (ec *executionContext) fieldContext_Member_username(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Member",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Member_storageType(ctx context.Context, field graphql.CollectedField, obj *model.Member) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Member_storageType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StorageType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Member_storageType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Member",
 		Field:      field,
@@ -13773,6 +13813,47 @@ func (ec *executionContext) fieldContext_MemberProfile_IsActive(ctx context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MemberProfile_storageType(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MemberProfile_storageType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StorageType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MemberProfile_storageType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MemberProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -17927,6 +18008,8 @@ func (ec *executionContext) fieldContext_Query_getMemberProfileDetails(ctx conte
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
 			case "IsActive":
 				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
+			case "storageType":
+				return ec.fieldContext_MemberProfile_storageType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -18849,6 +18932,8 @@ func (ec *executionContext) fieldContext_Query_memberProfileDetails(ctx context.
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
 			case "IsActive":
 				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
+			case "storageType":
+				return ec.fieldContext_MemberProfile_storageType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
 		},
@@ -18947,6 +19032,8 @@ func (ec *executionContext) fieldContext_Query_getMemberDetails(ctx context.Cont
 				return ec.fieldContext_Member_password(ctx, field)
 			case "username":
 				return ec.fieldContext_Member_username(ctx, field)
+			case "storageType":
+				return ec.fieldContext_Member_storageType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Member", field.Name)
 		},
@@ -23932,7 +24019,7 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			it.IsActive = graphql.OmittableOf(data)
 		case "profileImage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileImage"))
-			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
@@ -24136,7 +24223,7 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"companyName", "profileName", "profileSlug", "companyLocation", "companyLogo", "about", "website", "twitter", "linkedin", "companyProfile", "seoTitle", "seoDescription", "seoKeyword", "companyB64Logo"}
+	fieldsInOrder := [...]string{"companyName", "profileName", "profileSlug", "companyLocation", "companyLogo", "about", "website", "twitter", "linkedin", "companyProfile", "seoTitle", "seoDescription", "seoKeyword"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -24173,7 +24260,7 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 			it.CompanyLocation = graphql.OmittableOf(data)
 		case "companyLogo":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyLogo"))
-			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
@@ -24234,13 +24321,6 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 				return &it, err
 			}
 			it.SeoKeyword = graphql.OmittableOf(data)
-		case "companyB64Logo":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyB64Logo"))
-			data, err := ec.unmarshalOinputB64Data2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐInputB64Data(ctx, v)
-			if err != nil {
-				return &it, err
-			}
-			it.CompanyB64Logo = graphql.OmittableOf(data)
 		}
 	}
 
@@ -24525,40 +24605,6 @@ func (ec *executionContext) unmarshalInputcustomerInput(ctx context.Context, obj
 				return &it, err
 			}
 			it.StreetAddress = graphql.OmittableOf(data)
-		}
-	}
-
-	return &it, nil
-}
-
-func (ec *executionContext) unmarshalInputinputB64Data(ctx context.Context, obj interface{}) (*model.InputB64Data, error) {
-	var it model.InputB64Data
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"base64Data", "imageName"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "base64Data":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("base64Data"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return &it, err
-			}
-			it.Base64Data = data
-		case "imageName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("imageName"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return &it, err
-			}
-			it.ImageName = data
 		}
 	}
 
@@ -26440,6 +26486,8 @@ func (ec *executionContext) _Member(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Member_password(ctx, field, obj)
 		case "username":
 			out.Values[i] = ec._Member_username(ctx, field, obj)
+		case "storageType":
+			out.Values[i] = ec._Member_storageType(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -26591,6 +26639,8 @@ func (ec *executionContext) _MemberProfile(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._MemberProfile_claimStatus(ctx, field, obj)
 		case "IsActive":
 			out.Values[i] = ec._MemberProfile_IsActive(ctx, field, obj)
+		case "storageType":
+			out.Values[i] = ec._MemberProfile_storageType(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -30392,14 +30442,6 @@ func (ec *executionContext) marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 		return graphql.Null
 	}
 	return ec.___Type(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOinputB64Data2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐInputB64Data(ctx context.Context, v interface{}) (*model.InputB64Data, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputinputB64Data(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOorderFilter2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐOrderFilter(ctx context.Context, v interface{}) (*model.OrderFilter, error) {

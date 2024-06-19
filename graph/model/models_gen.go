@@ -332,7 +332,7 @@ type MemberDetails struct {
 	Email            string                             `json:"email"`
 	Password         graphql.Omittable[*string]         `json:"password,omitempty"`
 	IsActive         graphql.Omittable[*int]            `json:"isActive,omitempty"`
-	ProfileImage     graphql.Omittable[*graphql.Upload] `json:"profileImage,omitempty"`
+	ProfileImage     graphql.Omittable[*string]         `json:"profileImage,omitempty"`
 	ProfileImagePath graphql.Omittable[*string]         `json:"profileImagePath,omitempty"`
 	Username         graphql.Omittable[*string]         `json:"username,omitempty"`
 	GroupID          graphql.Omittable[*int]            `json:"groupId,omitempty"`
@@ -487,7 +487,7 @@ type ProfileData struct {
 	ProfileName     string                             `json:"profileName"`
 	ProfileSlug     string                             `json:"profileSlug"`
 	CompanyLocation graphql.Omittable[*string]         `json:"companyLocation,omitempty"`
-	CompanyLogo     graphql.Omittable[*graphql.Upload] `json:"companyLogo,omitempty"`
+	CompanyLogo     graphql.Omittable[*string]         `json:"companyLogo,omitempty"`
 	About           graphql.Omittable[*string]         `json:"about,omitempty"`
 	Website         graphql.Omittable[*string]         `json:"website,omitempty"`
 	Twitter         graphql.Omittable[*string]         `json:"twitter,omitempty"`
@@ -496,7 +496,6 @@ type ProfileData struct {
 	SeoTitle        graphql.Omittable[*string]         `json:"seoTitle,omitempty"`
 	SeoDescription  graphql.Omittable[*string]         `json:"seoDescription,omitempty"`
 	SeoKeyword      graphql.Omittable[*string]         `json:"seoKeyword,omitempty"`
-	CompanyB64Logo  graphql.Omittable[*InputB64Data]   `json:"companyB64Logo,omitempty"`
 }
 
 type Query struct {
@@ -613,11 +612,6 @@ type CustomerInput struct {
 	Country       graphql.Omittable[*string] `json:"country,omitempty"`
 	ZipCode       graphql.Omittable[*string] `json:"zipCode,omitempty"`
 	StreetAddress graphql.Omittable[*string] `json:"streetAddress,omitempty"`
-}
-
-type InputB64Data struct {
-	Base64Data string `json:"base64Data"`
-	ImageName  string `json:"imageName"`
 }
 
 type OrderFilter struct {

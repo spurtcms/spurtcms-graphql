@@ -524,59 +524,62 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 		var fileName, filePath string
 
-		storageType, _ := GetStorageType(db)
+		var imageData = *memberdata.ProfileImage.Value()
 
-		fileName = memberdata.ProfileImage.Value().Filename
+		var storageType StorageType
 
-		file := memberdata.ProfileImage.Value().File
+		if imageData != "" {
 
-		if storageType.SelectedType == "aws" {
+			fileName = GenerateFileName(imageData)
 
-			fmt.Printf("aws-S3 storage selected\n")
-
-			filePath = "member/" + fileName
-
-			err = storage.UploadFileS3(storageType.Aws, memberdata.ProfileImage.Value(), filePath)
-
-			if err != nil {
-
-				fmt.Printf("image upload failed %v\n", err)
-
-				return false, ErrUpload
-
-			}
-
-		} else if storageType.SelectedType == "local" {
-
-			fmt.Printf("local storage selected\n")
-
-			b64Data, err := IoReadSeekerToBase64(file)
-
+			storageType, err = GetStorageType(db)
 			if err != nil {
 
 				return false, err
 			}
 
-			endpoint := "gqlSaveLocal"
+			if storageType.SelectedType == "aws" {
 
-			url := PathUrl + endpoint
+				fmt.Printf("aws-S3 storage selected\n")
 
-			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
+				filePath = "member/" + fileName
 
-			if err != nil {
+				err = storage.UploadFileS3(storageType.Aws, nil, imageData, filePath)
+				if err != nil {
 
-				return false, ErrUpload
+					fmt.Printf("image upload failed %v\n", err)
+
+					return false, ErrUpload
+
+				}
+
+			} else if storageType.SelectedType == "local" {
+
+				fmt.Printf("local storage selected\n")
+
+				filePath = storageType.Local + "/member/"
+
+				endPoint := "gqlSaveLocal"
+
+				url := PathUrl + endPoint
+
+				filePath, err = storage.UploadImageToAdminLocal(imageData, fileName, url, filePath)
+				if err != nil {
+
+					return false, ErrUpload
+				}
+
+				log.Printf("local stored path: %v\n", filePath)
+
+			} else if storageType.SelectedType == "azure" {
+
+				fmt.Printf("azure storage selected")
+
+			} else if storageType.SelectedType == "drive" {
+
+				fmt.Println("drive storage selected")
 			}
 
-			log.Printf("local stored path: %v\n", filePath)
-
-		} else if storageType.SelectedType == "azure" {
-
-			fmt.Printf("azure storage selected")
-
-		} else if storageType.SelectedType == "drive" {
-
-			fmt.Println("drive storage selected")
 		}
 
 		memberData["profile_image"] = fileName
@@ -584,7 +587,6 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 		memberData["profile_image_path"] = filePath
 
 		memberData["storage_type"] = storageType.SelectedType
-
 	}
 
 	memberData["first_name"] = memberdata.FirstName
@@ -994,73 +996,68 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	var err error
 
-	if profiledata.CompanyLogo.IsSet() && profiledata.CompanyLogo.Value() != nil && profiledata.CompanyLogo.Value().File != nil {
+	if profiledata.CompanyLogo.IsSet() && profiledata.CompanyLogo.Value() != nil {
 
 		var fileName, filePath string
+		var imageData = *profiledata.CompanyLogo.Value()
+		var storageType StorageType
 
-		storageType, _ := GetStorageType(db)
+		if imageData != "" {
 
-		fileName = profiledata.CompanyLogo.Value().Filename
+			fileName = GenerateFileName(imageData)
 
-		file := profiledata.CompanyLogo.Value().File
-
-		if storageType.SelectedType == "aws" {
-
-			fmt.Printf("aws-S3 storage selected\n")
-
-			filePath = "member/" + fileName
-
-			err = storage.UploadFileS3(storageType.Aws, profiledata.CompanyLogo.Value(), filePath)
-
+			storageType, err = GetStorageType(db)
 			if err != nil {
-
-				ErrorLog.Printf("company profile logo update failed in s3 error: %s", err)
-
-				fmt.Printf("image upload failed %v\n", err)
-
-				return false, ErrUpload
-
-			}
-
-		} else if storageType.SelectedType == "local" {
-
-			fmt.Printf("local storage selected\n")
-
-			b64Data, err := IoReadSeekerToBase64(file)
-
-			if err != nil {
-
-				ErrorLog.Printf("base64 conversion error: %s", err)
 
 				return false, err
 			}
 
-			endpoint := "gqlSaveLocal"
+			if storageType.SelectedType == "aws" {
 
-			url := PathUrl + endpoint
+				filePath = "member/company/" + fileName
 
-			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
+				fmt.Printf("aws-S3 storage selected\n")
 
-			if err != nil {
+				err = storage.UploadFileS3(storageType.Aws, nil, imageData, filePath)
+				if err != nil {
 
-				ErrorLog.Printf("company profile logo upload failed in admin panel local error: %s", err)
+					fmt.Printf("image upload failed %v\n", err)
 
-				return false, ErrUpload
+					return false, ErrUpload
+
+				}
+
+			} else if storageType.SelectedType == "local" {
+
+				filePath = storageType.Local + "/member/company/"
+
+				fmt.Printf("local storage selected\n")
+
+				endPoint := "gqlSaveLocal"
+
+				url := PathUrl + endPoint
+
+				filePath, err = storage.UploadImageToAdminLocal(imageData, fileName, url, filePath)
+				if err != nil {
+
+					return false, ErrUpload
+				}
+
+				log.Printf("local stored path: %v\n", filePath)
+
+			} else if storageType.SelectedType == "azure" {
+
+				fmt.Printf("azure storage selected")
+
+			} else if storageType.SelectedType == "drive" {
+
+				fmt.Println("drive storage selected")
 			}
 
-		} else if storageType.SelectedType == "azure" {
-
-			fmt.Printf("azure storage selected")
-
-		} else if storageType.SelectedType == "drive" {
-
-			fmt.Println("drive storage selected")
 		}
-
 		companyData["company_logo"] = filePath
 
 		companyData["storage_type"] = storageType.SelectedType
-
 	}
 
 	companyData["company_name"] = profiledata.CompanyName

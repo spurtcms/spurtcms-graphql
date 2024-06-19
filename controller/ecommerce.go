@@ -976,7 +976,7 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 
 			filePath = "member/" + fileName
 
-			err := storage.UploadFileS3(storageType.Aws, customerInput.ProfileImage.Value(), filePath)
+			err := storage.UploadFileS3(storageType.Aws, customerInput.ProfileImage.Value(), "", filePath)
 
 			if err != nil {
 
@@ -990,6 +990,8 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 
 			fmt.Printf("local storage selected\n")
 
+			filePath = storageType.Local + "member/" + fileName
+
 			b64Data, err := IoReadSeekerToBase64(file)
 
 			if err != nil {
@@ -1001,7 +1003,7 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 
 			url := PathUrl + endpoint
 
-			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
+			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url,filePath)
 
 			if err != nil {
 
