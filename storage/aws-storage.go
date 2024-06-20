@@ -126,3 +126,26 @@ func CheckS3FileExistence(AwsCredentials map[string]interface{}, fileName string
 	return true, nil
 
 }
+
+func GetObjectFromS3(AwsCredentials map[string]interface{},key string) (*s3.GetObjectOutput, error) {
+
+	session := CreateAwsSession(AwsCredentials)
+
+	s3Svc := CreateS3Session(session)
+
+	awsBucket := AwsCredentials["BucketName"].(string)
+
+	rawObject, err := s3Svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(awsBucket),
+		Key:    aws.String(key),
+	})
+
+	if err != nil {
+
+		fmt.Printf("Error get object %s: %s\n", key, err)
+
+		return nil, err
+	}
+
+	return rawObject, nil
+}

@@ -162,3 +162,7 @@ func GetMemberDetails(db *gorm.DB,ctx context.Context) (*model.Member, error) {
 func EcommerceOrderStatusNames(db *gorm.DB,ctx context.Context) ([]model.OrderStatusNames, error) {
 	return controller.EcommerceOrderStatusNames(db,ctx)
 }
+
+func GetAwsS3Resoucres(ctx context.Context, fileName string, filePath *string, width, height *int) (interface{}, error) {
+	return controller.GetAwsS3Resoucres(ctx,fileName,filePath,width,height)
+}

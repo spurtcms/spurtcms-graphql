@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"spurtcms-graphql/graph/model"
-	"spurtcms-graphql/storage"
 	"strconv"
 	"strings"
 
@@ -15,8 +14,6 @@ import (
 func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId *int, categoryGroupSlug *string, hierarchyLevel, checkEntriesPresence *int) (*model.CategoriesList, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
-
-	// memberid := c.GetInt("memberid")
 
 	var categories []model.Category
 
@@ -154,44 +151,10 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 				if categoryIds != "" {
 
-					var modified_path string
-
-					if category.ImagePath != "" {
-
-						modified_path = PathUrl + strings.TrimPrefix(category.ImagePath, "/")
-					}
-
-					category.ImagePath = modified_path
-
 					final_categoriesList = append(final_categoriesList, category)
 				}
 
 			} else {
-
-				var modified_path string
-
-				if category.ImagePath != "" {
-
-					storageType, _ := GetStorageType(db)
-
-					awsCreds := storageType.Aws
-
-					isExist, _ := storage.CheckS3FileExistence(awsCreds, category.ImagePath)
-
-					if isExist {
-
-						s3FileServeEndpoint := "image-resize"
-
-						modified_path = PathUrl + s3FileServeEndpoint + "?name=" + strings.TrimPrefix(category.ImagePath, "/")
-
-					} else {
-
-						modified_path = PathUrl + strings.TrimPrefix(category.ImagePath, "/")
-					}
-
-				}
-
-				category.ImagePath = modified_path
 
 				final_categoriesList = append(final_categoriesList, category)
 

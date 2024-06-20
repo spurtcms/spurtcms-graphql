@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"spurtcms-graphql/graph/model"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	channel "github.com/spurtcms/pkgcontent/channels"
@@ -57,13 +56,7 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 // this function provides the published channel entries list under a channel and channel entry details for a particular channeel entry by using its id
 func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string, requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
-
-	token, _ := c.Get("token")
-
-	// memberid := c.GetInt("memberid")
-
-	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
+	channelAuth := channel.Channel{Authority: GetAuthorizationWithoutToken(db)}
 
 	var channelEntries []channel.TblChannelEntries
 
@@ -120,19 +113,12 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 				categoryModBy := category.ModifiedBy
 
-				var categoryImage string
-
-				if category.ImagePath != "" {
-
-					categoryImage = PathUrl + strings.TrimPrefix(category.ImagePath, "/")
-				}
-
 				conv_category := model.Category{
 					ID:           category.Id,
 					CategoryName: category.CategoryName,
 					CategorySlug: category.CategorySlug,
 					Description:  category.Description,
-					ImagePath:    categoryImage,
+					ImagePath:    category.ImagePath,
 					CreatedOn:    category.CreatedOn,
 					CreatedBy:    category.CreatedBy,
 					ModifiedOn:   &categoryModon,
@@ -153,20 +139,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		authorIsActive := entry.AuthorDetail.IsActive
 
-		var authorProfileImage string
-
-		if entry.AuthorDetail.ProfileImagePath != "" {
-
-			if entry.AuthorDetail.StorageType == "local" {
-
-				authorProfileImage = PathUrl + strings.TrimPrefix(entry.AuthorDetail.ProfileImagePath, "/")
-
-			} else if entry.AuthorDetail.StorageType == "aws" {
-
-				authorProfileImage = PathUrl + "image-resize?name=" + entry.AuthorDetail.ProfileImagePath
-			}
-
-		}
+		authorProfileImage := entry.AuthorDetail.ProfileImagePath
 
 		authorDetails := model.Author{
 			AuthorID:         entry.AuthorDetail.AuthorID,
@@ -257,13 +230,6 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 			fieldCharAllowed := field.CharacterAllowed
 
-			var fieldImagePath string
-
-			if field.ImagePath != "" {
-
-				fieldImagePath = PathUrl + strings.TrimPrefix(field.ImagePath, "/")
-			}
-
 			conv_field := model.Field{
 				FieldID:          field.Id,
 				FieldName:        field.FieldName,
@@ -276,7 +242,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 				ModifiedBy:       &fieldModBy,
 				FieldDesc:        field.FieldDesc,
 				OrderIndex:       field.OrderIndex,
-				ImagePath:        fieldImagePath,
+				ImagePath:        field.ImagePath,
 				DatetimeFormat:   &fieldDateTime,
 				TimeFormat:       &fieldTime,
 				SectionParentID:  &fieldSectionParentId,
@@ -294,21 +260,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		conv_channelEntries[index].AdditionalFields = &additionalFields
 
-		var memberProfileComLogo string
-
-		if entry.MemberProfile.CompanyLogo != "" {
-
-			if entry.MemberProfile.StorageType == "local" {
-
-				memberProfileComLogo = PathUrl + strings.TrimPrefix(entry.MemberProfile.CompanyLogo, "/")
-
-			} else if entry.MemberProfile.StorageType == "aws" {
-
-				memberProfileComLogo = PathUrl + "image-resize?name=" + entry.MemberProfile.CompanyLogo
-			}
-
-		}
-
+		memberProfileComLogo := entry.MemberProfile.CompanyLogo
 		memberProfileId := entry.MemberProfile.Id
 		memberProfileMemId := entry.MemberProfile.MemberId
 		memberProfileName := entry.MemberProfile.ProfileName
@@ -354,14 +306,6 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 			ClaimStatus:     &memberProfileClaim,
 		}
 
-		var entryCoverImage string
-
-		if entry.CoverImage != "" {
-
-			entryCoverImage = PathUrl + strings.TrimPrefix(entry.CoverImage, "/")
-
-		}
-
 		conv_channelEntries[index].MemberProfile = MemberProfile
 
 		conv_channelEntries[index].Author = &entry.Author
@@ -370,7 +314,7 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		conv_channelEntries[index].ChannelID = entry.ChannelId
 
-		conv_channelEntries[index].CoverImage = entryCoverImage
+		conv_channelEntries[index].CoverImage = entry.CoverImage
 
 		conv_channelEntries[index].CreateTime = &entry.CreateTime
 

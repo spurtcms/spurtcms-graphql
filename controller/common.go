@@ -2,13 +2,19 @@ package controller
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"log"
 	"net/smtp"
 	"os"
+	"path/filepath"
 	"spurtcms-graphql/dbconfig"
 	"spurtcms-graphql/logger"
 	"spurtcms-graphql/storage"
@@ -17,6 +23,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/nfnt/resize"
 	"github.com/spurtcms/pkgcore/auth"
 	"github.com/spurtcms/pkgcore/member"
 	"golang.org/x/crypto/bcrypt"
@@ -24,8 +31,6 @@ import (
 	"gorm.io/gorm"
 
 	spurtcore "github.com/spurtcms/pkgcore"
-
-	memberpkg "github.com/spurtcms/member"
 )
 
 type key string
@@ -33,13 +38,13 @@ type key string
 const ContextKey key = "ginContext"
 
 type MailConfig struct {
-	Emails         []string
-	MailUsername   string
-	MailPassword   string
-	SmtpPort       string
-	SmtpHost       string
-	Subject        string
-	TimeOut        time.Duration
+	Emails       []string
+	MailUsername string
+	MailPassword string
+	SmtpPort     string
+	SmtpHost     string
+	Subject      string
+	TimeOut      time.Duration
 }
 
 type MailImages struct {
@@ -116,7 +121,6 @@ var (
 	ErrClaimMail          = errors.New("failed to send claim request mail to the admin")
 	ErrClaimSubmitMail    = errors.New("failed to send claim request submission status mail to the user")
 	ErrInactiveTemplate   = errors.New("mail template is inactive")
-
 )
 
 func init() {
@@ -138,19 +142,6 @@ func init() {
 
 	WarnLog = logger.WarnLOG()
 
-	ProfileImagePath = "Uploads/ProfileImages/"
-
-	if os.Getenv("DOMAIN_URL") != "" {
-
-		PathUrl = os.Getenv("DOMAIN_URL")
-
-	} else {
-
-		PathUrl = os.Getenv("LOCAL_URL")
-	}
-
-	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
-
 	EmailImagePath = MailImages{
 		Owndesk:   EmailImageUrlPrefix + strings.TrimPrefix("/view/img/own-desk-logo.png", "/"),
 		Twitter:   EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons3.png", "/"),
@@ -168,18 +159,54 @@ func init() {
 		Youtube:   os.Getenv("YOUTUBE"),
 	}
 
-	MemberRegisterPermission = os.Getenv("ALLOW_MEMBER_REGISTER")
-
 }
 
-func GetMemberPackageSetup(db *gorm.DB) *memberpkg.Member {
+func GetAwsS3Resoucres(ctx context.Context, fileName string, filePath *string, width, height *int) (interface{}, error) {
 
-	memberConfig := memberpkg.Config{DB: db}
+	path := *filePath
 
-	memberSetup := memberpkg.MemberSetup(memberConfig)
+	Width, _ := strconv.ParseUint(strconv.Itoa(*width), 10, 64)
 
-	return memberSetup
+	Height, _ := strconv.ParseUint(strconv.Itoa(*height), 10, 64)
 
+	extention := filepath.Ext(fileName)
+
+	rawObject, err := storage.GetObjectFromS3(make(map[string]interface{}), path+fileName)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, nil
+	}
+
+	buf := new(bytes.Buffer)
+
+	buf.ReadFrom(rawObject.Body)
+
+	if extention == ".svg" {
+		svgData := buf.String()
+
+		return []byte(svgData), nil
+	}
+
+	Image, _, erri := image.Decode(bytes.NewReader(buf.Bytes()))
+	if erri != nil {
+		fmt.Println(erri)
+		return nil, nil
+	}
+
+	var buf1 bytes.Buffer
+	newImage := resize.Resize(uint(Width), uint(Height), Image, resize.Lanczos3)
+	if extention == ".png" {
+		png.Encode(&buf1, newImage)
+		return buf1.Bytes(), nil
+	}
+
+	if extention == ".jpeg" || extention == ".jpg" {
+		_ = jpeg.Encode(&buf1, newImage, nil)
+		return buf1.Bytes(), nil
+	}
+
+	return nil, nil
 }
 
 func GetAuthorization(token string, db *gorm.DB) *auth.Authorization {

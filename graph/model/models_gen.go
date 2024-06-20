@@ -14,7 +14,7 @@ type AdditionalFields struct {
 }
 
 type Author struct {
-	AuthorID         int       `json:"AuthorId" gorm:"column:id"`
+	AuthorID         int       `json:"AuthorId"`
 	FirstName        string    `json:"FirstName"`
 	LastName         string    `json:"LastName"`
 	Email            string    `json:"Email"`
@@ -91,10 +91,10 @@ type ChannelEntries struct {
 	RelatedArticles  string            `json:"relatedArticles"`
 	FeaturedEntry    int               `json:"featuredEntry"`
 	ViewCount        int               `json:"viewCount"`
-	Categories       [][]Category      `json:"categories" gorm:"-"`
-	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty" gorm:"-"`
-	AuthorDetails    Author            `json:"authorDetails" gorm:"-"`
-	MemberProfile    MemberProfile     `json:"memberProfile" gorm:"-"`
+	Categories       [][]Category      `json:"categories"`
+	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty"`
+	AuthorDetails    Author            `json:"authorDetails"`
+	MemberProfile    MemberProfile     `json:"memberProfile"`
 	Author           *string           `json:"author,omitempty"`
 	SortOrder        *int              `json:"sortOrder,omitempty"`
 	CreateTime       *time.Time        `json:"createTime,omitempty"`
@@ -142,7 +142,7 @@ type EcommerceCartDetails struct {
 
 type EcommerceOrder struct {
 	ID              int        `json:"id"`
-	OrderID         string     `json:"orderId" gorm:"column:uuid"`
+	OrderID         string     `json:"orderId"`
 	CustomerID      int        `json:"customerId"`
 	Status          string     `json:"status"`
 	ShippingAddress string     `json:"shippingAddress"`
@@ -175,21 +175,21 @@ type EcommerceProduct struct {
 	DeletedBy          *int           `json:"deletedBy,omitempty"`
 	DeletedOn          *time.Time     `json:"deletedOn,omitempty"`
 	ViewCount          *int           `json:"viewCount,omitempty"`
-	DefaultPrice       int            `json:"defaultPrice" gorm:"column:product_price"`
-	DiscountPrice      *int           `json:"discountPrice,omitempty" gorm:"column:discount_price"`
-	SpecialPrice       *int           `json:"specialPrice,omitempty" gorm:"column:special_price"`
-	ProductImageArray  []string       `json:"productImageArray,omitempty" gorm:"-"`
-	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty" gorm:"foreignKey:ProductID"`
-	OrderID            *int           `json:"orderId,omitempty" gorm:"column:id"`
-	OrderUniqueID      *string        `json:"orderUniqueId,omitempty" gorm:"column:uuid"`
-	OrderStatus        *string        `json:"orderStatus,omitempty" gorm:"column:status"`
-	OrderCustomer      *int           `json:"orderCustomer,omitempty" gorm:"column:customer_id"`
-	OrderTime          *time.Time     `json:"orderTime,omitempty" gorm:"column:created_on"`
-	ShippingDetails    *string        `json:"shippingDetails,omitempty" gorm:"column:shipping_address"`
-	OrderQuantity      *int           `json:"orderQuantity,omitempty" gorm:"column:quantity"`
-	OrderPrice         *int           `json:"orderPrice,omitempty" gorm:"column:price"`
-	OrderTax           *int           `json:"orderTax,omitempty" gorm:"column:tax"`
-	PaymentMode        *string        `json:"paymentMode,omitempty" gorm:"column:payment_mode"`
+	DefaultPrice       int            `json:"defaultPrice"`
+	DiscountPrice      *int           `json:"discountPrice,omitempty"`
+	SpecialPrice       *int           `json:"specialPrice,omitempty"`
+	ProductImageArray  []string       `json:"productImageArray,omitempty"`
+	EcommerceCart      *EcommerceCart `json:"ecommerceCart,omitempty"`
+	OrderID            *int           `json:"orderId,omitempty"`
+	OrderUniqueID      *string        `json:"orderUniqueId,omitempty"`
+	OrderQuantity      *int           `json:"orderQuantity,omitempty"`
+	OrderPrice         *int           `json:"orderPrice,omitempty"`
+	OrderTax           *int           `json:"orderTax,omitempty"`
+	OrderStatus        *string        `json:"orderStatus,omitempty"`
+	OrderCustomer      *int           `json:"orderCustomer,omitempty"`
+	OrderTime          *time.Time     `json:"orderTime,omitempty"`
+	PaymentMode        *string        `json:"paymentMode,omitempty"`
+	ShippingDetails    *string        `json:"shippingDetails,omitempty"`
 }
 
 type EcommerceProducts struct {
@@ -258,7 +258,7 @@ type FieldValue struct {
 type Job struct {
 	ID             int        `json:"id"`
 	CategoriesID   int        `json:"categoriesId"`
-	Category       *Category `json:"category,omitempty" gorm:"foreignKey:CategoriesID;references:ID"`
+	Category       *Category  `json:"category,omitempty"`
 	JobTitle       string     `json:"jobTitle"`
 	JobSlug        string     `json:"jobSlug"`
 	JobDescription string     `json:"jobDescription"`
@@ -319,23 +319,23 @@ type Member struct {
 	ModifiedOn       *time.Time    `json:"modifiedOn,omitempty"`
 	ModifiedBy       *int          `json:"modifiedBy,omitempty"`
 	MemberGroupID    int           `json:"memberGroupId"`
-	Group            []MemberGroup `json:"group,omitempty" gorm:"-"`
+	Group            []MemberGroup `json:"group,omitempty"`
 	Password         *string       `json:"password,omitempty"`
 	Username         *string       `json:"username,omitempty"`
 	StorageType      *string       `json:"storageType,omitempty"`
 }
 
 type MemberDetails struct {
-	FirstName        string                             `json:"firstName"`
-	LastName         graphql.Omittable[*string]         `json:"lastName,omitempty"`
-	Mobile           graphql.Omittable[*string]         `json:"mobile,omitempty"`
-	Email            string                             `json:"email"`
-	Password         graphql.Omittable[*string]         `json:"password,omitempty"`
-	IsActive         graphql.Omittable[*int]            `json:"isActive,omitempty"`
-	ProfileImage     graphql.Omittable[*string]         `json:"profileImage,omitempty"`
-	ProfileImagePath graphql.Omittable[*string]         `json:"profileImagePath,omitempty"`
-	Username         graphql.Omittable[*string]         `json:"username,omitempty"`
-	GroupID          graphql.Omittable[*int]            `json:"groupId,omitempty"`
+	FirstName        string                     `json:"firstName"`
+	LastName         graphql.Omittable[*string] `json:"lastName,omitempty"`
+	Mobile           graphql.Omittable[*string] `json:"mobile,omitempty"`
+	Email            string                     `json:"email"`
+	Password         graphql.Omittable[*string] `json:"password,omitempty"`
+	IsActive         graphql.Omittable[*int]    `json:"isActive,omitempty"`
+	ProfileImage     graphql.Omittable[*string] `json:"profileImage,omitempty"`
+	ProfileImagePath graphql.Omittable[*string] `json:"profileImagePath,omitempty"`
+	Username         graphql.Omittable[*string] `json:"username,omitempty"`
+	GroupID          graphql.Omittable[*int]    `json:"groupId,omitempty"`
 }
 
 type MemberGroup struct {
@@ -356,7 +356,7 @@ type MemberProfile struct {
 	ProfileName     *string     `json:"profileName,omitempty"`
 	ProfileSlug     *string     `json:"profileSlug,omitempty"`
 	ProfilePage     *string     `json:"profilePage,omitempty"`
-	MemberDetails   interface{} `json:"memberDetails,omitempty" gorm:"column:member_details;type:jsonb"`
+	MemberDetails   interface{} `json:"memberDetails,omitempty"`
 	CompanyName     *string     `json:"companyName,omitempty"`
 	CompanyLocation *string     `json:"companyLocation,omitempty"`
 	CompanyLogo     *string     `json:"companyLogo,omitempty"`
@@ -477,25 +477,25 @@ type ProductPricing struct {
 }
 
 type ProductSort struct {
-	Price graphql.Omittable[*int] `json:"price,omitempty"`
-	Date  graphql.Omittable[*int] `json:"date,omitempty"`
+	Price     graphql.Omittable[*int] `json:"price,omitempty"`
+	Date      graphql.Omittable[*int] `json:"date,omitempty"`
 	ViewCount graphql.Omittable[*int] `json:"viewCount,omitempty"`
 }
 
 type ProfileData struct {
-	CompanyName     string                             `json:"companyName"`
-	ProfileName     string                             `json:"profileName"`
-	ProfileSlug     string                             `json:"profileSlug"`
-	CompanyLocation graphql.Omittable[*string]         `json:"companyLocation,omitempty"`
-	CompanyLogo     graphql.Omittable[*string]         `json:"companyLogo,omitempty"`
-	About           graphql.Omittable[*string]         `json:"about,omitempty"`
-	Website         graphql.Omittable[*string]         `json:"website,omitempty"`
-	Twitter         graphql.Omittable[*string]         `json:"twitter,omitempty"`
-	Linkedin        graphql.Omittable[*string]         `json:"linkedin,omitempty"`
-	CompanyProfile  graphql.Omittable[*string]         `json:"companyProfile,omitempty"`
-	SeoTitle        graphql.Omittable[*string]         `json:"seoTitle,omitempty"`
-	SeoDescription  graphql.Omittable[*string]         `json:"seoDescription,omitempty"`
-	SeoKeyword      graphql.Omittable[*string]         `json:"seoKeyword,omitempty"`
+	CompanyName     string                     `json:"companyName"`
+	ProfileName     string                     `json:"profileName"`
+	ProfileSlug     string                     `json:"profileSlug"`
+	CompanyLocation graphql.Omittable[*string] `json:"companyLocation,omitempty"`
+	CompanyLogo     graphql.Omittable[*string] `json:"companyLogo,omitempty"`
+	About           graphql.Omittable[*string] `json:"about,omitempty"`
+	Website         graphql.Omittable[*string] `json:"website,omitempty"`
+	Twitter         graphql.Omittable[*string] `json:"twitter,omitempty"`
+	Linkedin        graphql.Omittable[*string] `json:"linkedin,omitempty"`
+	CompanyProfile  graphql.Omittable[*string] `json:"companyProfile,omitempty"`
+	SeoTitle        graphql.Omittable[*string] `json:"seoTitle,omitempty"`
+	SeoDescription  graphql.Omittable[*string] `json:"seoDescription,omitempty"`
+	SeoKeyword      graphql.Omittable[*string] `json:"seoKeyword,omitempty"`
 }
 
 type Query struct {
@@ -585,46 +585,46 @@ type CustomerDetails struct {
 	CreatedOn        time.Time  `json:"createdOn"`
 	CreatedBy        int        `json:"createdBy"`
 	ModifiedOn       *time.Time `json:"modifiedOn,omitempty"`
-	ModifiedBy       *int       `json:"modifiedBy,omitempty"`
 	IsDeleted        *int       `json:"IsDeleted,omitempty"`
 	DeletedOn        *time.Time `json:"DeletedOn,omitempty"`
-	HouseNo          *string    `json:"houseNo,omitempty" gorm:"-"`
-	Area             *string    `json:"Area,omitempty" gorm:"-"`
+	ModifiedBy       *int       `json:"modifiedBy,omitempty"`
+	HouseNo          *string    `json:"houseNo,omitempty"`
+	Area             *string    `json:"Area,omitempty"`
 	City             *string    `json:"city,omitempty"`
 	State            *string    `json:"state,omitempty"`
 	Country          *string    `json:"country,omitempty"`
 	ZipCode          *string    `json:"zipCode,omitempty"`
-	StreetAddress    *string    `json:"streetAddrees,omitempty"`
+	StreetAddress    *string    `json:"streetAddress,omitempty"`
 	MemberID         *int       `json:"memberId,omitempty"`
 }
 
 type CustomerInput struct {
-	FirstName     string `json:"firstName"`
-	LastName      graphql.Omittable[*string] `json:"lastName,omitempty"`
-	MobileNo      graphql.Omittable[*string] `json:"mobileNo,omitempty"`
-	Email         string `json:"email"`
-	Username      graphql.Omittable[*string] `json:"username,omitempty"`
-	Password      graphql.Omittable[*string] `json:"password,omitempty"`
-	IsActive      graphql.Omittable[*int]    `json:"isActive,omitempty"`
+	FirstName     string                             `json:"firstName"`
+	LastName      graphql.Omittable[*string]         `json:"lastName,omitempty"`
+	MobileNo      graphql.Omittable[*string]         `json:"mobileNo,omitempty"`
+	Email         string                             `json:"email"`
+	Username      graphql.Omittable[*string]         `json:"username,omitempty"`
+	Password      graphql.Omittable[*string]         `json:"password,omitempty"`
+	IsActive      graphql.Omittable[*int]            `json:"isActive,omitempty"`
 	ProfileImage  graphql.Omittable[*graphql.Upload] `json:"profileImage,omitempty"`
-	City          graphql.Omittable[*string] `json:"city,omitempty"`
-	State         graphql.Omittable[*string] `json:"state,omitempty"`
-	Country       graphql.Omittable[*string] `json:"country,omitempty"`
-	ZipCode       graphql.Omittable[*string] `json:"zipCode,omitempty"`
-	StreetAddress graphql.Omittable[*string] `json:"streetAddress,omitempty"`
+	City          graphql.Omittable[*string]         `json:"city,omitempty"`
+	State         graphql.Omittable[*string]         `json:"state,omitempty"`
+	Country       graphql.Omittable[*string]         `json:"country,omitempty"`
+	ZipCode       graphql.Omittable[*string]         `json:"zipCode,omitempty"`
+	StreetAddress graphql.Omittable[*string]         `json:"streetAddress,omitempty"`
 }
 
 type OrderFilter struct {
-	Status        graphql.Omittable[*string]  `json:"status,omitempty"`
-	StartingPrice graphql.Omittable[*int]     `json:"startingPrice,omitempty"`
-	EndingPrice   graphql.Omittable[*int]     `json:"endingPrice,omitempty"`
-	StartingDate  graphql.Omittable[*string]  `json:"startingDate,omitempty"`
-	EndingDate    graphql.Omittable[*string]  `json:"endingDate,omitempty"`
-	CategoryName  graphql.Omittable[*string]  `json:"categoryName,omitempty"`
-	CategoryID    graphql.Omittable[*int]     `json:"categoryId,omitempty"`
-	StarRatings   graphql.Omittable[*float64] `json:"starRatings,omitempty"`
-	SearchKeyword graphql.Omittable[*string]  `json:"searchKeyword,omitempty"`
-	OrderID       graphql.Omittable[*string]  `json:"orderId,omitempty"`
+	Status         graphql.Omittable[*string]  `json:"status,omitempty"`
+	StartingPrice  graphql.Omittable[*int]     `json:"startingPrice,omitempty"`
+	EndingPrice    graphql.Omittable[*int]     `json:"endingPrice,omitempty"`
+	StartingDate   graphql.Omittable[*string]  `json:"startingDate,omitempty"`
+	EndingDate     graphql.Omittable[*string]  `json:"endingDate,omitempty"`
+	CategoryName   graphql.Omittable[*string]  `json:"categoryName,omitempty"`
+	CategoryID     graphql.Omittable[*int]     `json:"categoryId,omitempty"`
+	StarRatings    graphql.Omittable[*float64] `json:"starRatings,omitempty"`
+	SearchKeyword  graphql.Omittable[*string]  `json:"searchKeyword,omitempty"`
+	OrderID        graphql.Omittable[*string]  `json:"orderId,omitempty"`
 	UpcomingOrders graphql.Omittable[*int]     `json:"upcomingOrders,omitempty"`
 	OrderHistory   graphql.Omittable[*int]     `json:"orderHistory,omitempty"`
 }
@@ -646,14 +646,4 @@ type OrderProduct struct {
 type OrderSort struct {
 	Price graphql.Omittable[*int] `json:"price,omitempty"`
 	Date  graphql.Omittable[*int] `json:"date,omitempty"`
-}
-
-func (EcommerceCart) TableName() string {
-
-    return "tbl_ecom_carts" // Specify the actual table name in your database
-}
-
-func(Category) TableName() string{
-
-    return "tbl_categories"
 }
