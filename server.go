@@ -53,5 +53,7 @@ func main() {
 
 	r.GET("/", ginhandler.PlaygroundHandler())
 
+	r.GET("image-resize", controller.ImageResize)
+
 	r.Run(":" + port)
 }

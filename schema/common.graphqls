@@ -1,3 +1,0 @@
-extend type Query{
-    getAwsS3Resoucres(fileName: String!, filePath: String, Width: Int, Height: Int): Any!
-}

@@ -7,9 +7,10 @@ require (
 	github.com/aws/aws-sdk-go v1.53.12
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/spurtcms/auth v0.0.6
 	github.com/spurtcms/member v0.0.7
-	github.com/spurtcms/pkgcontent v1.1.18
+	github.com/spurtcms/pkgcontent v1.1.19
 	github.com/spurtcms/pkgcore v1.0.90
 	github.com/vektah/gqlparser/v2 v2.5.11
 	golang.org/x/crypto v0.21.0

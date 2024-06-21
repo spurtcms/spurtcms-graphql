@@ -2,7 +2,6 @@ package controller
 
 import (
 	"os"
-	"sync"
 
 	newauth "github.com/spurtcms/auth"
 	memberPkg "github.com/spurtcms/member"
@@ -17,8 +16,6 @@ var (
 	MemberConfig *memberPkg.Member
 	// MemberaccessConfig *memaccess.AccessControl
 )
-
-var lock = &sync.Mutex{}
 
 // AuthCofing
 func AuthConfig() *newauth.Auth {

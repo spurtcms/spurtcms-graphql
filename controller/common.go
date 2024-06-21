@@ -2,7 +2,6 @@ package controller
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -14,7 +13,7 @@ import (
 	"log"
 	"net/smtp"
 	"os"
-	"path/filepath"
+	"path"
 	"spurtcms-graphql/dbconfig"
 	"spurtcms-graphql/logger"
 	"spurtcms-graphql/storage"
@@ -22,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/nfnt/resize"
 	"github.com/spurtcms/pkgcore/auth"
@@ -121,6 +121,10 @@ var (
 	ErrClaimMail          = errors.New("failed to send claim request mail to the admin")
 	ErrClaimSubmitMail    = errors.New("failed to send claim request submission status mail to the user")
 	ErrInactiveTemplate   = errors.New("mail template is inactive")
+	ErrGetImage           = errors.New("failed to retrieve the file")
+	ErrGetAwsCreds        = errors.New("failed to retrieve the aws credentials")
+	ErrDecodeImg          = errors.New("failed to parse the image data")
+	ErrImageResize        = errors.New("failed to resize the image")
 )
 
 func init() {
@@ -159,54 +163,6 @@ func init() {
 		Youtube:   os.Getenv("YOUTUBE"),
 	}
 
-}
-
-func GetAwsS3Resoucres(ctx context.Context, fileName string, filePath *string, width, height *int) (interface{}, error) {
-
-	path := *filePath
-
-	Width, _ := strconv.ParseUint(strconv.Itoa(*width), 10, 64)
-
-	Height, _ := strconv.ParseUint(strconv.Itoa(*height), 10, 64)
-
-	extention := filepath.Ext(fileName)
-
-	rawObject, err := storage.GetObjectFromS3(make(map[string]interface{}), path+fileName)
-
-	if err != nil {
-		fmt.Println(err)
-		return nil, nil
-	}
-
-	buf := new(bytes.Buffer)
-
-	buf.ReadFrom(rawObject.Body)
-
-	if extention == ".svg" {
-		svgData := buf.String()
-
-		return []byte(svgData), nil
-	}
-
-	Image, _, erri := image.Decode(bytes.NewReader(buf.Bytes()))
-	if erri != nil {
-		fmt.Println(erri)
-		return nil, nil
-	}
-
-	var buf1 bytes.Buffer
-	newImage := resize.Resize(uint(Width), uint(Height), Image, resize.Lanczos3)
-	if extention == ".png" {
-		png.Encode(&buf1, newImage)
-		return buf1.Bytes(), nil
-	}
-
-	if extention == ".jpeg" || extention == ".jpg" {
-		_ = jpeg.Encode(&buf1, newImage, nil)
-		return buf1.Bytes(), nil
-	}
-
-	return nil, nil
 }
 
 func GetAuthorization(token string, db *gorm.DB) *auth.Authorization {
@@ -425,4 +381,119 @@ func GenerateFileName(imageData string) (fileName string) {
 	imageName := "IMG-" + rand_num + "." + ext
 
 	return imageName
+}
+
+func ImageResize(c *gin.Context) {
+
+	fileName := c.Query("filename")
+
+	filePath := c.Query("path")
+
+	extension := path.Ext(fileName)
+
+	storageType, err := GetStorageType(DB)
+
+	if err != nil {
+
+		fmt.Println(err)
+
+		c.AbortWithError(500, fmt.Errorf("%v-%v", ErrGetAwsCreds, err))
+
+		return
+	}
+
+	var byteData []byte
+
+	if storageType.SelectedType == "aws" {
+
+		rawObject, err := storage.GetObjectFromS3(storageType.Aws, filePath+fileName)
+
+		if err != nil {
+
+			fmt.Println(err)
+
+			c.AbortWithError(500, fmt.Errorf("%v-%v", ErrGetImage, err))
+
+			return
+		}
+
+		buf := new(bytes.Buffer)
+
+		buf.ReadFrom(rawObject.Body)
+
+		byteData = buf.Bytes()
+
+	} else if storageType.SelectedType == "azure" {
+
+		fmt.Printf("azure storage selected")
+
+		return
+
+	} else if storageType.SelectedType == "drive" {
+
+		fmt.Println("drive storage selected")
+
+		return
+	}
+
+	extType := strings.Trim(extension, ".")
+
+	if c.Query("width") == "" || c.Query("height") == "" {
+
+		if extType == "svg" {
+
+			extType = "svg+xml"
+		}
+
+		c.Data(200, "image/"+extType, byteData)
+
+		return
+	}
+
+	width, _ := strconv.ParseUint(c.Query("width"), 10, 64)
+
+	height, _ := strconv.ParseUint(c.Query("height"), 10, 64)
+
+	Image, _, err := image.Decode(bytes.NewReader(byteData))
+
+	if err != nil {
+
+		fmt.Println(err)
+
+		c.AbortWithError(500, fmt.Errorf("%v-%v", ErrDecodeImg, err))
+
+		return
+	}
+
+	newImage := resize.Resize(uint(width), uint(height), Image, resize.Lanczos3)
+
+	if extension == ".png" {
+
+		err = png.Encode(c.Writer, newImage)
+
+		if err != nil {
+
+			fmt.Println(err)
+
+			c.AbortWithError(500, fmt.Errorf("%v-%v", ErrImageResize, err))
+
+			return
+		}
+	}
+
+	if extension == ".jpeg" || extension == ".jpg" {
+
+		err = jpeg.Encode(c.Writer, newImage, nil)
+
+		if err != nil {
+
+			fmt.Println(err)
+
+			c.AbortWithError(500, fmt.Errorf("%v-%v", ErrImageResize, err))
+
+			return
+		}
+
+	}
+
 }
