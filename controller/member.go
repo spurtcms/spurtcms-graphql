@@ -289,22 +289,6 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 		return &model.LoginDetails{}, err
 	}
 
-	if memberProfileDetails.CompanyLogo != nil && *memberProfileDetails.CompanyLogo != "" {
-
-		var profileLogo string
-
-		if memberProfileDetails.StorageType != nil && *memberProfileDetails.StorageType == "local" {
-
-			profileLogo = PathUrl + strings.TrimPrefix(*memberProfileDetails.CompanyLogo, "/")
-
-		} else if  memberProfileDetails.StorageType != nil && *memberProfileDetails.StorageType == "aws" {
-
-			profileLogo = PathUrl + "image-resize?name=" + *memberProfileDetails.CompanyLogo
-		}
-
-		memberProfileDetails.CompanyLogo = &profileLogo
-	}
-
 	return &model.LoginDetails{MemberProfileData: memberProfileDetails, Token: token}, nil
 
 }
@@ -514,13 +498,36 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	}
 
+	var memberDetails member.TblMember
+
+	db.Debug().Table("tbl_members").Where("is_deleted = 0 and email = ?", memberdata.Email).First(&memberDetails)
+
+	if memberDetails.Id != memberid && memberDetails.Id != 0 {
+
+		return false, ErrMailExist
+	}
+
+	memberDetails = member.TblMember{}
+
+	db.Debug().Table("tbl_members").Where("is_deleted = 0 and mobile_no = ?", *memberdata.Mobile.Value()).First(&memberDetails)
+
+	if memberDetails.Id != memberid && memberDetails.Id != 0 {
+
+		return false, ErrMobileExist
+	}
+
 	memberData := make(map[string]interface{})
 
 	var err error
 
-	// fmt.Println("chkkk",memberdata.ProfileImage.Value().Filename)
+	var memDetails member.TblMember
 
-	if memberdata.ProfileImage.IsSet() && memberdata.ProfileImage.Value() != nil {
+	if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and is_active = 1 and id = ?",memberid).First(&memDetails).Error;err!=nil{
+
+		return false, err
+	}
+
+	if memberdata.ProfileImage.IsSet() && memberdata.ProfileImage.Value() != nil && memDetails.ProfileImagePath != *memberdata.ProfileImagePath.Value() {
 
 		var fileName, filePath string
 
@@ -530,54 +537,49 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 		if imageData != "" {
 
-			fileName = GenerateFileName(imageData)
+			isValidBase64, base64Data, extension := IsValidBase64(imageData)
 
-			storageType, err = GetStorageType(db)
-			if err != nil {
+			if isValidBase64 && base64Data != "" {
 
-				return false, err
-			}
+				rand_num := strconv.Itoa(int(time.Now().Unix()))
 
-			if storageType.SelectedType == "aws" {
+				fileName = "IMG-" + rand_num + "." + extension
 
-				fmt.Printf("aws-S3 storage selected\n")
-
-				filePath = "member/" + fileName
-
-				err = storage.UploadFileS3(storageType.Aws, nil, imageData, filePath)
+				storageType, err = GetStorageType(db)
 				if err != nil {
 
-					fmt.Printf("image upload failed %v\n", err)
-
-					return false, ErrUpload
-
+					return false, err
 				}
 
-			} else if storageType.SelectedType == "local" {
+				if storageType.SelectedType == "aws" {
 
-				fmt.Printf("local storage selected\n")
+					fmt.Printf("aws-S3 storage selected\n")
 
-				filePath = storageType.Local + "/member/"
+					filePath = "member/" + fileName
 
-				endPoint := "gqlSaveLocal"
+					err = storage.UploadFileS3(storageType.Aws, nil, base64Data, filePath)
+					if err != nil {
 
-				url := PathUrl + endPoint
+						fmt.Printf("image upload failed %v\n", err)
 
-				filePath, err = storage.UploadImageToAdminLocal(imageData, fileName, url, filePath)
-				if err != nil {
+						return false, ErrUpload
 
-					return false, ErrUpload
+					}
+
+				} else if storageType.SelectedType == "azure" {
+
+					fmt.Printf("azure storage selected")
+
+				} else if storageType.SelectedType == "drive" {
+
+					fmt.Println("drive storage selected")
 				}
 
-				log.Printf("local stored path: %v\n", filePath)
+			} else {
+				ErrorLog.Printf("%v", "illegal base64 data")
 
-			} else if storageType.SelectedType == "azure" {
+				return false, errors.New("illegal base64 data ")
 
-				fmt.Printf("azure storage selected")
-
-			} else if storageType.SelectedType == "drive" {
-
-				fmt.Println("drive storage selected")
 			}
 
 		}
@@ -729,22 +731,6 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 		return &model.MemberProfile{}, err
 	}
 
-	if memberProfile.CompanyLogo != nil && *memberProfile.CompanyLogo != "" {
-
-		var logoPath string
-
-		if memberProfile.StorageType != nil && *memberProfile.StorageType == "local" {
-
-			logoPath = PathUrl + strings.TrimPrefix(*memberProfile.CompanyLogo, "/")
-
-		} else if memberProfile.StorageType != nil && *memberProfile.StorageType == "aws" {
-
-		    logoPath = PathUrl + "image-resize?name=" + *memberProfile.CompanyLogo
-		}
-
-		memberProfile.CompanyLogo = &logoPath
-	}
-
 	interfaceVal := memberProfile.MemberDetails.(*interface{})
 
 	byteVal := (*interfaceVal).([]byte)
@@ -819,20 +805,6 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 		}
 	}
 
-	var profileLogo string
-
-	if memberProfile.CompanyLogo != "" {
-
-		if memberProfile.StorageType == "local" {
-
-			profileLogo = PathUrl + strings.TrimPrefix(memberProfile.CompanyLogo, "/")
-
-		} else if memberProfile.StorageType == "aws" {
-
-			profileLogo = PathUrl + "image-resize?name=" + memberProfile.CompanyLogo
-		}
-	}
-
 	MemberProfile := model.MemberProfile{
 		ID:              &memberProfile.Id,
 		MemberID:        &memberProfile.MemberId,
@@ -842,7 +814,7 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 		MemberDetails:   &memberProfile.MemberDetails,
 		CompanyName:     &memberProfile.CompanyName,
 		CompanyLocation: &memberProfile.CompanyLocation,
-		CompanyLogo:     &profileLogo,
+		CompanyLogo:     &memberProfile.CompanyLogo,
 		About:           &memberProfile.About,
 		SeoTitle:        &memberProfile.SeoTitle,
 		SeoDescription:  &memberProfile.SeoDescription,
@@ -958,23 +930,6 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 		return &model.Member{}, result.Error
 	}
 
-	if memberDetails.ProfileImagePath != "" {
-
-		var profileImage string
-
-		if memberDetails.StorageType != nil && *memberDetails.StorageType == "local"{
-
-			profileImage = PathUrl + strings.TrimPrefix( memberDetails.ProfileImagePath,"/")
-
-		}else if memberDetails.StorageType != nil && *memberDetails.StorageType == "aws"{
-
-			profileImage = PathUrl + "image-resize?name=" + memberDetails.ProfileImagePath
-		}
-
-		memberDetails.ProfileImagePath = profileImage
-
-	}
-
 	return &memberDetails, nil
 
 }
@@ -992,11 +947,27 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		return false, ErrLoginReq
 	}
 
-	companyData := make(map[string]interface{})
-
 	var err error
 
-	if profiledata.CompanyLogo.IsSet() && profiledata.CompanyLogo.Value() != nil {
+	var memberProfile member.TblMemberProfile
+
+	db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and profile_slug = ?", profiledata.ProfileSlug).First(&memberProfile)
+
+	var memProfile member.TblMemberProfile
+
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?",memberid).First(&memProfile).Error;err!=nil{
+
+		return false, err
+	}
+
+	if memberProfile.MemberId != memberid && memberProfile.Id != 0 {
+
+		return false, ErrProfileSlugExist
+	}
+
+	companyData := make(map[string]interface{})
+
+	if profiledata.CompanyLogo.IsSet() && profiledata.CompanyLogo.Value() != nil && memProfile.CompanyLogo != *profiledata.CompanyLogo.Value() {
 
 		var fileName, filePath string
 		var imageData = *profiledata.CompanyLogo.Value()
@@ -1004,57 +975,53 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 		if imageData != "" {
 
-			fileName = GenerateFileName(imageData)
+			isValidBase64, base64Data, extension := IsValidBase64(imageData)
+		
+			if isValidBase64 && base64Data != "" {
 
-			storageType, err = GetStorageType(db)
-			if err != nil {
+				rand_num := strconv.Itoa(int(time.Now().Unix()))
 
-				return false, err
-			}
+				fileName = "IMG-" + rand_num + "." + extension
 
-			if storageType.SelectedType == "aws" {
-
-				filePath = "member/company/" + fileName
-
-				fmt.Printf("aws-S3 storage selected\n")
-
-				err = storage.UploadFileS3(storageType.Aws, nil, imageData, filePath)
+				storageType, err = GetStorageType(db)
 				if err != nil {
 
-					fmt.Printf("image upload failed %v\n", err)
-
-					return false, ErrUpload
-
+					return false, err
 				}
 
-			} else if storageType.SelectedType == "local" {
+				if storageType.SelectedType == "aws" {
 
-				filePath = storageType.Local + "/member/company/"
+					filePath = "member/company/" + fileName
 
-				fmt.Printf("local storage selected\n")
+					fmt.Printf("aws-S3 storage selected\n")
 
-				endPoint := "gqlSaveLocal"
+					err = storage.UploadFileS3(storageType.Aws, nil, base64Data, filePath)
+					if err != nil {
 
-				url := PathUrl + endPoint
+						fmt.Printf("image upload failed %v\n", err)
 
-				filePath, err = storage.UploadImageToAdminLocal(imageData, fileName, url, filePath)
-				if err != nil {
+						return false, ErrUpload
 
-					return false, ErrUpload
+					}
+
+				} else if storageType.SelectedType == "azure" {
+
+					fmt.Printf("azure storage selected")
+
+				} else if storageType.SelectedType == "drive" {
+
+					fmt.Println("drive storage selected")
 				}
 
-				log.Printf("local stored path: %v\n", filePath)
+			} else {
+				ErrorLog.Printf("%v", "illegal base64 data")
 
-			} else if storageType.SelectedType == "azure" {
+				return false, errors.New("illegal base64 data ")
 
-				fmt.Printf("azure storage selected")
-
-			} else if storageType.SelectedType == "drive" {
-
-				fmt.Println("drive storage selected")
 			}
 
 		}
+
 		companyData["company_logo"] = filePath
 
 		companyData["storage_type"] = storageType.SelectedType
@@ -1153,7 +1120,7 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, pro
 
 	var profileId int
 
-	db.Debug().Table("tbl_member_profiles").Select("id").Where("is_deleted = 0 and LOWER(profile_slug) = ?", profileSlug).Scan(&profileId)
+	db.Debug().Table("tbl_member_profiles").Select("id").Where("is_deleted = 0 and profile_slug = ?", profileSlug).Scan(&profileId)
 
 	if profileId != 0 && profileId == profileID {
 
@@ -1171,9 +1138,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	// memberAuth := GetMemberInstanceWithoutAuth()
-
-	verify_chan := make(chan error)
+	memberid := c.GetInt("memberid")
 
 	var MemberProfile model.MemberProfile
 
@@ -1201,6 +1166,48 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	if *MemberProfile.IsActive != 1 {
 
 		return false, ErrMemberInactive
+	}
+
+	var memberDetails member.TblMember
+
+	db.Debug().Table("tbl_members").Where("is_deleted = 0 and email = ?", profileData.WorkMail).First(&memberDetails)
+
+	if memberDetails.Id != 0 {
+
+		if memberid == memberDetails.Id {
+
+			return false, ErrLoginClaimMail
+
+		} else if memberid == 0 {
+
+			return false, ErrMailExist
+
+		} else {
+
+			return false, ErrMailExist
+		}
+
+	}
+
+	memberDetails = member.TblMember{}
+
+	db.Debug().Table("tbl_members").Where("is_deleted = 0 and mobile_no = ?", profileData.CompanyNumber).First(&memberDetails)
+
+	if memberDetails.Id != 0 {
+
+		if memberid == memberDetails.Id {
+
+			return false, ErrLoginClaimMob
+
+		} else if memberid == 0 {
+
+			return false, ErrMobileExist
+
+		}else{
+
+			return false, ErrMobileExist
+		}
+
 	}
 
 	var memberSettings model.MemberSettings
@@ -1298,6 +1305,8 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	sendMailData.Subject = modifiedSubject
 
 	html_content := template_buffers.String()
+
+	verify_chan := make(chan error)
 
 	go SendMail(sendMailData, html_content, verify_chan)
 

@@ -75,7 +75,7 @@ type StorageType struct {
 
 type EmailConfiguration struct {
 	Id           int
-	StmpConfig   datatypes.JSONMap `gorm:"type:jsonb"`
+	SmtpConfig   datatypes.JSONMap `gorm:"type:jsonb"`
 	SelectedType string
 }
 
@@ -125,6 +125,10 @@ var (
 	ErrGetAwsCreds        = errors.New("failed to retrieve the aws credentials")
 	ErrDecodeImg          = errors.New("failed to parse the image data")
 	ErrImageResize        = errors.New("failed to resize the image")
+	ErrMailExist          = errors.New("email already exists")
+	ErrLoginClaimMail     = errors.New("current login email sholuld not be used in another claim")
+	ErrLoginClaimMob      = errors.New("current login mobile number sholuld not be used in another claim")
+	ErrMobileExist        = errors.New("mobile number already exists")
 )
 
 func init() {
@@ -354,13 +358,13 @@ func GetEmailConfigurations(db *gorm.DB) (MailConfig, error) {
 
 	} else if email_configs.SelectedType == "smtp" {
 
-		sendMailData.MailUsername = email_configs.StmpConfig["Mail"].(string)
+		sendMailData.MailUsername = email_configs.SmtpConfig["Mail"].(string)
 
-		sendMailData.MailPassword = email_configs.StmpConfig["Password"].(string)
+		sendMailData.MailPassword = email_configs.SmtpConfig["Password"].(string)
 
-		sendMailData.SmtpHost = email_configs.StmpConfig["Host"].(string)
+		sendMailData.SmtpHost = email_configs.SmtpConfig["Host"].(string)
 
-		sendMailData.SmtpPort = email_configs.StmpConfig["Port"].(string)
+		sendMailData.SmtpPort = email_configs.SmtpConfig["Port"].(string)
 
 	}
 
@@ -496,4 +500,25 @@ func ImageResize(c *gin.Context) {
 
 	}
 
+}
+
+func IsValidBase64(input string) (isvalid bool, base64Data string, extension string) {
+
+	if !strings.Contains(input, "data:image/png;base64") && !strings.Contains(input, "data:image/jpeg;base64") && !strings.Contains(input, "data:image/jpg;base64") && strings.Contains(input, "data:image/svg;base64") {
+		return false, "", ""
+	}
+
+	base64Data = input[strings.IndexByte(input, ',')+1:]
+
+	_, err := base64.StdEncoding.DecodeString(base64Data)
+
+	if err != nil {
+		return false, "", ""
+	}
+
+	extEndIndex := strings.Index(input, ";base64,")
+
+	var ext = input[11:extEndIndex]
+
+	return true, base64Data, ext
 }

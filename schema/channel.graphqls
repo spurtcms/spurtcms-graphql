@@ -95,7 +95,6 @@ type MemberProfile{
 	modifiedOn:        Time 
 	modifiedBy:        Int 
 	claimStatus:       Int 
-	IsActive:          Int 
 	storageType:      String   
 }
 

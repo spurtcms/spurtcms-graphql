@@ -360,7 +360,6 @@ type MemberProfile{
 	modifiedOn:        Time 
 	modifiedBy:        Int 
 	claimStatus:       Int 
-	IsActive:          Int 
 	storageType:      String   
 }
 
@@ -4991,8 +4990,6 @@ func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx contex
 				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
-			case "IsActive":
-				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
 			case "storageType":
 				return ec.fieldContext_MemberProfile_storageType(ctx, field)
 			}
@@ -11721,8 +11718,6 @@ func (ec *executionContext) fieldContext_LoginDetails_memberProfileData(ctx cont
 				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
-			case "IsActive":
-				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
 			case "storageType":
 				return ec.fieldContext_MemberProfile_storageType(ctx, field)
 			}
@@ -13765,47 +13760,6 @@ func (ec *executionContext) _MemberProfile_claimStatus(ctx context.Context, fiel
 }
 
 func (ec *executionContext) fieldContext_MemberProfile_claimStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MemberProfile",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MemberProfile_IsActive(ctx context.Context, field graphql.CollectedField, obj *model.MemberProfile) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MemberProfile_IsActive(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsActive, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MemberProfile_IsActive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MemberProfile",
 		Field:      field,
@@ -18006,8 +17960,6 @@ func (ec *executionContext) fieldContext_Query_getMemberProfileDetails(ctx conte
 				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
-			case "IsActive":
-				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
 			case "storageType":
 				return ec.fieldContext_MemberProfile_storageType(ctx, field)
 			}
@@ -18930,8 +18882,6 @@ func (ec *executionContext) fieldContext_Query_memberProfileDetails(ctx context.
 				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
 			case "claimStatus":
 				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
-			case "IsActive":
-				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
 			case "storageType":
 				return ec.fieldContext_MemberProfile_storageType(ctx, field)
 			}
@@ -26637,8 +26587,6 @@ func (ec *executionContext) _MemberProfile(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._MemberProfile_modifiedBy(ctx, field, obj)
 		case "claimStatus":
 			out.Values[i] = ec._MemberProfile_claimStatus(ctx, field, obj)
-		case "IsActive":
-			out.Values[i] = ec._MemberProfile_IsActive(ctx, field, obj)
 		case "storageType":
 			out.Values[i] = ec._MemberProfile_storageType(ctx, field, obj)
 		default:
