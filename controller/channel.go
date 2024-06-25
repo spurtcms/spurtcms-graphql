@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"spurtcms-graphql/graph/model"
 
@@ -260,7 +261,13 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		conv_channelEntries[index].AdditionalFields = &additionalFields
 
-		memberProfileComLogo := entry.MemberProfile.CompanyLogo
+		var memberProfileComLogo string
+
+		if entry.MemberProfile.CompanyLogo != "" && entry.MemberProfile.StorageType == "aws" {
+
+			memberProfileComLogo = "image-resize?name=" + entry.MemberProfile.CompanyLogo
+		}
+
 		memberProfileId := entry.MemberProfile.Id
 		memberProfileMemId := entry.MemberProfile.MemberId
 		memberProfileName := entry.MemberProfile.ProfileName
@@ -592,6 +599,15 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 
 	additionalFields := &model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
+	fmt.Println("chk", channelEntry.MemberProfile.CompanyLogo)
+
+	var memberProfileComLogo string
+
+	if channelEntry.MemberProfile.CompanyLogo != "" && channelEntry.MemberProfile.StorageType == "aws" {
+
+		memberProfileComLogo = "image-resize?name=" + channelEntry.MemberProfile.CompanyLogo
+	}
+
 	memberProfileId := channelEntry.MemberProfile.Id
 	memberProfileMemId := channelEntry.MemberProfile.MemberId
 	memberProfileName := channelEntry.MemberProfile.ProfileName
@@ -600,7 +616,6 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 	memberProfileMemDetails := channelEntry.MemberProfile.MemberDetails
 	memberProfileComName := channelEntry.MemberProfile.CompanyName
 	memberProfileComLocation := channelEntry.MemberProfile.CompanyLocation
-	memberProfileComLogo := channelEntry.MemberProfile.CompanyLogo
 	memberProfileAbout := channelEntry.MemberProfile.About
 	memberProfileSeoTitle := channelEntry.MemberProfile.SeoTitle
 	memberProfileSeoDesc := channelEntry.MemberProfile.SeoDescription

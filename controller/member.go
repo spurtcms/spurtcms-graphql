@@ -289,6 +289,16 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 		return &model.LoginDetails{}, err
 	}
 
+	var profileLogo string
+
+	if *memberProfileDetails.CompanyLogo != "" && *memberProfileDetails.StorageType == "aws"{
+
+		profileLogo = "image-resize?name=" + *memberProfileDetails.CompanyLogo
+
+	}
+
+	memberProfileDetails.CompanyLogo = &profileLogo
+
 	return &model.LoginDetails{MemberProfileData: memberProfileDetails, Token: token}, nil
 
 }
@@ -509,11 +519,15 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	memberDetails = member.TblMember{}
 
-	db.Debug().Table("tbl_members").Where("is_deleted = 0 and mobile_no = ?", *memberdata.Mobile.Value()).First(&memberDetails)
+	if memberdata.Mobile.IsSet() && memberdata.Mobile.Value() != nil {
 
-	if memberDetails.Id != memberid && memberDetails.Id != 0 {
+		db.Debug().Table("tbl_members").Where("is_deleted = 0 and mobile_no = ?", *memberdata.Mobile.Value()).First(&memberDetails)
 
-		return false, ErrMobileExist
+		if memberDetails.Id != memberid && memberDetails.Id != 0 {
+
+			return false, ErrMobileExist
+		}
+
 	}
 
 	memberData := make(map[string]interface{})
@@ -522,16 +536,16 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	var memDetails member.TblMember
 
-	if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and is_active = 1 and id = ?",memberid).First(&memDetails).Error;err!=nil{
+	if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?", memberid).First(&memDetails).Error; err != nil {
 
 		return false, err
 	}
 
-	if memberdata.ProfileImage.IsSet() && memberdata.ProfileImage.Value() != nil && memDetails.ProfileImagePath != *memberdata.ProfileImagePath.Value() {
+	if memberdata.ProfileImagePath.IsSet() && memberdata.ProfileImagePath.Value() != nil && memDetails.ProfileImagePath != *memberdata.ProfileImagePath.Value() {
 
 		var fileName, filePath string
 
-		var imageData = *memberdata.ProfileImage.Value()
+		var imageData = *memberdata.ProfileImagePath.Value()
 
 		var storageType StorageType
 
@@ -731,6 +745,15 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 		return &model.MemberProfile{}, err
 	}
 
+	var CompanyLogo string
+
+	if *memberProfile.CompanyLogo != "" && *memberProfile.StorageType == "aws"{
+
+	   CompanyLogo = "image-resize?name=" + *memberProfile.CompanyLogo
+	}
+
+	memberProfile.CompanyLogo = &CompanyLogo
+
 	interfaceVal := memberProfile.MemberDetails.(*interface{})
 
 	byteVal := (*interfaceVal).([]byte)
@@ -805,6 +828,13 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 		}
 	}
 
+	var profileLogo string
+
+	if memberProfile.CompanyLogo != "" && memberProfile.StorageType == "aws"{
+
+		profileLogo = "image-resize?name=" + memberProfile.CompanyLogo
+	}
+
 	MemberProfile := model.MemberProfile{
 		ID:              &memberProfile.Id,
 		MemberID:        &memberProfile.MemberId,
@@ -814,7 +844,7 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 		MemberDetails:   &memberProfile.MemberDetails,
 		CompanyName:     &memberProfile.CompanyName,
 		CompanyLocation: &memberProfile.CompanyLocation,
-		CompanyLogo:     &memberProfile.CompanyLogo,
+		CompanyLogo:     &profileLogo,
 		About:           &memberProfile.About,
 		SeoTitle:        &memberProfile.SeoTitle,
 		SeoDescription:  &memberProfile.SeoDescription,
@@ -930,6 +960,12 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 		return &model.Member{}, result.Error
 	}
 
+	if memberDetails.ProfileImagePath != "" && *memberDetails.StorageType == "aws"{
+
+		memberDetails.ProfileImagePath = "image-resize?name=" + memberDetails.ProfileImagePath
+
+	}
+
 	return &memberDetails, nil
 
 }
@@ -955,7 +991,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 	var memProfile member.TblMemberProfile
 
-	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?",memberid).First(&memProfile).Error;err!=nil{
+	if err := db.Debug().Table("tbl_member_profiles").Where("is_deleted = 0 and member_id = ?", memberid).First(&memProfile).Error; err != nil {
 
 		return false, err
 	}
@@ -973,10 +1009,13 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		var imageData = *profiledata.CompanyLogo.Value()
 		var storageType StorageType
 
+		fmt.Println("imae", imageData)
+
 		if imageData != "" {
 
 			isValidBase64, base64Data, extension := IsValidBase64(imageData)
-		
+			fmt.Println("isvali", isValidBase64)
+
 			if isValidBase64 && base64Data != "" {
 
 				rand_num := strconv.Itoa(int(time.Now().Unix()))
