@@ -140,7 +140,16 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 
 		authorIsActive := entry.AuthorDetail.IsActive
 
-		authorProfileImage := entry.AuthorDetail.ProfileImagePath
+		var authorProfileImage string
+
+		if entry.AuthorDetail.ProfileImagePath != "" && entry.AuthorDetail.StorageType == "aws"{
+
+			authorProfileImage = "image-resize?name=" + entry.AuthorDetail.ProfileImagePath
+
+		}else{
+
+			authorProfileImage = entry.AuthorDetail.ProfileImagePath
+		}
 
 		authorDetails := model.Author{
 			AuthorID:         entry.AuthorDetail.AuthorID,
@@ -266,6 +275,10 @@ func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId 
 		if entry.MemberProfile.CompanyLogo != "" && entry.MemberProfile.StorageType == "aws" {
 
 			memberProfileComLogo = "image-resize?name=" + entry.MemberProfile.CompanyLogo
+
+		}else{
+
+			memberProfileComLogo = entry.MemberProfile.CompanyLogo
 		}
 
 		memberProfileId := entry.MemberProfile.Id

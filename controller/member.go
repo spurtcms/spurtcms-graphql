@@ -291,10 +291,13 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	var profileLogo string
 
-	if *memberProfileDetails.CompanyLogo != "" && *memberProfileDetails.StorageType == "aws"{
+	if *memberProfileDetails.CompanyLogo != "" && *memberProfileDetails.StorageType == "aws" {
 
 		profileLogo = "image-resize?name=" + *memberProfileDetails.CompanyLogo
 
+	} else {
+
+		profileLogo = *memberProfileDetails.CompanyLogo
 	}
 
 	memberProfileDetails.CompanyLogo = &profileLogo
@@ -549,6 +552,13 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 		var storageType StorageType
 
+		storageType, err = GetStorageType(db)
+
+		if err != nil {
+
+			return false, err
+		}
+
 		if imageData != "" {
 
 			isValidBase64, base64Data, extension := IsValidBase64(imageData)
@@ -558,12 +568,6 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 				rand_num := strconv.Itoa(int(time.Now().Unix()))
 
 				fileName = "IMG-" + rand_num + "." + extension
-
-				storageType, err = GetStorageType(db)
-				if err != nil {
-
-					return false, err
-				}
 
 				if storageType.SelectedType == "aws" {
 
@@ -589,7 +593,12 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 					fmt.Println("drive storage selected")
 				}
 
+			} else if strings.Contains(imageData, "image-resize?name") {
+
+				filePath = strings.ReplaceAll(imageData, "image-resize?name=", "")
+
 			} else {
+
 				ErrorLog.Printf("%v", "illegal base64 data")
 
 				return false, errors.New("illegal base64 data ")
@@ -747,9 +756,13 @@ func MemberProfileDetails(db *gorm.DB, ctx context.Context) (*model.MemberProfil
 
 	var CompanyLogo string
 
-	if *memberProfile.CompanyLogo != "" && *memberProfile.StorageType == "aws"{
+	if *memberProfile.CompanyLogo != "" && *memberProfile.StorageType == "aws" {
 
-	   CompanyLogo = "image-resize?name=" + *memberProfile.CompanyLogo
+		CompanyLogo = "image-resize?name=" + *memberProfile.CompanyLogo
+
+	} else {
+
+		CompanyLogo = *memberProfile.CompanyLogo
 	}
 
 	memberProfile.CompanyLogo = &CompanyLogo
@@ -830,9 +843,13 @@ func GetMemberProfileDetails(db *gorm.DB, ctx context.Context, id *int, profileS
 
 	var profileLogo string
 
-	if memberProfile.CompanyLogo != "" && memberProfile.StorageType == "aws"{
+	if memberProfile.CompanyLogo != "" && memberProfile.StorageType == "aws" {
 
 		profileLogo = "image-resize?name=" + memberProfile.CompanyLogo
+
+	} else {
+
+		profileLogo = memberProfile.CompanyLogo
 	}
 
 	MemberProfile := model.MemberProfile{
@@ -960,7 +977,7 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 		return &model.Member{}, result.Error
 	}
 
-	if memberDetails.ProfileImagePath != "" && *memberDetails.StorageType == "aws"{
+	if memberDetails.ProfileImagePath != "" && *memberDetails.StorageType == "aws" {
 
 		memberDetails.ProfileImagePath = "image-resize?name=" + memberDetails.ProfileImagePath
 
@@ -1009,6 +1026,12 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 		var imageData = *profiledata.CompanyLogo.Value()
 		var storageType StorageType
 
+		storageType, err = GetStorageType(db)
+		if err != nil {
+
+			return false, err
+		}
+
 		fmt.Println("imae", imageData)
 
 		if imageData != "" {
@@ -1021,12 +1044,6 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 				rand_num := strconv.Itoa(int(time.Now().Unix()))
 
 				fileName = "IMG-" + rand_num + "." + extension
-
-				storageType, err = GetStorageType(db)
-				if err != nil {
-
-					return false, err
-				}
 
 				if storageType.SelectedType == "aws" {
 
@@ -1051,6 +1068,10 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 					fmt.Println("drive storage selected")
 				}
+
+			} else if strings.Contains(imageData, "image-resize?name") {
+
+				filePath = strings.ReplaceAll(imageData, "image-resize?name=", "")
 
 			} else {
 				ErrorLog.Printf("%v", "illegal base64 data")
@@ -1213,7 +1234,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	if memberDetails.Id != 0 {
 
-		if memberid == memberDetails.Id {
+		if memberid == memberDetails.Id{
 
 			return false, ErrLoginClaimMail
 
@@ -1234,7 +1255,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	if memberDetails.Id != 0 {
 
-		if memberid == memberDetails.Id {
+		if memberid == memberDetails.Id  {
 
 			return false, ErrLoginClaimMob
 
@@ -1242,7 +1263,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 			return false, ErrMobileExist
 
-		}else{
+		} else {
 
 			return false, ErrMobileExist
 		}
