@@ -150,6 +150,8 @@ func init() {
 
 	WarnLog = logger.WarnLOG()
 
+	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
+
 	EmailImagePath = MailImages{
 		Owndesk:   EmailImageUrlPrefix + strings.TrimPrefix("/view/img/own-desk-logo.png", "/"),
 		Twitter:   EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons3.png", "/"),
