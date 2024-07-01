@@ -35,11 +35,13 @@ type key string
 const ContextKey key = "ginContext"
 
 type MailConfig struct {
-	Emails         []string
-	MailUsername   string
-	MailPassword   string
-	Subject        string
-	AdditionalData map[string]interface{}
+	Emails       []string
+	MailUsername string
+	MailPassword string
+	SmtpPort     string
+	SmtpHost     string
+	Subject      string
+	TimeOut      time.Duration
 }
 
 type MailImages struct {
@@ -68,6 +70,12 @@ type StorageType struct {
 	SelectedType string
 }
 
+type EmailConfiguration struct {
+	Id           int
+	SmtpConfig   datatypes.JSONMap `gorm:"type:jsonb"`
+	SelectedType string
+}
+
 var (
 	DB                             *gorm.DB
 	Mem                            member.MemberAuth
@@ -83,33 +91,45 @@ var (
 	// OwndeskChannelId               = 108
 	EmailImagePath              MailImages
 	SocialMediaLinks            SocialMedias
-	OwndeskLoginEnquiryTemplate = "OwndeskLoginEnquiry"
-	OwndeskLoginTemplate        = "OwndeskLogin"
-	OwndeskClaimnowTemplate     = "OwndeskClaimRequest"
-	LocalLoginType              = "member"
+	OwndeskLoginEnquiryTemplate    = "owndeskloginenquiry"
+	OwndeskLoginTemplate           = "owndesklogin"
+	OwndeskClaimnowTemplate        = "owndeskclaimrequest"
+	OwndeskClaimSubmitTemplate     = "owndeskclaimsubmit"
+	LocalLoginType                 = "member"
 	TokenExpiryTime             = 1
 	ErrorLog                    *log.Logger
 	WarnLog                     *log.Logger
 )
 
 var (
-	ErrInvalidMail        = errors.New("your email is not yet registered in our owndesk platform")
-	ErrSendMail           = errors.New("failed to send unauthorized login attempt mail to admin")
-	ErrclaimAlready       = errors.New("member profile is already claimed")
-	ErrEmptyProfileSlug   = errors.New("profile slug should not be empty")
-	ErrProfileSlugExist   = errors.New("profile slug already exists")
-	ErrMandatory          = errors.New("missing mandatory fields")
-	ErrMemberRegisterPerm = errors.New("member register permission denied")
-	ErrMemberInactive     = errors.New("inactive member")
-	ErrMemberLoginPerm    = errors.New("member login permission denied")
-	ErrRecordNotFound     = errors.New("record not found")
-	ErrPassHash           = errors.New("hasing password failed")
-	ErrUpload             = errors.New("file upload failed")
-	ErrOldPass            = errors.New("old password mismatched")
-	ErrConfirmPass        = errors.New("new passowrd and confirmation password mismatched")
-	ErrSamePass           = errors.New("old password and new password should not be same")
-	ErrLoginReq           = errors.New("login required")
-	ErrUnauthorize        = errors.New("unauthorized access")
+	ErrInvalidMail           = errors.New("your email is not yet registered in our owndesk platform")
+	ErrSendMail              = errors.New("failed to send unauthorized login attempt mail to admin")
+	ErrclaimAlready          = errors.New("member profile is already claimed")
+	ErrEmptyProfileSlug      = errors.New("profile slug should not be empty")
+	ErrProfileSlugExist      = errors.New("profile slug already exists")
+	ErrMandatory             = errors.New("missing mandatory fields")
+	ErrMemberRegisterPerm    = errors.New("member register permission denied")
+	ErrMemberInactive        = errors.New("inactive member")
+	ErrMemberLoginPerm       = errors.New("member login permission denied")
+	ErrRecordNotFound        = errors.New("record not found")
+	ErrPassHash              = errors.New("hasing password failed")
+	ErrUpload                = errors.New("file upload failed")
+	ErrOldPass               = errors.New("old password mismatched")
+	ErrConfirmPass           = errors.New("new passowrd and confirmation password mismatched")
+	ErrSamePass              = errors.New("old password and new password should not be same")
+	ErrLoginReq              = errors.New("login required")
+	ErrUnauthorize           = errors.New("unauthorized access")
+	ErrGinInstance           = errors.New("Gin instance retrieval context error")
+	ErrMemberSettings        = errors.New("failed to fetch member settings")
+	ErrFetchMailConfig       = errors.New("failed to fetch email configurations")
+	ErrInactiveTemplate      = errors.New("mail template is inactive")
+	ErrParsingHtmlTemplate   = errors.New("failed to parse the html template")
+	ErrExecutingHtmlTemplate = errors.New("failed to execute html template")
+	ErrNoMemberDetails       = errors.New("failed to get the member details")
+	ErrNoOtpUpdate           = errors.New("unable to update otp")
+	ErrFetchAdmin            = errors.New("failed to fetch the admin details")
+	ErrCreatingToken         = errors.New("unable to create token")
+	ErrLoginDataCheck        = errors.New("failed to get member login data")
 )
 
 func init() {
@@ -342,5 +362,44 @@ func ConvertByteToJson(byteData []byte) (map[string]interface{}, error) {
 	}
 
 	return jsonMap, nil
+
+}
+
+func GetEmailConfigurations(db *gorm.DB) (MailConfig, error) {
+
+	var email_configs EmailConfiguration
+
+	if err := db.Debug().Table("tbl_email_configurations").First(&email_configs).Error; err != nil {
+
+		return MailConfig{}, err
+	}
+
+	var sendMailData MailConfig
+
+	if email_configs.SelectedType == "environment" {
+
+		sendMailData.MailUsername = os.Getenv("MAIL_USERNAME")
+
+		sendMailData.MailPassword = os.Getenv("MAIL_PASSWORD")
+
+		sendMailData.SmtpHost = os.Getenv("SMTP_HOST")
+
+		sendMailData.SmtpPort = os.Getenv("SMTP_PORT")
+
+	} else if email_configs.SelectedType == "smtp" {
+
+		sendMailData.MailUsername = email_configs.SmtpConfig["Mail"].(string)
+
+		sendMailData.MailPassword = email_configs.SmtpConfig["Password"].(string)
+
+		sendMailData.SmtpHost = email_configs.SmtpConfig["Host"].(string)
+
+		sendMailData.SmtpPort = email_configs.SmtpConfig["Port"].(string)
+
+	}
+
+	sendMailData.TimeOut = 5 * time.Second
+
+	return sendMailData, nil
 
 }

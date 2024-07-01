@@ -26,28 +26,93 @@ import (
 
 func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+
+		fmtErr := fmt.Errorf("%v: %v", ErrGinInstance, ok)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		return false, fmtErr
+	}
+
 	memberSettings, err := MemberInstance.GetMemberSettings()
 
 	if err != nil {
 
-		return false, err
+		fmtErr := fmt.Errorf("%v: %v", ErrMemberSettings, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return false, fmtErr
 	}
 
 	if memberSettings.MemberLogin == "password" {
 
-		return false, ErrMemberLoginPerm
-	}
+		ErrorLog.Printf("%v", ErrMemberLoginPerm)
 
-	// c, _ := ctx.Value(ContextKey).(*gin.Context)
+		return false, err
+	}
 
 	memberDetails, err := MemberInstance.GetMemberAndProfileData(0, email, 0, "")
 
+	if err != nil {
+
+		fmtErr := fmt.Errorf("%v: %v", ErrNoMemberDetails, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return false, fmtErr
+	}
+
 	if memberDetails.IsActive != 1 {
+
+		ErrorLog.Printf("%v", ErrMemberInactive)
 
 		return false, ErrMemberInactive
 	}
 
+	sendMailData, err := GetEmailConfigurations(db)
+
+	if err != nil {
+
+		fmtErr := fmt.Errorf("%v: %v", ErrFetchMailConfig, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return false, fmtErr
+	}
+
 	if gorm.ErrRecordNotFound == err {
+
+		var loginEnquiryTemplate model.EmailTemplate
+
+		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_slug = ?", OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error; err != nil {
+
+			fmtErr := fmt.Errorf("%v: %v", loginEnquiryTemplate.TemplateName, err)
+
+			ErrorLog.Printf("%v", fmtErr)
+
+			c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+			return false, fmtErr
+		}
+
+		if loginEnquiryTemplate.IsActive != 1 {
+
+			fmtErr := fmt.Errorf("%v: %v", loginEnquiryTemplate.TemplateName, ErrInactiveTemplate)
+
+			ErrorLog.Printf("%v", fmtErr)
+
+			return false, fmtErr
+		}
 
 		var convIds []int
 
@@ -60,16 +125,22 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 			convIds = append(convIds, convId)
 		}
 
-		_, notifyEmails, _ := GetNotifyAdminEmails(db, convIds)
+		_, notifyEmails, err := GetNotifyAdminEmails(db, convIds)
 
-		var loginEnquiryTemplate model.EmailTemplate
+		if err != nil {
 
-		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_name = ?", OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error; err != nil {
+			fmtErr := fmt.Errorf("%v: %v", ErrFetchAdmin, err)
 
-			return false, err
+			ErrorLog.Printf("%v", fmtErr)
+
+			c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+			return false, fmtErr
 		}
 
-		var admin_mail_data = MailConfig{Emails: notifyEmails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginEnquiryTemplate.TemplateSubject}
+		sendMailData.Emails = notifyEmails
+
+		sendMailData.Subject = loginEnquiryTemplate.TemplateSubject
 
 		dataReplacer := strings.NewReplacer(
 			"{OwndeskLogo}", EmailImagePath.Owndesk,
@@ -99,7 +170,14 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		if err != nil {
 
-			return false, err
+			fmtErr := fmt.Errorf("%v: %v", ErrParsingHtmlTemplate, err)
+
+			ErrorLog.Printf("%v", fmtErr)
+
+			c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+			return false, fmtErr
+
 		}
 
 		channel := make(chan error)
@@ -108,27 +186,46 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		if err := tmpl.Execute(&template_buffers, gin.H{"body": htmlBody}); err != nil {
 
-			return false, err
+			fmtErr := fmt.Errorf("%v: %v", ErrExecutingHtmlTemplate, err)
+
+			ErrorLog.Printf("%v", fmtErr)
+
+			c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+			return false, fmtErr
 		}
 
 		admin_content := template_buffers.String()
 
-		go SendMail(admin_mail_data, admin_content, channel)
+		go SendMail(sendMailData, admin_content, channel)
 
 		if <-channel != nil {
 
-			return false, <-channel
+			fmtErr := fmt.Errorf("%v: %v", ErrInvalidMail, <-channel)
 
+			ErrorLog.Printf("%v", fmtErr)
+
+			c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+			return false, <-channel
 		}
 
 		return false, ErrInvalidMail
 
 	} else if err != nil {
 
-		return false, ErrInvalidMail
+		fmtErr := fmt.Errorf("%v: %v", ErrInvalidMail, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return false, err
 	}
 
 	if memberDetails.IsActive != 1 {
+
+		ErrorLog.Printf("%v", ErrMemberInactive)
 
 		return false, ErrMemberInactive
 	}
@@ -139,16 +236,28 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	if err != nil {
 
-		return false, err
+		fmtErr := fmt.Errorf("%v: %v", ErrNoMemberDetails, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return false, fmtErr
 	}
 
 	mail_expiry_time := expiryTime.In(TimeZone).Format("02 Jan 2006 03:04 PM")
 
 	var loginTemplate model.EmailTemplate
 
-	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_name = ?", OwndeskLoginTemplate).First(&loginTemplate).Error; err != nil {
+	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_slug = ?", OwndeskLoginTemplate).First(&loginTemplate).Error; err != nil {
 
-		return false, err
+		fmtErr := fmt.Errorf("%v: %v", ErrNoOtpUpdate, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return false, fmtErr
 	}
 
 	dataReplacer := strings.NewReplacer(
@@ -176,36 +285,51 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	htmlBody := template.HTML(integratedBody)
 
-	if err != nil {
-
-		return false, err
-	}
-
 	tmpl, err := template.ParseFiles("./view/email/login-template.html")
 
 	if err != nil {
 
-		return false, err
+		fmtErr := fmt.Errorf("%v: %v", ErrParsingHtmlTemplate, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return false, fmtErr
 	}
 
 	var template_buffer bytes.Buffer
 
 	if err := tmpl.Execute(&template_buffer, gin.H{"body": htmlBody}); err != nil {
 
-		return false, err
+		fmtErr := fmt.Errorf("%v: %v", ErrExecutingHtmlTemplate, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return false, fmtErr
 	}
 
 	var sendMails []string
 
 	sendMails = append(sendMails, memberDetails.Email)
 
-	mail_data := MailConfig{Emails: sendMails, MailUsername: os.Getenv("MAIL_USERNAME"), MailPassword: os.Getenv("MAIL_PASSWORD"), Subject: loginTemplate.TemplateSubject}
+	sendMailData.Emails = sendMails
+
+	sendMailData.Subject = loginTemplate.TemplateSubject
 
 	html_content := template_buffer.String()
 
-	go SendMail(mail_data, html_content, channel)
+	go SendMail(sendMailData, html_content, channel)
 
 	if <-channel != nil {
+
+		fmtErr := fmt.Errorf("%v: %v", ErrInvalidMail, <-channel)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
 
 		return false, <-channel
 
@@ -216,9 +340,26 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*model.LoginDetails, error) {
 
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+
+		fmtErr := fmt.Errorf("%v: %v", ErrGinInstance, ok)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		return &model.LoginDetails{}, fmtErr
+	}
+
 	member, err := AuthInstance.CheckMemberLogin(authPkg.MemberLoginCheck{Email: email, OTP: otp, EmailWithOTP: true})
 
 	if err != nil {
+
+		fmtErr := fmt.Errorf("%v: %v", ErrLoginDataCheck, err)
+
+		ErrorLog.Printf("%v",fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
 
 		return &model.LoginDetails{}, err
 	}
@@ -227,10 +368,27 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 
 	if err != nil {
 
-		return &model.LoginDetails{}, err
+		fmtErr := fmt.Errorf("%v: %v", ErrCreatingToken, err)
+
+		ErrorLog.Printf("%v",fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return &model.LoginDetails{}, fmtErr
 	}
 
 	memberProfile, err := MemberInstance.GetMemberProfileByMemberId(member.Id)
+
+	if err != nil{
+		
+		fmtErr := fmt.Errorf("%v: %v", ErrCreatingToken, err)
+
+		ErrorLog.Printf("%v",fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return &model.LoginDetails{}, fmtErr
+	}
 
 	if memberProfile.CompanyLogo != "" {
 
@@ -488,13 +646,22 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetails) (bool, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+
+		fmtErr := fmt.Errorf("%v: %v", ErrGinInstance, ok)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		return false, fmtErr
+	}
 
 	memberid := c.GetInt("memberid")
 
 	if memberid == 0 {
 
-		ErrorLog.Printf("Unauthorize error: %s", ErrUnauthorize)
+		ErrorLog.Printf("%v", ErrUnauthorize)
 
 		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorize)
 
@@ -1064,7 +1231,7 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, pro
 
 	slugPresence, err := MemberInstance.CheckProfileSlug(profileSlug, profileID)
 
-	if err != nil{
+	if err != nil {
 
 		return false, err
 	}
@@ -1085,7 +1252,6 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 	verify_chan := make(chan error)
 
 	var (
-
 		MemberDetails memberPkg.Tblmember
 
 		err error
@@ -1095,7 +1261,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 		MemberDetails, err = MemberInstance.GetMemberAndProfileData(0, "", *profileId, "")
 
-	} else if profileSlug != nil &&  *profileSlug != "" {
+	} else if profileSlug != nil && *profileSlug != "" {
 
 		MemberDetails, err = MemberInstance.GetMemberAndProfileData(0, "", 0, *profileSlug)
 	}

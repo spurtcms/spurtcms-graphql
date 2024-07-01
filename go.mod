@@ -10,6 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
 	github.com/spurtcms/auth v0.0.8
+	github.com/spurtcms/channels v0.0.10
 	github.com/spurtcms/ecommerce v0.0.1
 	github.com/spurtcms/member v0.0.13
 	github.com/spurtcms/pkgcontent v1.1.15
@@ -59,7 +60,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sosodev/duration v1.2.0 // indirect
 	github.com/spurtcms/categories v0.0.4 // indirect
-	github.com/spurtcms/channels v0.0.10 // indirect
 	github.com/spurtcms/member-access v0.0.1 // indirect
 	github.com/spurtcms/team-roles v0.0.6 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
