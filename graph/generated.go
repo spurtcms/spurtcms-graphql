@@ -465,7 +465,7 @@ input ProfileData{
 	profileName:      String!
 	profileSlug:      String!
 	companyLocation:  String
-	companyLogo:      Upload
+	companyLogo:      String
 	about:            String
 	website:          String
 	twitter:          String
@@ -883,10 +883,10 @@ input MemberDetails{
     email:             String!
     password:          String
     isActive:          Int
-    profileImage:      Upload
+    profileImage:      String
     profileImagePath:  String
     username:          String
-    groupId:           Int 
+    groupId:           Int
 }`, BuiltIn: false},
 	{Name: "../schema/space.graphqls", Input: `# GraphQL schema example
 #
@@ -23925,7 +23925,7 @@ func (ec *executionContext) unmarshalInputMemberDetails(ctx context.Context, obj
 			it.IsActive = graphql.OmittableOf(data)
 		case "profileImage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileImage"))
-			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
@@ -24166,7 +24166,7 @@ func (ec *executionContext) unmarshalInputProfileData(ctx context.Context, obj i
 			it.CompanyLocation = graphql.OmittableOf(data)
 		case "companyLogo":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyLogo"))
-			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}

@@ -1,7 +1,10 @@
 package storage
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,13 +49,36 @@ func CreateAwsSession(AwsCredentials map[string]interface{}) *session.Session {
 }
 
 /*upload files to s3 */
-func UploadFileS3(AwsCredentials map[string]interface{}, upload *graphql.Upload, filePath string) error {
+func UploadFileS3(AwsCredentials map[string]interface{}, upload *graphql.Upload, base64String string, filePath string) error {
 
 	session := CreateAwsSession(AwsCredentials)
 
 	awsBucket := AwsCredentials["BucketName"].(string)
 
 	fmt.Println("upload filename :==", filePath)
+
+	var s3Body io.Reader
+	
+	var err error
+
+	if base64String != "" {
+
+		base64data := base64String[strings.IndexByte(base64String, ',')+1:]
+
+		imageData, err := base64.StdEncoding.DecodeString(base64data)
+
+		if err != nil {
+			
+			return err
+		}
+
+		s3Body = strings.NewReader(string(imageData))
+
+	} else if upload != nil {
+
+		s3Body = upload.File
+
+	}
 
 	// Create an uploader with the session and default options
 	uploader := s3manager.NewUploader(session)
@@ -61,7 +87,7 @@ func UploadFileS3(AwsCredentials map[string]interface{}, upload *graphql.Upload,
 	result, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(awsBucket),
 		Key:    aws.String(filePath),
-		Body:   upload.File,
+		Body:   s3Body,
 		ACL:    aws.String("public-read"),
 	})
 
@@ -73,6 +99,7 @@ func UploadFileS3(AwsCredentials map[string]interface{}, upload *graphql.Upload,
 
 	return nil
 }
+
 
 func CheckS3FileExistence(AwsCredentials map[string]interface{}, fileName string) (bool, error) {
 

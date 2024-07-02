@@ -3,10 +3,10 @@ package controller
 import (
 	"context"
 	"errors"
-	"fmt"
+	// "fmt"
 	"net/http"
 	"spurtcms-graphql/graph/model"
-	"spurtcms-graphql/storage"
+	// "spurtcms-graphql/storage"
 	"strconv"
 	"strings"
 	"time"
@@ -943,186 +943,186 @@ func EcommerceCustomerDetails(db *gorm.DB, ctx context.Context) (*model.Customer
 
 func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model.CustomerInput) (bool, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
+	// c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	memberid := c.GetInt("memberid")
+	// memberid := c.GetInt("memberid")
 
-	if memberid == 0 {
+	// if memberid == 0 {
 
-		err := errors.New("unauthorized access")
+	// 	err := errors.New("unauthorized access")
 
-		c.AbortWithError(http.StatusUnauthorized, err)
+	// 	c.AbortWithError(http.StatusUnauthorized, err)
 
-		return false, err
-	}
+	// 	return false, err
+	// }
 
-	customerDetails := make(map[string]interface{})
+	// customerDetails := make(map[string]interface{})
 
-	memberDetails := make(map[string]interface{})
+	// memberDetails := make(map[string]interface{})
 
-	if customerInput.ProfileImage.IsSet() && customerInput.ProfileImage.Value() != nil {
+	// if customerInput.ProfileImage.IsSet() && customerInput.ProfileImage.Value() != nil {
 
-		var fileName, filePath string
+	// 	var fileName, filePath string
 
-		storageType, _ := GetStorageType(db)
+	// 	storageType, _ := GetStorageType(db)
 
-		fileName = customerInput.ProfileImage.Value().Filename
+	// 	fileName = customerInput.ProfileImage.Value().Filename
 
-		file := customerInput.ProfileImage.Value().File
+	// 	file := customerInput.ProfileImage.Value().File
 
-		if storageType.SelectedType == "aws" {
+	// 	if storageType.SelectedType == "aws" {
 
-			fmt.Printf("aws-S3 storage selected\n")
+	// 		fmt.Printf("aws-S3 storage selected\n")
 
-			filePath = "member/" + fileName
+	// 		filePath = "member/" + fileName
 
-			err := storage.UploadFileS3(storageType.Aws, customerInput.ProfileImage.Value(), filePath)
+	// 		err := storage.UploadFileS3(storageType.Aws, customerInput.ProfileImage.Value(), filePath)
 
-			if err != nil {
+	// 		if err != nil {
 
-				fmt.Printf("image upload failed %v\n", err)
+	// 			fmt.Printf("image upload failed %v\n", err)
 
-				return false, ErrUpload
+	// 			return false, ErrUpload
 
-			}
+	// 		}
 
-		} else if storageType.SelectedType == "local" {
+	// 	} else if storageType.SelectedType == "local" {
 
-			fmt.Printf("local storage selected\n")
+	// 		fmt.Printf("local storage selected\n")
 
-			b64Data, err := IoReadSeekerToBase64(file)
+	// 		b64Data, err := IoReadSeekerToBase64(file)
 
-			if err != nil {
+	// 		if err != nil {
 
-				return false, err
-			}
+	// 			return false, err
+	// 		}
 
-			endpoint := "gqlSaveLocal"
+	// 		endpoint := "gqlSaveLocal"
 
-			url := PathUrl + endpoint
+	// 		url := PathUrl + endpoint
 
-			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
+	// 		filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url)
 
-			if err != nil {
+	// 		if err != nil {
 
-				return false, ErrUpload
-			}
+	// 			return false, ErrUpload
+	// 		}
 
-			fmt.Printf("local stored path: %v\n", filePath)
+	// 		fmt.Printf("local stored path: %v\n", filePath)
 
-		} else if storageType.SelectedType == "azure" {
+	// 	} else if storageType.SelectedType == "azure" {
 
-			fmt.Printf("azure storage selected")
+	// 		fmt.Printf("azure storage selected")
 
-		} else if storageType.SelectedType == "drive" {
+	// 	} else if storageType.SelectedType == "drive" {
 
-			fmt.Println("drive storage selected")
-		}
+	// 		fmt.Println("drive storage selected")
+	// 	}
 
-		customerDetails["profile_image"] = fileName
+	// 	customerDetails["profile_image"] = fileName
 
-		memberDetails["profile_image"] = fileName
+	// 	memberDetails["profile_image"] = fileName
 
-		customerDetails["profile_image_path"] = filePath
+	// 	customerDetails["profile_image_path"] = filePath
 
-		memberDetails["profile_image_path"] = filePath
+	// 	memberDetails["profile_image_path"] = filePath
 
-	}
+	// }
 
-	customerDetails["first_name"] = customerInput.FirstName
+	// customerDetails["first_name"] = customerInput.FirstName
 
-	memberDetails["first_name"] = customerInput.FirstName
+	// memberDetails["first_name"] = customerInput.FirstName
 
-	customerDetails["email"] = customerInput.Email
+	// customerDetails["email"] = customerInput.Email
 
-	memberDetails["email"] = customerInput.Email
+	// memberDetails["email"] = customerInput.Email
 
-	if customerInput.LastName.IsSet() && customerInput.LastName.Value() != nil {
+	// if customerInput.LastName.IsSet() && customerInput.LastName.Value() != nil {
 
-		customerDetails["last_name"] = *customerInput.LastName.Value()
+	// 	customerDetails["last_name"] = *customerInput.LastName.Value()
 
-		memberDetails["last_name"] = *customerInput.LastName.Value()
-	}
+	// 	memberDetails["last_name"] = *customerInput.LastName.Value()
+	// }
 
-	if customerInput.MobileNo.IsSet() && customerInput.MobileNo.Value() != nil {
+	// if customerInput.MobileNo.IsSet() && customerInput.MobileNo.Value() != nil {
 
-		customerDetails["mobile_no"] = *customerInput.MobileNo.Value()
+	// 	customerDetails["mobile_no"] = *customerInput.MobileNo.Value()
 
-		memberDetails["mobile_no"] = *customerInput.MobileNo.Value()
-	}
+	// 	memberDetails["mobile_no"] = *customerInput.MobileNo.Value()
+	// }
 
-	if customerInput.Username.IsSet() && customerInput.Username.Value() != nil {
+	// if customerInput.Username.IsSet() && customerInput.Username.Value() != nil {
 
-		customerDetails["username"] = *customerInput.Username.Value()
+	// 	customerDetails["username"] = *customerInput.Username.Value()
 
-		memberDetails["username"] = *customerInput.Username.Value()
-	}
+	// 	memberDetails["username"] = *customerInput.Username.Value()
+	// }
 
-	if customerInput.IsActive.IsSet() && customerInput.IsActive.Value() != nil {
+	// if customerInput.IsActive.IsSet() && customerInput.IsActive.Value() != nil {
 
-		customerDetails["is_active"] = *customerInput.IsActive.Value()
+	// 	customerDetails["is_active"] = *customerInput.IsActive.Value()
 
-		memberDetails["is_active"] = *customerInput.IsActive.Value()
-	}
+	// 	memberDetails["is_active"] = *customerInput.IsActive.Value()
+	// }
 
-	if customerInput.StreetAddress.IsSet() && customerInput.StreetAddress.Value() != nil {
+	// if customerInput.StreetAddress.IsSet() && customerInput.StreetAddress.Value() != nil {
 
-		customerDetails["street_address"] = *customerInput.StreetAddress.Value()
-	}
+	// 	customerDetails["street_address"] = *customerInput.StreetAddress.Value()
+	// }
 
-	if customerInput.City.IsSet() && customerInput.City.Value() != nil {
+	// if customerInput.City.IsSet() && customerInput.City.Value() != nil {
 
-		customerDetails["city"] = *customerInput.City.Value()
-	}
+	// 	customerDetails["city"] = *customerInput.City.Value()
+	// }
 
-	if customerInput.Country.IsSet() && customerInput.Country.Value() != nil {
+	// if customerInput.Country.IsSet() && customerInput.Country.Value() != nil {
 
-		customerDetails["country"] = *customerInput.Country.Value()
-	}
+	// 	customerDetails["country"] = *customerInput.Country.Value()
+	// }
 
-	if customerInput.State.IsSet() && customerInput.State.Value() != nil {
+	// if customerInput.State.IsSet() && customerInput.State.Value() != nil {
 
-		customerDetails["state"] = *customerInput.State.Value()
-	}
+	// 	customerDetails["state"] = *customerInput.State.Value()
+	// }
 
-	if customerInput.ZipCode.IsSet() && customerInput.ZipCode.Value() != nil {
+	// if customerInput.ZipCode.IsSet() && customerInput.ZipCode.Value() != nil {
 
-		customerDetails["zip_code"] = *customerInput.ZipCode.Value()
-	}
+	// 	customerDetails["zip_code"] = *customerInput.ZipCode.Value()
+	// }
 
-	if customerInput.Password.IsSet() && customerInput.Password.Value() != nil && *customerInput.Password.Value() != "" {
+	// if customerInput.Password.IsSet() && customerInput.Password.Value() != nil && *customerInput.Password.Value() != "" {
 
-		hashpass, err := HashingPassword(*customerInput.Password.Value())
+	// 	hashpass, err := HashingPassword(*customerInput.Password.Value())
 
-		if err != nil {
+	// 	if err != nil {
 
-			return false, ErrPassHash
-		}
+	// 		return false, ErrPassHash
+	// 	}
 
-		customerDetails["password"] = hashpass
+	// 	customerDetails["password"] = hashpass
 
-		memberDetails["password"] = hashpass
-	}
+	// 	memberDetails["password"] = hashpass
+	// }
 
-	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+	// currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
-	customerDetails["modified_on"] = currentTime
+	// customerDetails["modified_on"] = currentTime
 
-	memberDetails["modified_on"] = currentTime
+	// memberDetails["modified_on"] = currentTime
 
-	customerDetails["modified_by"] = memberid
+	// customerDetails["modified_by"] = memberid
 
-	memberDetails["modified_by"] = memberid
+	// memberDetails["modified_by"] = memberid
 
-	if err := db.Debug().Table("tbl_ecom_customers").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(&customerDetails).Error; err != nil {
+	// if err := db.Debug().Table("tbl_ecom_customers").Where("is_deleted = 0 and member_id = ?", memberid).UpdateColumns(&customerDetails).Error; err != nil {
 
-		return false, err
-	}
+	// 	return false, err
+	// }
 
-	if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?", memberid).UpdateColumns(&memberDetails).Error; err != nil {
+	// if err := db.Debug().Table("tbl_members").Where("is_deleted = 0 and id = ?", memberid).UpdateColumns(&memberDetails).Error; err != nil {
 
-		return false, err
-	}
+	// 	return false, err
+	// }
 
 	return true, nil
 }

@@ -200,7 +200,7 @@ input ProfileData{
 	profileName:      String!
 	profileSlug:      String!
 	companyLocation:  String
-	companyLogo:      Upload
+	companyLogo:      String
 	about:            String
 	website:          String
 	twitter:          String

@@ -130,6 +130,15 @@ var (
 	ErrFetchAdmin            = errors.New("failed to fetch the admin details")
 	ErrCreatingToken         = errors.New("unable to create token")
 	ErrLoginDataCheck        = errors.New("failed to get member login data")
+	ErrMailExist             = errors.New("email already exists")
+	ErrMobileExist           = errors.New("mobile number already exists")
+	ErrFetchStorageType      = errors.New("failed to fetch the storage type details")
+	ErrIllegalB64            = errors.New("illegal base64 data")
+	ErrJsonUnMarshal         = errors.New("failed to unmarshall the json")
+	ErrClaimMail             = errors.New("failed to send claim request mail to the admin")
+	ErrClaimSubmitMail       = errors.New("failed to send claim request submission status mail to the user")
+	ErrLoginClaimMail     = errors.New("current login email sholuld not be used in another claim")
+	ErrLoginClaimMob      = errors.New("current login mobile number sholuld not be used in another claim")
 )
 
 func init() {
@@ -403,3 +412,26 @@ func GetEmailConfigurations(db *gorm.DB) (MailConfig, error) {
 	return sendMailData, nil
 
 }
+
+func IsValidBase64(input string) (isvalid bool, base64Data string, extension string) {
+
+	if !strings.Contains(input, "data:image/png;base64") && !strings.Contains(input, "data:image/jpeg;base64") && !strings.Contains(input, "data:image/jpg;base64") && !strings.Contains(input, "data:image/svg;base64") {
+
+		return false, "", ""
+	}
+
+	base64Data = input[strings.IndexByte(input, ',')+1:]
+
+	_, err := base64.StdEncoding.DecodeString(base64Data)
+
+	if err != nil {
+		return false, "", ""
+	}
+
+	extEndIndex := strings.Index(input, ";base64,")
+
+	var ext = input[11:extEndIndex]
+
+	return true, base64Data, ext
+}
+

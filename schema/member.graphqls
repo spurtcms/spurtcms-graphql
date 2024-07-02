@@ -61,8 +61,8 @@ input MemberDetails{
     email:             String!
     password:          String
     isActive:          Int
-    profileImage:      Upload
+    profileImage:      String
     profileImagePath:  String
     username:          String
-    groupId:           Int 
+    groupId:           Int
 }
