@@ -28,11 +28,18 @@ type EcommerceProduct{
 	deletedBy:                 Int
 	deletedOn:                 Time
 	viewCount:                 Int
-	defaultPrice:              Int! 
+	productPrice:              Int! 
 	discountPrice:             Int
 	specialPrice:              Int
 	productImageArray:         [String!]
-	ecommerceCart:             EcommerceCart
+	cartId:                    Int!
+	productId:                 Int!
+	customerId:                Int!
+	quantity:                  Int!
+	cartCreatedOn:             Time!
+	cartModifiedOn:            Time
+	cartIsDeleted:             Int!
+	cartDeletedOn:             Time              
 	orderId:                   Int
 	orderUniqueId:             String
 	orderQuantity:             Int
@@ -56,7 +63,7 @@ type ProductPricing{
 	type:        String!
 }
 
-type EcommerceCart{
+type TblEcommerceCart{
 	id:              Int!
 	productId:       Int!
 	customerId:      Int!
@@ -83,7 +90,7 @@ type CartSummary{
 
 type EcommerceOrder{
 	id:                Int!
-	orderId:           String!
+	uuid:           String!
 	customerId:        Int!
 	status:            String!
 	shippingAddress:   String!
@@ -240,7 +247,7 @@ input customerInput{
 	username:         String
 	password:         String
 	isActive:         Int
-	profileImage:     Upload
+	profileImage:     String
 	city:             String
 	state:            String
 	country:          String

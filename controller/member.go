@@ -677,9 +677,12 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 }
 
-func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string) (string, error) {
+func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string, ecomModule *int) (string, error) {
 
-	var memberSettings model.MemberSettings
+	var (
+		memberSettings model.MemberSettings
+		ecomModuleInt  int
+	)
 
 	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
 
@@ -701,14 +704,23 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 		memberLogin.Username = *username
 
-	} else if email != nil {
+	}
+
+	if email != nil {
 
 		memberLogin.Emailid = *email
+
+	}
+
+	if ecomModule != nil {
+
+		ecomModuleInt = *ecomModule
+
 	}
 
 	memberLogin.Password = password
 
-	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"), LocalLoginType)
+	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"), LocalLoginType, ecomModuleInt)
 
 	if err != nil {
 
@@ -1234,7 +1246,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	if memberDetails.Id != 0 {
 
-		if memberid == memberDetails.Id{
+		if memberid == memberDetails.Id {
 
 			return false, ErrLoginClaimMail
 
@@ -1255,7 +1267,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	if memberDetails.Id != 0 {
 
-		if memberid == memberDetails.Id  {
+		if memberid == memberDetails.Id {
 
 			return false, ErrLoginClaimMob
 

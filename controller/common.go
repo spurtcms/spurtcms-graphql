@@ -505,8 +505,6 @@ func ImageResize(c *gin.Context) {
 }
 
 func IsValidBase64(input string) (isvalid bool, base64Data string, extension string) {
-	
-	fmt.Println("input", input)
 
 	if !strings.Contains(input, "data:image/png;base64") && !strings.Contains(input, "data:image/jpeg;base64") && !strings.Contains(input, "data:image/jpg;base64") && !strings.Contains(input, "data:image/svg;base64") {
 

@@ -49,7 +49,7 @@ extend type Query{
 }
 
 extend type Mutation{
-    templateMemberLogin(username: String,email: String,password: String!): String! 
+    templateMemberLogin(username: String,email: String,password: String!,ecomModule: Int): String! 
     memberRegister(input: MemberDetails!,ecomModule: Int): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
     memberPasswordUpdate(oldPassword: String!,newPassword: String!,confirmPassword: String!): Boolean! @auth

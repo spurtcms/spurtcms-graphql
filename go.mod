@@ -11,7 +11,7 @@ require (
 	github.com/spurtcms/auth v0.0.6
 	github.com/spurtcms/member v0.0.7
 	github.com/spurtcms/pkgcontent v1.1.19
-	github.com/spurtcms/pkgcore v1.0.90
+	github.com/spurtcms/pkgcore v1.0.91
 	github.com/vektah/gqlparser/v2 v2.5.11
 	golang.org/x/crypto v0.21.0
 	gorm.io/datatypes v1.2.0

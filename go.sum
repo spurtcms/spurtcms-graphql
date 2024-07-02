@@ -115,6 +115,8 @@ github.com/spurtcms/pkgcontent v1.1.19 h1:rlES1jHfx2Oxn5LExgRFOinamDO4oIyHYw0rYU
 github.com/spurtcms/pkgcontent v1.1.19/go.mod h1:yA3OJ8M9xEPqMyLE8usLFPqNG+yHo6AZnxKY4qrA56w=
 github.com/spurtcms/pkgcore v1.0.90 h1:w2+y5/e7P4vCPGLgiPDs5MZeQ86UjFneITBx1aXG5mw=
 github.com/spurtcms/pkgcore v1.0.90/go.mod h1:k/HTW4fjgZbQTN92Q7pWfvoHtbT0S08b1LbFNJsdn38=
+github.com/spurtcms/pkgcore v1.0.91 h1:2FEIn3LvUQL7PpY+fgnMhyKDYPVD0GPibccUj2K5URs=
+github.com/spurtcms/pkgcore v1.0.91/go.mod h1:k/HTW4fjgZbQTN92Q7pWfvoHtbT0S08b1LbFNJsdn38=
 github.com/spurtcms/team-roles v0.0.5 h1:cdakl6Hh5Gkl2+YC5h8IpTl5Dcn+mt7cSFMQfHcP1Gg=
 github.com/spurtcms/team-roles v0.0.5/go.mod h1:WFP36zjRo6gkKTFrWy6DT/B+Nh/V/1xHTYS7kJcNPGA=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

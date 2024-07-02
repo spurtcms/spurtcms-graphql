@@ -241,7 +241,7 @@ func EcommerceAddToCart(db *gorm.DB, ctx context.Context, productID *int, produc
 
 	}
 
-	var cart model.EcommerceCart
+	var cart model.TblEcommerceCart
 
 	var productId int
 
@@ -357,8 +357,8 @@ func EcommerceCartList(db *gorm.DB, ctx context.Context, limit, offset int) (*mo
 
 	var count int64
 
-	if err := db.Debug().Table("tbl_ecom_products").Select("tbl_ecom_products.*,rp.price AS discount_price ,rs.price AS special_price,tbl_ecom_carts.*").Joins("inner join tbl_ecom_carts on tbl_ecom_carts.product_id =  tbl_ecom_products.id ").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rp on rp.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rs on rs.product_id = tbl_ecom_products.id").Joins("inner join tbl_ecom_customers on tbl_ecom_customers.id = tbl_ecom_carts.customer_id").
-		Where("tbl_ecom_carts.is_deleted = 0 and tbl_ecom_products.is_deleted = 0 and tbl_ecom_customers.is_deleted = 0 and tbl_ecom_products.is_active = 1 and tbl_ecom_customers.id = ?", customer_id).Preload("EcommerceCart").Limit(limit).Offset(offset).Order("tbl_ecom_carts.id desc").Find(&cartList).Error; err != nil {
+	if err := db.Debug().Table("tbl_ecom_products").Select("tbl_ecom_products.*,rp.price AS discount_price ,rs.price AS special_price,tbl_ecom_carts.id AS cart_id,tbl_ecom_carts.product_id  AS product_id,tbl_ecom_carts.customer_id As customer_id,tbl_ecom_carts.quantity AS quantity,tbl_ecom_carts.created_on as cart_created_on,tbl_ecom_carts.modified_on as cart_modified_on,tbl_ecom_carts.is_deleted as cart_is_deleted,tbl_ecom_carts.deleted_on as cart_deleted_on").Joins("inner join tbl_ecom_carts on tbl_ecom_carts.product_id =  tbl_ecom_products.id ").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='discount' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rp on rp.product_id = tbl_ecom_products.id").Joins("left join (select *, ROW_NUMBER() OVER (PARTITION BY tbl_ecom_product_pricings.id, tbl_ecom_product_pricings.type ORDER BY tbl_ecom_product_pricings.priority,tbl_ecom_product_pricings.start_date desc) AS rn from tbl_ecom_product_pricings where tbl_ecom_product_pricings.type ='special' and tbl_ecom_product_pricings.start_date <= now() and tbl_ecom_product_pricings.end_date >= now()) rs on rs.product_id = tbl_ecom_products.id").Joins("inner join tbl_ecom_customers on tbl_ecom_customers.id = tbl_ecom_carts.customer_id").
+		Where("tbl_ecom_carts.is_deleted = 0 and tbl_ecom_products.is_deleted = 0 and tbl_ecom_customers.is_deleted = 0 and tbl_ecom_products.is_active = 1 and tbl_ecom_customers.id = ?", customer_id).Limit(limit).Offset(offset).Order("tbl_ecom_carts.id desc").Find(&cartList).Error; err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -395,38 +395,34 @@ func EcommerceCartList(db *gorm.DB, ctx context.Context, limit, offset int) (*mo
 			cartProduct.ProductImageArray = imagePaths
 		}
 
-		if cartProduct.EcommerceCart != nil {
+		var priceByQuantity int64
 
-			var priceByQuantity int64
+		if cartProduct.SpecialPrice != nil {
 
-			if cartProduct.SpecialPrice != nil {
+			reductionPrice := cartProduct.ProductPrice - *cartProduct.SpecialPrice
 
-				reductionPrice := cartProduct.DefaultPrice - *cartProduct.SpecialPrice
+			priceByQuantity = int64(cartProduct.Quantity) * int64(reductionPrice)
 
-				priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(reductionPrice)
+			subtotal = subtotal + priceByQuantity
 
-				subtotal = subtotal + priceByQuantity
+		} else if cartProduct.DiscountPrice != nil {
 
-			} else if cartProduct.DiscountPrice != nil {
+			priceByQuantity = int64(cartProduct.Quantity) * int64(*cartProduct.DiscountPrice)
 
-				priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(*cartProduct.DiscountPrice)
+			subtotal = subtotal + priceByQuantity
 
-				subtotal = subtotal + priceByQuantity
+		} else {
 
-			} else {
+			priceByQuantity = int64(cartProduct.Quantity) * int64(cartProduct.ProductPrice)
 
-				priceByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(cartProduct.DefaultPrice)
-
-				subtotal = subtotal + priceByQuantity
-			}
-
-			var taxByQuantity = int64(cartProduct.EcommerceCart.Quantity) * int64(cartProduct.Tax)
-
-			totalTax = totalTax + taxByQuantity
-
-			totalQuantity = totalQuantity + cartProduct.EcommerceCart.Quantity
-
+			subtotal = subtotal + priceByQuantity
 		}
+
+		var taxByQuantity = int64(cartProduct.Quantity) * int64(cartProduct.Tax)
+
+		totalTax = totalTax + taxByQuantity
+
+		totalQuantity = totalQuantity + cartProduct.Quantity
 
 		final_cartList = append(final_cartList, cartProduct)
 
@@ -637,7 +633,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 		query = query.Order("o.id desc")
 	}
 
-	if err := query.Select("p.*,o.id,o.uuid,o.status,o.customer_id,o.created_on,o.shipping_address,d.quantity,d.price,d.tax,op.payment_mode").Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
+	if err := query.Select("p.*,o.id as order_id,o.uuid as order_unique_id,o.status as order_status,o.customer_id as order_customer,o.created_on as order_time,o.shipping_address as shipping_details,d.quantity as order_quantity,d.price as order_price,d.tax as order_tax,op.payment_mode").Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
 
 		return &model.EcommerceProducts{}, err
 	}
@@ -764,7 +760,7 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	orderId := "SP" + strconv.Itoa(int(unixTime))
 
-	orderplaced.OrderID = orderId
+	orderplaced.UUID = orderId
 
 	orderplaced.ShippingAddress = shippingAddress
 
@@ -802,6 +798,8 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 		totalCost = totalPrice + totalTax
 	}
+
+	fmt.Println("totalPrice", totalPrice)
 
 	orderplaced.Price = totalPrice
 
@@ -962,56 +960,47 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 
 	if customerInput.ProfileImage.IsSet() && customerInput.ProfileImage.Value() != nil {
 
-		var fileName, filePath string
+		var (
+			fileName, filePath string
+			storageType        StorageType
+			err                error
+		)
 
-		storageType, _ := GetStorageType(db)
+		var imageData = *customerInput.ProfileImage.Value()
 
-		fileName = customerInput.ProfileImage.Value().Filename
+		storageType, err = GetStorageType(db)
+		if err != nil {
 
-		file := customerInput.ProfileImage.Value().File
+			return false, err
+		}
 
-		if storageType.SelectedType == "aws" {
+		if imageData != "" {
 
-			fmt.Printf("aws-S3 storage selected\n")
+			isValidBase64, base64Data, extension := IsValidBase64(imageData)
 
-			filePath = "member/" + fileName
+			if isValidBase64 && base64Data != "" {
 
-			err := storage.UploadFileS3(storageType.Aws, customerInput.ProfileImage.Value(), "", filePath)
+				randNum := strconv.Itoa(int(time.Now().Unix()))
 
-			if err != nil {
+				fileName = "IMG-" + randNum + "." + extension
 
-				fmt.Printf("image upload failed %v\n", err)
+				if storageType.SelectedType == "aws" {
 
-				return false, ErrUpload
+					fmt.Printf("aws-S3 storage selected\n")
+
+					filePath = "member/" + fileName
+
+					err = storage.UploadFileS3(storageType.Aws, nil, base64Data, filePath)
+					if err != nil {
+
+						fmt.Printf("image upload failed %v\n", err)
+
+						return false, ErrUpload
+
+					}
+				}
 
 			}
-
-		} else if storageType.SelectedType == "local" {
-
-			fmt.Printf("local storage selected\n")
-
-			filePath = storageType.Local + "member/" + fileName
-
-			b64Data, err := IoReadSeekerToBase64(file)
-
-			if err != nil {
-
-				return false, err
-			}
-
-			endpoint := "gqlSaveLocal"
-
-			url := PathUrl + endpoint
-
-			filePath, err = storage.UploadImageToAdminLocal(b64Data, fileName, url,filePath)
-
-			if err != nil {
-
-				return false, ErrUpload
-			}
-
-			fmt.Printf("local stored path: %v\n", filePath)
-
 		} else if storageType.SelectedType == "azure" {
 
 			fmt.Printf("azure storage selected")
@@ -1161,7 +1150,7 @@ func UpdateProductViewCount(db *gorm.DB, ctx context.Context, productID *int, pr
 	return true, nil
 }
 
-func EcommerceOrderStatusNames(db *gorm.DB,ctx context.Context) ([]model.OrderStatusNames, error) {
+func EcommerceOrderStatusNames(db *gorm.DB, ctx context.Context) ([]model.OrderStatusNames, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
@@ -1178,7 +1167,7 @@ func EcommerceOrderStatusNames(db *gorm.DB,ctx context.Context) ([]model.OrderSt
 
 	var orderStatus []model.OrderStatusNames
 
-	if err := db.Debug().Table("tbl_ecom_statuses").Find(&orderStatus).Error;err!= nil{
+	if err := db.Debug().Table("tbl_ecom_statuses").Find(&orderStatus).Error; err != nil {
 
 		return []model.OrderStatusNames{}, err
 	}
