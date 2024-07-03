@@ -133,7 +133,7 @@ type EcommerceOrder struct {
 	ID              int        `json:"id"`
 	UUID            string     `json:"uuid"`
 	CustomerID      int        `json:"customerId"`
-	Status          int        `json:"status"`
+	OrderStatus     int        `json:"orderStatus"`
 	ShippingAddress string     `json:"shippingAddress"`
 	IsDeleted       int        `json:"isDeleted"`
 	CreatedOn       time.Time  `json:"createdOn"`
@@ -563,8 +563,9 @@ type TblEcommerceCart struct {
 
 type ApplicationInput struct {
 	Name           string                     `json:"name"`
+	Password       string                     `json:"password"`
 	EmailID        string                     `json:"emailId"`
-	MobileNo       int                        `json:"mobileNo"`
+	MobileNo       string                     `json:"mobileNo"`
 	JobType        string                     `json:"jobType"`
 	Gender         string                     `json:"gender"`
 	Location       string                     `json:"location"`
@@ -577,6 +578,9 @@ type ApplicationInput struct {
 	CurrentSalary  graphql.Omittable[*int]    `json:"currentSalary,omitempty"`
 	ExpectedSalary int                        `json:"expectedSalary"`
 	Resume         graphql.Upload             `json:"resume"`
+	CreatedOn      time.Time                  `json:"createdOn"`
+	CreatedBy      int                        `json:"createdBy"`
+	IsDeleted      graphql.Omittable[*int]    `json:"isDeleted,omitempty"`
 }
 
 type CustomerDetails struct {

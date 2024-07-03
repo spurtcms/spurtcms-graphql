@@ -63,7 +63,7 @@ type MutationResolver interface {
 	CustomerProfileUpdate(ctx context.Context, customerDetails model.CustomerInput) (bool, error)
 	UpdateProductViewCount(ctx context.Context, productID *int, productSlug *string) (bool, error)
 	JobApplication(ctx context.Context, applicationDetails model.ApplicationInput) (bool, error)
-	TemplateMemberLogin(ctx context.Context, username *string, email *string, password string, ecomModule *int) (string, error)
+	TemplateMemberLogin(ctx context.Context, username *string, email *string, password string, module *int) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails, ecomModule *int) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
 	MemberPasswordUpdate(ctx context.Context, oldPassword string, newPassword string, confirmPassword string) (bool, error)
@@ -585,7 +585,7 @@ type EcommerceOrder{
 	id:                Int!
 	uuid:           String!
 	customerId:        Int!
-	status:            Int!
+	orderStatus:       Int!
 	shippingAddress:   String!
 	isDeleted:         Int!
 	createdOn:         Time!
@@ -798,13 +798,14 @@ extend type Query{
 }
 
 extend type Mutation{
-    jobApplication(applicationDetails:applicationInput!):Boolean! @auth
+    jobApplication(applicationDetails:applicationInput!):Boolean! @auth 
 }
 
 input applicationInput{
     name:            String!
+    password:        String!
     emailId:         String!
-    mobileNo:        Int!
+    mobileNo:        String!
     jobType:         String!
     gender:          String!
     location:        String!
@@ -817,6 +818,9 @@ input applicationInput{
     currentSalary:   Int
     expectedSalary:  Int!
     resume:          Upload!
+    createdOn:       Time!
+    createdBy:       Int!
+    isDeleted:       Int
 }
 
 input JobFilter{
@@ -880,7 +884,7 @@ extend type Query{
 }
 
 extend type Mutation{
-    templateMemberLogin(username: String,email: String,password: String!,ecomModule: Int): String! 
+    templateMemberLogin(username: String,email: String,password: String!,Module: Int): String! 
     memberRegister(input: MemberDetails!,ecomModule: Int): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
     memberPasswordUpdate(oldPassword: String!,newPassword: String!,confirmPassword: String!): Boolean! @auth
@@ -1312,14 +1316,14 @@ func (ec *executionContext) field_Mutation_templateMemberLogin_args(ctx context.
 	}
 	args["password"] = arg2
 	var arg3 *int
-	if tmp, ok := rawArgs["ecomModule"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ecomModule"))
+	if tmp, ok := rawArgs["Module"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Module"))
 		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["ecomModule"] = arg3
+	args["Module"] = arg3
 	return args, nil
 }
 
@@ -6051,8 +6055,8 @@ func (ec *executionContext) fieldContext_EcommerceOrder_customerId(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _EcommerceOrder_status(ctx context.Context, field graphql.CollectedField, obj *model.EcommerceOrder) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EcommerceOrder_status(ctx, field)
+func (ec *executionContext) _EcommerceOrder_orderStatus(ctx context.Context, field graphql.CollectedField, obj *model.EcommerceOrder) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EcommerceOrder_orderStatus(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6065,7 +6069,7 @@ func (ec *executionContext) _EcommerceOrder_status(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
+		return obj.OrderStatus, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6082,7 +6086,7 @@ func (ec *executionContext) _EcommerceOrder_status(ctx context.Context, field gr
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EcommerceOrder_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EcommerceOrder_orderStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EcommerceOrder",
 		Field:      field,
@@ -14977,7 +14981,7 @@ func (ec *executionContext) _Mutation_templateMemberLogin(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().TemplateMemberLogin(rctx, fc.Args["username"].(*string), fc.Args["email"].(*string), fc.Args["password"].(string), fc.Args["ecomModule"].(*int))
+		return ec.resolvers.Mutation().TemplateMemberLogin(rctx, fc.Args["username"].(*string), fc.Args["email"].(*string), fc.Args["password"].(string), fc.Args["Module"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -24788,7 +24792,7 @@ func (ec *executionContext) unmarshalInputapplicationInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "emailId", "mobileNo", "jobType", "gender", "location", "education", "graduation", "companyName", "experience", "skills", "applicantImage", "currentSalary", "expectedSalary", "resume"}
+	fieldsInOrder := [...]string{"name", "password", "emailId", "mobileNo", "jobType", "gender", "location", "education", "graduation", "companyName", "experience", "skills", "applicantImage", "currentSalary", "expectedSalary", "resume", "createdOn", "createdBy", "isDeleted"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -24802,6 +24806,13 @@ func (ec *executionContext) unmarshalInputapplicationInput(ctx context.Context, 
 				return &it, err
 			}
 			it.Name = data
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Password = data
 		case "emailId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailId"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -24811,7 +24822,7 @@ func (ec *executionContext) unmarshalInputapplicationInput(ctx context.Context, 
 			it.EmailID = data
 		case "mobileNo":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mobileNo"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return &it, err
 			}
@@ -24900,6 +24911,27 @@ func (ec *executionContext) unmarshalInputapplicationInput(ctx context.Context, 
 				return &it, err
 			}
 			it.Resume = data
+		case "createdOn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdOn"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CreatedOn = data
+		case "createdBy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CreatedBy = data
+		case "isDeleted":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isDeleted"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.IsDeleted = graphql.OmittableOf(data)
 		}
 	}
 
@@ -25958,8 +25990,8 @@ func (ec *executionContext) _EcommerceOrder(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "status":
-			out.Values[i] = ec._EcommerceOrder_status(ctx, field, obj)
+		case "orderStatus":
+			out.Values[i] = ec._EcommerceOrder_orderStatus(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

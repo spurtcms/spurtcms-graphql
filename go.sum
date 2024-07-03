@@ -107,10 +107,10 @@ github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/sergi/go-diff v1.3.1 h1:xkr+Oxo4BOQKmkn/B9eMK0g5Kg/983T9DqqPHwYqD+8=
 github.com/sosodev/duration v1.2.0 h1:pqK/FLSjsAADWY74SyWDCjOcd5l7H8GSnnOGEB9A1Us=
 github.com/sosodev/duration v1.2.0/go.mod h1:RQIBBX0+fMLc/D9+Jb/fwvVmo0eZvDDEERAikUR6SDg=
-github.com/spurtcms/auth v0.0.6 h1:mQ4Dk3ghv/zIkjHtEAEl8yF/rrbVeZRIdmnLEmBw/lU=
-github.com/spurtcms/auth v0.0.6/go.mod h1:1u46UkHWHcsN99jNGCaei0/75rslezIpOGITEhVkvAM=
-github.com/spurtcms/member v0.0.7 h1:gZvbWqY0SmRVatBZFCMY9fmA2OPJfozdIWs/NjO5JXs=
-github.com/spurtcms/member v0.0.7/go.mod h1:znxAG13AXz6hWDhOWZjidm7VJlTp6KL4Hpwzn0Y9b4k=
+github.com/spurtcms/auth v0.0.11 h1:Q+YH/PA5dCSE0eUTv4ED+b+8BhBKNuh3gx8S3H6QA5I=
+github.com/spurtcms/auth v0.0.11/go.mod h1:1u46UkHWHcsN99jNGCaei0/75rslezIpOGITEhVkvAM=
+github.com/spurtcms/member v0.0.15 h1:bgZRuz76Y+imB3HwZGMV1XBe1iYal7NGgGbT5w3qnic=
+github.com/spurtcms/member v0.0.15/go.mod h1:idcWtsYsuILbTxz2uUY93WoIgy4Yz9llx14om3UutW8=
 github.com/spurtcms/pkgcontent v1.1.19 h1:rlES1jHfx2Oxn5LExgRFOinamDO4oIyHYw0rYUsYNck=
 github.com/spurtcms/pkgcontent v1.1.19/go.mod h1:yA3OJ8M9xEPqMyLE8usLFPqNG+yHo6AZnxKY4qrA56w=
 github.com/spurtcms/pkgcore v1.0.91 h1:2FEIn3LvUQL7PpY+fgnMhyKDYPVD0GPibccUj2K5URs=

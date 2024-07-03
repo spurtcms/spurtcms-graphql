@@ -47,13 +47,14 @@ extend type Query{
 }
 
 extend type Mutation{
-    jobApplication(applicationDetails:applicationInput!):Boolean! @auth
+    jobApplication(applicationDetails:applicationInput!):Boolean! @auth 
 }
 
 input applicationInput{
     name:            String!
+    password:        String!
     emailId:         String!
-    mobileNo:        Int!
+    mobileNo:        String!
     jobType:         String!
     gender:          String!
     location:        String!
@@ -66,6 +67,9 @@ input applicationInput{
     currentSalary:   Int
     expectedSalary:  Int!
     resume:          Upload!
+    createdOn:       Time!
+    createdBy:       Int!
+    isDeleted:       Int
 }
 
 input JobFilter{

@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"spurtcms-graphql/graph/model"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +28,7 @@ func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *m
 	var (
 		jobTitle, jobLocation, skill, keyWord, categorySlug, datePosted string
 
-		minimumYears, maximumYears, categoryId                          int
+		minimumYears, maximumYears, categoryId int
 	)
 
 	if filter != nil {
@@ -119,7 +118,7 @@ func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *m
 
 	if datePosted != "" {
 
-		var startDate,endDate time.Time
+		var startDate, endDate time.Time
 
 		var currentDate = time.Now().Local()
 
@@ -301,7 +300,7 @@ func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.A
 
 	newMember.Email = applicationInfo.EmailID
 
-	newMember.MobileNo = strconv.Itoa(applicationInfo.MobileNo)
+	newMember.MobileNo = applicationInfo.MobileNo
 
 	newMember.IsActive = 1
 
@@ -314,7 +313,7 @@ func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.A
 	result := db.Table("tbl_members").Create(&newMember)
 
 	if result.Error != nil {
-		
+
 		return false, result.Error
 	}
 

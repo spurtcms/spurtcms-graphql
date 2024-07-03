@@ -745,18 +745,21 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	}
 
+	var (
+		customerId, totalPrice, totalTax, totalCost int
+		orderplaced                                 model.EcommerceOrder
+		orderStatus                                 model.OrderStatusNames
+		err                                         error
+	)
+
 	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
-	var customerId int
-
-	if err := db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?", memberid).Scan(&customerId).Error; err != nil {
+	if err = db.Table("tbl_ecom_customers").Select("id").Where("is_deleted = 0 and member_id = ?", memberid).Scan(&customerId).Error; err != nil {
 
 		return false, err
 	}
 
 	unixTime := time.Now().Unix()
-
-	var orderplaced model.EcommerceOrder
 
 	orderId := "SP" + strconv.Itoa(int(unixTime))
 
@@ -766,13 +769,17 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 	orderplaced.CustomerID = customerId
 
-	orderplaced.Status = 1
+	if err = db.Debug().Table("tbl_ecom_statuses").Where("is_deleted = 0").Order("priority").First(&orderStatus).Error; err != nil {
+
+		return false, err
+
+	}
+
+	orderplaced.OrderStatus = orderStatus.ID
 
 	orderplaced.IsDeleted = 0
 
 	orderplaced.CreatedOn = currentTime
-
-	var totalPrice, totalTax, totalCost int
 
 	if orderSummary != nil {
 
@@ -814,7 +821,10 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 		return false, err
 	}
 
-	var createorder model.EcommerceOrder
+	var (
+		createorder       model.EcommerceOrder
+		orderedProductIds []int
+	)
 
 	if err := db.Table("tbl_ecom_product_orders").Where("uuid = ?", orderId).First(&createorder).Error; err != nil {
 
@@ -822,8 +832,6 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 		return false, err
 	}
-
-	var orderedProductIds []int
 
 	for _, value := range orderProducts {
 
@@ -844,11 +852,14 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 		orderedProductIds = append(orderedProductIds, value.ProductID)
 	}
 
-	var orderstatus model.OrderStatus
+	var (
+		orderstatus  model.OrderStatus
+		orderPayment model.OrderPayment
+	)
 
 	orderstatus.OrderID = createorder.ID
 
-	orderstatus.OrderStatus = 1
+	orderstatus.OrderStatus = orderStatus.ID
 
 	orderstatus.CreatedBy = customerId
 
@@ -860,8 +871,6 @@ func EcommerceOrderPlacement(db *gorm.DB, ctx context.Context, paymentMode strin
 
 		return false, err
 	}
-
-	var orderPayment model.OrderPayment
 
 	orderPayment.OrderID = createorder.ID
 
