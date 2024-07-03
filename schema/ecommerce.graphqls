@@ -92,7 +92,7 @@ type EcommerceOrder{
 	id:                Int!
 	uuid:           String!
 	customerId:        Int!
-	status:            String!
+	status:            Int!
 	shippingAddress:   String!
 	isDeleted:         Int!
 	createdOn:         Time!
@@ -114,7 +114,7 @@ type OrderProductDetails{
 type OrderStatus{
 	id:            Int!
 	orderId:       Int!
-	orderStatus:   String!
+	orderStatus:   Int!
 	createdBy:     Int!
 	createdOn:     Time!
 }
@@ -167,6 +167,7 @@ type OrderStatusNames{
 	modifiedBy:      Int
 	modifiedOn:      Time
 	isDeleted:       Int!
+	priority:        Int!
 }
 
 extend type Query{

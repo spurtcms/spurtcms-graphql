@@ -133,7 +133,7 @@ type EcommerceOrder struct {
 	ID              int        `json:"id"`
 	UUID            string     `json:"uuid"`
 	CustomerID      int        `json:"customerId"`
-	Status          string     `json:"status"`
+	Status          int        `json:"status"`
 	ShippingAddress string     `json:"shippingAddress"`
 	IsDeleted       int        `json:"isDeleted"`
 	CreatedOn       time.Time  `json:"createdOn"`
@@ -396,7 +396,7 @@ type OrderProductDetails struct {
 type OrderStatus struct {
 	ID          int       `json:"id"`
 	OrderID     int       `json:"orderId"`
-	OrderStatus string    `json:"orderStatus"`
+	OrderStatus int       `json:"orderStatus"`
 	CreatedBy   int       `json:"createdBy"`
 	CreatedOn   time.Time `json:"createdOn"`
 }
@@ -411,6 +411,7 @@ type OrderStatusNames struct {
 	ModifiedBy  *int       `json:"modifiedBy,omitempty"`
 	ModifiedOn  *time.Time `json:"modifiedOn,omitempty"`
 	IsDeleted   int        `json:"isDeleted"`
+	Priority    int        `json:"priority"`
 }
 
 type OrderSummary struct {
@@ -592,11 +593,11 @@ type CustomerDetails struct {
 	CreatedOn        time.Time  `json:"createdOn"`
 	CreatedBy        int        `json:"createdBy"`
 	ModifiedOn       *time.Time `json:"modifiedOn,omitempty"`
-	ModifiedBy       *int       `json:"modifiedBy,omitempty"`
 	IsDeleted        *int       `json:"IsDeleted,omitempty"`
 	DeletedOn        *time.Time `json:"DeletedOn,omitempty"`
-	HouseNo          *string    `json:"houseNo,omitempty" gorm:"-"`
-	Area             *string    `json:"Area,omitempty" gorm:"-"`
+	ModifiedBy       *int       `json:"modifiedBy,omitempty"`
+	HouseNo          *string    `json:"houseNo,omitempty"`
+	Area             *string    `json:"Area,omitempty"`
 	City             *string    `json:"city,omitempty"`
 	State            *string    `json:"state,omitempty"`
 	Country          *string    `json:"country,omitempty"`

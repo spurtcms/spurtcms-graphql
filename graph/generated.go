@@ -585,7 +585,7 @@ type EcommerceOrder{
 	id:                Int!
 	uuid:           String!
 	customerId:        Int!
-	status:            String!
+	status:            Int!
 	shippingAddress:   String!
 	isDeleted:         Int!
 	createdOn:         Time!
@@ -607,7 +607,7 @@ type OrderProductDetails{
 type OrderStatus{
 	id:            Int!
 	orderId:       Int!
-	orderStatus:   String!
+	orderStatus:   Int!
 	createdBy:     Int!
 	createdOn:     Time!
 }
@@ -660,6 +660,7 @@ type OrderStatusNames{
 	modifiedBy:      Int
 	modifiedOn:      Time
 	isDeleted:       Int!
+	priority:        Int!
 }
 
 extend type Query{
@@ -6076,9 +6077,9 @@ func (ec *executionContext) _EcommerceOrder_status(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EcommerceOrder_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6088,7 +6089,7 @@ func (ec *executionContext) fieldContext_EcommerceOrder_status(ctx context.Conte
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -15600,9 +15601,9 @@ func (ec *executionContext) _OrderStatus_orderStatus(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrderStatus_orderStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -15612,7 +15613,7 @@ func (ec *executionContext) fieldContext_OrderStatus_orderStatus(ctx context.Con
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -16081,6 +16082,50 @@ func (ec *executionContext) _OrderStatusNames_isDeleted(ctx context.Context, fie
 }
 
 func (ec *executionContext) fieldContext_OrderStatusNames_isDeleted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrderStatusNames",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrderStatusNames_priority(ctx context.Context, field graphql.CollectedField, obj *model.OrderStatusNames) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrderStatusNames_priority(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Priority, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrderStatusNames_priority(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OrderStatusNames",
 		Field:      field,
@@ -18665,6 +18710,8 @@ func (ec *executionContext) fieldContext_Query_ecommerceOrderStatusNames(ctx con
 				return ec.fieldContext_OrderStatusNames_modifiedOn(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_OrderStatusNames_isDeleted(ctx, field)
+			case "priority":
+				return ec.fieldContext_OrderStatusNames_priority(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrderStatusNames", field.Name)
 		},
@@ -27366,6 +27413,11 @@ func (ec *executionContext) _OrderStatusNames(ctx context.Context, sel ast.Selec
 			out.Values[i] = ec._OrderStatusNames_modifiedOn(ctx, field, obj)
 		case "isDeleted":
 			out.Values[i] = ec._OrderStatusNames_isDeleted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "priority":
+			out.Values[i] = ec._OrderStatusNames_priority(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
