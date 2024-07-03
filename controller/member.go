@@ -67,13 +67,6 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, fmtErr
 	}
 
-	if memberDetails.IsActive != 1 {
-
-		ErrorLog.Printf("%v", ErrMemberInactive)
-
-		return false, ErrMemberInactive
-	}
-
 	sendMailData, err := GetEmailConfigurations(db)
 
 	if err != nil {
@@ -387,9 +380,15 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 		return &model.LoginDetails{}, fmtErr
 	}
 
-	if memberProfile.CompanyLogo != "" {
+	var profileLogo string
 
-		memberProfile.CompanyLogo = GetFilePathsRelatedToStorageTypes(db, memberProfile.CompanyLogo)
+	if memberProfile.CompanyLogo != "" && memberProfile.StorageType == "aws" {
+
+		profileLogo = "image-resize?name=" + memberProfile.CompanyLogo
+
+	} else {
+
+		profileLogo = memberProfile.CompanyLogo
 	}
 
 	conv_memProfile := model.MemberProfile{
@@ -401,7 +400,7 @@ func VerifyMemberOtp(db *gorm.DB, ctx context.Context, email string, otp int) (*
 		MemberDetails:   &memberProfile.MemberDetails,
 		CompanyName:     &memberProfile.CompanyName,
 		CompanyLocation: &memberProfile.CompanyLocation,
-		CompanyLogo:     &memberProfile.CompanyLogo,
+		CompanyLogo:     &profileLogo,
 		About:           &memberProfile.About,
 		SeoTitle:        &memberProfile.SeoTitle,
 		SeoDescription:  &memberProfile.SeoDescription,
@@ -1385,17 +1384,28 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		MemberDetails, err = MemberInstance.GetMemberAndProfileData(0, "", 0, *profileSlug)
 	}
 
+	if err != nil {
+
+		fmtErr := fmt.Errorf("%v: %v", ErrNoMemberDetails, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(500,fmtErr)
+
+		return false, fmtErr
+	}
+
 	if MemberDetails.TblMemberProfile.ClaimStatus == 1 {
 
 		return false, ErrclaimAlready
 	}
 
-	if MemberDetails.IsActive != 1 {
+	if MemberDetails.Id != 0 &&  MemberDetails.IsActive != 1 {
 
 		return false, ErrMemberInactive
 	}
 
-	_,memberData,_ := MemberInstance.CheckEmailInMember(0, profileData.WorkMail)
+	_,memberData,_ := MemberInstance.CheckEmailInMember(MemberDetails.Id, profileData.WorkMail)
 
 	if memberData.Id != 0 {
 
@@ -1403,18 +1413,13 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 			return false, ErrLoginClaimMail
 
-		} else if memberid == 0 {
-
-			return false, ErrMailExist
-
-		} else {
-
-			return false, ErrMailExist
 		}
+
+		return false, ErrMailExist
 
 	}
 
-	_,memData, _ := MemberInstance.CheckNumberInMember(0, profileData.CompanyNumber)
+	_,memData, _ := MemberInstance.CheckNumberInMember(MemberDetails.Id, profileData.CompanyNumber)
 
 	if memData.Id != 0 {
 
@@ -1422,14 +1427,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 			return false, ErrLoginClaimMob
 
-		} else if memberid == 0 {
-
-			return false, ErrMobileExist
-
-		} else {
-
-			return false, ErrMobileExist
 		}
+
+		return false, ErrMobileExist
 
 	}
 
@@ -1450,7 +1450,13 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	if err != nil {
 
-		return false, err
+		fmtErr := fmt.Errorf("%v: %v", ErrFetchMailConfig, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(http.StatusInternalServerError, fmtErr)
+
+		return false, fmtErr
 	}
 
 	var convIds []int

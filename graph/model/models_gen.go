@@ -91,10 +91,6 @@ type ChannelEntries struct {
 	RelatedArticles  string            `json:"relatedArticles"`
 	FeaturedEntry    int               `json:"featuredEntry"`
 	ViewCount        int               `json:"viewCount"`
-	Categories       [][]Category      `json:"categories" gorm:"-"`
-	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty" gorm:"-"`
-	AuthorDetails    Author            `json:"authorDetails" gorm:"-"`
-	MemberProfile    MemberProfile     `json:"memberProfile" gorm:"-"`
 	Author           *string           `json:"author,omitempty"`
 	SortOrder        *int              `json:"sortOrder,omitempty"`
 	CreateTime       *time.Time        `json:"createTime,omitempty"`
@@ -103,6 +99,10 @@ type ChannelEntries struct {
 	Tags             *string           `json:"tags,omitempty"`
 	Excerpt          *string           `json:"excerpt,omitempty"`
 	ImageAltTag      *string           `json:"imageAltTag,omitempty"`
+	Categories       [][]Category      `json:"categories,omitempty" gorm:"-"`
+	AdditionalFields *AdditionalFields `json:"additionalFields,omitempty" gorm:"-"`
+	AuthorDetails    *Author           `json:"authorDetails,omitempty" gorm:"-"`
+	MemberProfile    *MemberProfile    `json:"memberProfile,omitempty" gorm:"-"`
 }
 
 type ChannelEntriesDetails struct {
@@ -212,6 +212,15 @@ type EmailTemplate struct {
 	DeletedOn       *time.Time `json:"deletedOn,omitempty"`
 	DeletedBy       *int       `json:"deletedBy,omitempty"`
 	IsDefault       *int       `json:"isDefault,omitempty"`
+}
+
+type EntryFilter struct {
+	Title               graphql.Omittable[*string] `json:"title,omitempty"`
+	Keyword             graphql.Omittable[*string] `json:"keyword,omitempty"`
+	CategorySlug        graphql.Omittable[*string] `json:"categorySlug,omitempty"`
+	ChannelID           graphql.Omittable[*int]    `json:"channelId,omitempty"`
+	CategoryID          graphql.Omittable[*int]    `json:"categoryId,omitempty"`
+	LinkChildCategories graphql.Omittable[*bool]   `json:"linkChildCategories,omitempty"`
 }
 
 type Field struct {
@@ -604,7 +613,7 @@ type CustomerInput struct {
 	Username      graphql.Omittable[*string]         `json:"username,omitempty"`
 	Password      graphql.Omittable[*string]         `json:"password,omitempty"`
 	IsActive      graphql.Omittable[*int]            `json:"isActive,omitempty"`
-	ProfileImage  graphql.Omittable[*graphql.Upload] `json:"profileImage,omitempty"`
+	ProfileImage  graphql.Omittable[*string]         `json:"profileImage,omitempty"`
 	City          graphql.Omittable[*string]         `json:"city,omitempty"`
 	State         graphql.Omittable[*string]         `json:"state,omitempty"`
 	Country       graphql.Omittable[*string]         `json:"country,omitempty"`

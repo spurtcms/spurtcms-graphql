@@ -33,6 +33,36 @@ type MemberGroup{
 	modifiedBy:   Int 
 }
 
+type MemberProfile{
+	id:                Int
+	memberId:          Int
+	profileName:       String
+	profileSlug:       String
+	profilePage:       String
+	memberDetails:     Any
+	companyName:       String
+	companyLocation:   String
+	companyLogo:       String
+	about:             String
+	seoTitle:          String
+	seoDescription:    String
+	seoKeyword:        String
+	linkedin:          String
+	twitter:           String
+	website:           String
+	createdBy:         Int
+	createdOn:         Time
+	modifiedOn:        Time 
+	modifiedBy:        Int 
+	claimStatus:       Int 
+	IsActive:          Int    
+}
+
+type LoginDetails{
+	memberProfileData:  MemberProfile!
+	token:              String! 
+}
+
 type MemberSettings {
     id:                  Int!
     allowRegistration:   Int!     
@@ -42,12 +72,35 @@ type MemberSettings {
 	notificationUsers:   String!  
 }
 
+type EmailTemplate{
+	id:                Int!
+	templateName:      String!
+	templateSlug:      String!
+	templateSubject:   String!
+	templateMessage:   String! 
+	IsActive:          Int!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBy:        Int
+	isDeleted:         Int!
+	deletedOn:         Time
+	deletedBy:         Int
+	isDefault:         Int
+}
+
 extend type Query{
     memberProfileDetails: MemberProfile! @auth
     getMemberDetails: Member! @auth
+    getMemberProfileDetails(id: Int,profileSlug: String): MemberProfile! @auth
 }
 
 extend type Mutation{
+    memberLogin(email: String!): Boolean!
+	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
+	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
+	memberclaimnow(input: ClaimData!,profileId: Int,profileSlug: String): Boolean! @auth
+	profileNameVerification(profileSlug: String!, profileId: Int!): Boolean! @auth
     templateMemberLogin(username: String,email: String,password: String!): String! 
     memberRegister(input: MemberDetails!,ecomModule: Int): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth

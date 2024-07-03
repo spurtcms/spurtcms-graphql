@@ -51,11 +51,6 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	MemberLogin(ctx context.Context, email string) (bool, error)
-	VerifyMemberOtp(ctx context.Context, email string, otp int) (*model.LoginDetails, error)
-	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error)
-	Memberclaimnow(ctx context.Context, input model.ClaimData, profileID *int, profileSlug *string) (bool, error)
-	ProfileNameVerification(ctx context.Context, profileSlug string, profileID int) (bool, error)
 	UpdateChannelEntryViewCount(ctx context.Context, entryID *int, slug *string) (bool, error)
 	EcommerceAddToCart(ctx context.Context, productID *int, productSlug *string, quantity int) (bool, error)
 	EcommerceOrderPlacement(ctx context.Context, paymentMode string, shippingAddress string, orderProducts []model.OrderProduct, orderSummary *model.OrderSummary) (bool, error)
@@ -63,6 +58,11 @@ type MutationResolver interface {
 	CustomerProfileUpdate(ctx context.Context, customerDetails model.CustomerInput) (bool, error)
 	UpdateProductViewCount(ctx context.Context, productID *int, productSlug *string) (bool, error)
 	JobApplication(ctx context.Context, applicationDetails model.ApplicationInput) (bool, error)
+	MemberLogin(ctx context.Context, email string) (bool, error)
+	VerifyMemberOtp(ctx context.Context, email string, otp int) (*model.LoginDetails, error)
+	MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error)
+	Memberclaimnow(ctx context.Context, input model.ClaimData, profileID *int, profileSlug *string) (bool, error)
+	ProfileNameVerification(ctx context.Context, profileSlug string, profileID int) (bool, error)
 	TemplateMemberLogin(ctx context.Context, username *string, email *string, password string) (string, error)
 	MemberRegister(ctx context.Context, input model.MemberDetails, ecomModule *int) (bool, error)
 	MemberUpdate(ctx context.Context, memberdata model.MemberDetails) (bool, error)
@@ -72,9 +72,8 @@ type QueryResolver interface {
 	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, categoryGroupSlug *string, hierarchyLevel *int, checkEntriesPresence *int) (*model.CategoriesList, error)
 	ChannelList(ctx context.Context, limit int, offset int) (*model.ChannelDetails, error)
 	ChannelDetail(ctx context.Context, channelID *int, channelSlug *string) (*model.Channel, error)
-	ChannelEntriesList(ctx context.Context, channelID *int, categoryID *int, limit int, offset int, title *string, categoryChildID *int, categorySlug *string, categoryChildSlug *string, requireData *model.RequireData) (*model.ChannelEntriesDetails, error)
+	ChannelEntriesList(ctx context.Context, limit int, offset int, filter *model.EntryFilter, requireData *model.RequireData) (*model.ChannelEntriesDetails, error)
 	ChannelEntryDetail(ctx context.Context, categoryID *int, channelID *int, channelEntryID *int, slug *string, categoryChildID *int, profileSlug *string) (*model.ChannelEntries, error)
-	GetMemberProfileDetails(ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error)
 	EcommerceProductList(ctx context.Context, limit int, offset int, filter *model.ProductFilter, sort *model.ProductSort) (*model.EcommerceProducts, error)
 	EcommerceProductDetails(ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error)
 	EcommerceCartList(ctx context.Context, limit int, offset int) (*model.EcommerceCartDetails, error)
@@ -86,6 +85,7 @@ type QueryResolver interface {
 	JobDetail(ctx context.Context, id *int, jobSlug *string) (*model.Job, error)
 	MemberProfileDetails(ctx context.Context) (*model.MemberProfile, error)
 	GetMemberDetails(ctx context.Context) (*model.Member, error)
+	GetMemberProfileDetails(ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error)
 	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error)
 	SpaceDetails(ctx context.Context, spaceID *int, spaceSlug *string) (*model.Space, error)
 	PagesAndPageGroupsUnderSpace(ctx context.Context, spaceID int) (*model.PageAndPageGroups, error)
@@ -117,6 +117,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputClaimData,
+		ec.unmarshalInputEntryFilter,
 		ec.unmarshalInputJobFilter,
 		ec.unmarshalInputMemberDetails,
 		ec.unmarshalInputOrderSummary,
@@ -312,10 +313,6 @@ type ChannelEntries{
 	relatedArticles:      String!
 	featuredEntry:        Int!
 	viewCount:            Int!
-	categories:           [[Category!]!]!
-	additionalFields:     AdditionalFields
-	authorDetails:        Author!
-	memberProfile:        MemberProfile!
 	author:               String
 	sortOrder:            Int
 	createTime:           Time
@@ -324,6 +321,10 @@ type ChannelEntries{
 	tags:                 String
 	excerpt:              String
 	imageAltTag:          String
+	categories:           [[Category!]!]
+	additionalFields:     AdditionalFields
+	authorDetails:        Author
+	memberProfile:        MemberProfile
 }
 
 type Author{
@@ -337,32 +338,6 @@ type Author{
 	CreatedOn:            Time!
 	CreatedBy:            Int!      
 }
-
-type MemberProfile{
-	id:                Int
-	memberId:          Int
-	profileName:       String
-	profileSlug:       String
-	profilePage:       String
-	memberDetails:     Any
-	companyName:       String
-	companyLocation:   String
-	companyLogo:       String
-	about:             String
-	seoTitle:          String
-	seoDescription:    String
-	seoKeyword:        String
-	linkedin:          String
-	twitter:           String
-	website:           String
-	createdBy:         Int
-	createdOn:         Time
-	modifiedOn:        Time 
-	modifiedBy:        Int 
-	claimStatus:       Int 
-	IsActive:          Int    
-}
-
 
 type AdditionalFields{
 	sections:   [Section!]
@@ -421,42 +396,14 @@ type FieldOptions{
 	modifiedBY:        Int
 }
 
-type LoginDetails{
-	memberProfileData:  MemberProfile!
-	token:              String! 
-}
-
-type EmailTemplate{
-	id:                Int!
-	templateName:      String!
-	templateSlug:      String!
-	templateSubject:   String!
-	templateMessage:   String! 
-	IsActive:          Int!
-	createdOn:         Time!
-	createdBy:         Int!
-	modifiedOn:        Time
-	modifiedBy:        Int
-	isDeleted:         Int!
-	deletedOn:         Time
-	deletedBy:         Int
-	isDefault:         Int
-}
-
 extend type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int,channelSlug: String): Channel! @auth
-    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String,requireData: RequireData): ChannelEntriesDetails! @auth
+    channelEntriesList(limit: Int!,offset: Int!,filter: EntryFilter,requireData: RequireData): ChannelEntriesDetails! @auth
 	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int,profileSlug: String): ChannelEntries! @auth
-	getMemberProfileDetails(id: Int,profileSlug: String): MemberProfile! @auth
 }
 
 extend type Mutation{
-    memberLogin(email: String!): Boolean!
-	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
-	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
-	memberclaimnow(input: ClaimData!,profileId: Int,profileSlug: String): Boolean! @auth
-	profileNameVerification(profileSlug: String!, profileId: Int!): Boolean! @auth
 	updateChannelEntryViewCount(entryId: Int,slug: String): Boolean! @auth
 }
 
@@ -484,12 +431,22 @@ input ClaimData{
 	personName:      String!
 }
 
+input EntryFilter{
+	title:               String
+	keyword:             String
+	categorySlug:        String
+	channelId:           Int
+	categoryId:          Int
+	linkChildCategories: Boolean
+}
+
 input RequireData{
 	authorDetails:    Boolean
 	categories:       Boolean
 	memberProfile:    Boolean
 	additionalFields: Boolean
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 	{Name: "../schema/ecommerce.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
@@ -732,7 +689,7 @@ input customerInput{
 	username:         String
 	password:         String
 	isActive:         Int
-	profileImage:     Upload
+	profileImage:     String
 	city:             String
 	state:            String
 	country:          String
@@ -855,6 +812,36 @@ type MemberGroup{
 	modifiedBy:   Int 
 }
 
+type MemberProfile{
+	id:                Int
+	memberId:          Int
+	profileName:       String
+	profileSlug:       String
+	profilePage:       String
+	memberDetails:     Any
+	companyName:       String
+	companyLocation:   String
+	companyLogo:       String
+	about:             String
+	seoTitle:          String
+	seoDescription:    String
+	seoKeyword:        String
+	linkedin:          String
+	twitter:           String
+	website:           String
+	createdBy:         Int
+	createdOn:         Time
+	modifiedOn:        Time 
+	modifiedBy:        Int 
+	claimStatus:       Int 
+	IsActive:          Int    
+}
+
+type LoginDetails{
+	memberProfileData:  MemberProfile!
+	token:              String! 
+}
+
 type MemberSettings {
     id:                  Int!
     allowRegistration:   Int!     
@@ -864,12 +851,35 @@ type MemberSettings {
 	notificationUsers:   String!  
 }
 
+type EmailTemplate{
+	id:                Int!
+	templateName:      String!
+	templateSlug:      String!
+	templateSubject:   String!
+	templateMessage:   String! 
+	IsActive:          Int!
+	createdOn:         Time!
+	createdBy:         Int!
+	modifiedOn:        Time
+	modifiedBy:        Int
+	isDeleted:         Int!
+	deletedOn:         Time
+	deletedBy:         Int
+	isDefault:         Int
+}
+
 extend type Query{
     memberProfileDetails: MemberProfile! @auth
     getMemberDetails: Member! @auth
+    getMemberProfileDetails(id: Int,profileSlug: String): MemberProfile! @auth
 }
 
 extend type Mutation{
+    memberLogin(email: String!): Boolean!
+	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
+	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
+	memberclaimnow(input: ClaimData!,profileId: Int,profileSlug: String): Boolean! @auth
+	profileNameVerification(profileSlug: String!, profileId: Int!): Boolean! @auth
     templateMemberLogin(username: String,email: String,password: String!): String! 
     memberRegister(input: MemberDetails!,ecomModule: Int): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
@@ -1469,87 +1479,42 @@ func (ec *executionContext) field_Query_channelDetail_args(ctx context.Context, 
 func (ec *executionContext) field_Query_channelEntriesList_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *int
-	if tmp, ok := rawArgs["channelId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelId"))
-		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["channelId"] = arg0
-	var arg1 *int
-	if tmp, ok := rawArgs["categoryId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
-		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["categoryId"] = arg1
-	var arg2 int
+	var arg0 int
 	if tmp, ok := rawArgs["limit"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["limit"] = arg2
-	var arg3 int
+	args["limit"] = arg0
+	var arg1 int
 	if tmp, ok := rawArgs["offset"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
-		arg3, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["offset"] = arg3
-	var arg4 *string
-	if tmp, ok := rawArgs["title"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
-		arg4, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+	args["offset"] = arg1
+	var arg2 *model.EntryFilter
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg2, err = ec.unmarshalOEntryFilter2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEntryFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["title"] = arg4
-	var arg5 *int
-	if tmp, ok := rawArgs["categoryChildId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryChildId"))
-		arg5, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["categoryChildId"] = arg5
-	var arg6 *string
-	if tmp, ok := rawArgs["categorySlug"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categorySlug"))
-		arg6, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["categorySlug"] = arg6
-	var arg7 *string
-	if tmp, ok := rawArgs["categoryChildSlug"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryChildSlug"))
-		arg7, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["categoryChildSlug"] = arg7
-	var arg8 *model.RequireData
+	args["filter"] = arg2
+	var arg3 *model.RequireData
 	if tmp, ok := rawArgs["requireData"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requireData"))
-		arg8, err = ec.unmarshalORequireData2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐRequireData(ctx, tmp)
+		arg3, err = ec.unmarshalORequireData2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐRequireData(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["requireData"] = arg8
+	args["requireData"] = arg3
 	return args, nil
 }
 
@@ -4731,273 +4696,6 @@ func (ec *executionContext) fieldContext_ChannelEntries_viewCount(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _ChannelEntries_categories(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChannelEntries_categories(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Categories, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([][]model.Category)
-	fc.Result = res
-	return ec.marshalNCategory2ᚕᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ChannelEntries_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ChannelEntries",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
-			case "categoryName":
-				return ec.fieldContext_Category_categoryName(ctx, field)
-			case "categorySlug":
-				return ec.fieldContext_Category_categorySlug(ctx, field)
-			case "description":
-				return ec.fieldContext_Category_description(ctx, field)
-			case "imagePath":
-				return ec.fieldContext_Category_imagePath(ctx, field)
-			case "createdOn":
-				return ec.fieldContext_Category_createdOn(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_Category_createdBy(ctx, field)
-			case "modifiedOn":
-				return ec.fieldContext_Category_modifiedOn(ctx, field)
-			case "modifiedBy":
-				return ec.fieldContext_Category_modifiedBy(ctx, field)
-			case "parentId":
-				return ec.fieldContext_Category_parentId(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ChannelEntries_additionalFields(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChannelEntries_additionalFields(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AdditionalFields, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.AdditionalFields)
-	fc.Result = res
-	return ec.marshalOAdditionalFields2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAdditionalFields(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ChannelEntries_additionalFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ChannelEntries",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "sections":
-				return ec.fieldContext_AdditionalFields_sections(ctx, field)
-			case "fields":
-				return ec.fieldContext_AdditionalFields_fields(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type AdditionalFields", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ChannelEntries_authorDetails(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AuthorDetails, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.Author)
-	fc.Result = res
-	return ec.marshalNAuthor2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ChannelEntries_authorDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ChannelEntries",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "AuthorId":
-				return ec.fieldContext_Author_AuthorId(ctx, field)
-			case "FirstName":
-				return ec.fieldContext_Author_FirstName(ctx, field)
-			case "LastName":
-				return ec.fieldContext_Author_LastName(ctx, field)
-			case "Email":
-				return ec.fieldContext_Author_Email(ctx, field)
-			case "MobileNo":
-				return ec.fieldContext_Author_MobileNo(ctx, field)
-			case "IsActive":
-				return ec.fieldContext_Author_IsActive(ctx, field)
-			case "ProfileImagePath":
-				return ec.fieldContext_Author_ProfileImagePath(ctx, field)
-			case "CreatedOn":
-				return ec.fieldContext_Author_CreatedOn(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Author_CreatedBy(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Author", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ChannelEntries_memberProfile(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.MemberProfile, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.MemberProfile)
-	fc.Result = res
-	return ec.marshalNMemberProfile2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ChannelEntries",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_MemberProfile_id(ctx, field)
-			case "memberId":
-				return ec.fieldContext_MemberProfile_memberId(ctx, field)
-			case "profileName":
-				return ec.fieldContext_MemberProfile_profileName(ctx, field)
-			case "profileSlug":
-				return ec.fieldContext_MemberProfile_profileSlug(ctx, field)
-			case "profilePage":
-				return ec.fieldContext_MemberProfile_profilePage(ctx, field)
-			case "memberDetails":
-				return ec.fieldContext_MemberProfile_memberDetails(ctx, field)
-			case "companyName":
-				return ec.fieldContext_MemberProfile_companyName(ctx, field)
-			case "companyLocation":
-				return ec.fieldContext_MemberProfile_companyLocation(ctx, field)
-			case "companyLogo":
-				return ec.fieldContext_MemberProfile_companyLogo(ctx, field)
-			case "about":
-				return ec.fieldContext_MemberProfile_about(ctx, field)
-			case "seoTitle":
-				return ec.fieldContext_MemberProfile_seoTitle(ctx, field)
-			case "seoDescription":
-				return ec.fieldContext_MemberProfile_seoDescription(ctx, field)
-			case "seoKeyword":
-				return ec.fieldContext_MemberProfile_seoKeyword(ctx, field)
-			case "linkedin":
-				return ec.fieldContext_MemberProfile_linkedin(ctx, field)
-			case "twitter":
-				return ec.fieldContext_MemberProfile_twitter(ctx, field)
-			case "website":
-				return ec.fieldContext_MemberProfile_website(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_MemberProfile_createdBy(ctx, field)
-			case "createdOn":
-				return ec.fieldContext_MemberProfile_createdOn(ctx, field)
-			case "modifiedOn":
-				return ec.fieldContext_MemberProfile_modifiedOn(ctx, field)
-			case "modifiedBy":
-				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
-			case "claimStatus":
-				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
-			case "IsActive":
-				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _ChannelEntries_author(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChannelEntries_author(ctx, field)
 	if err != nil {
@@ -5326,6 +5024,264 @@ func (ec *executionContext) fieldContext_ChannelEntries_imageAltTag(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelEntries_categories(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_categories(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Categories, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([][]model.Category)
+	fc.Result = res
+	return ec.marshalOCategory2ᚕᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_categories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Category_id(ctx, field)
+			case "categoryName":
+				return ec.fieldContext_Category_categoryName(ctx, field)
+			case "categorySlug":
+				return ec.fieldContext_Category_categorySlug(ctx, field)
+			case "description":
+				return ec.fieldContext_Category_description(ctx, field)
+			case "imagePath":
+				return ec.fieldContext_Category_imagePath(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_Category_createdOn(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Category_createdBy(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_Category_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_Category_modifiedBy(ctx, field)
+			case "parentId":
+				return ec.fieldContext_Category_parentId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelEntries_additionalFields(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_additionalFields(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AdditionalFields, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AdditionalFields)
+	fc.Result = res
+	return ec.marshalOAdditionalFields2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAdditionalFields(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_additionalFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "sections":
+				return ec.fieldContext_AdditionalFields_sections(ctx, field)
+			case "fields":
+				return ec.fieldContext_AdditionalFields_fields(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AdditionalFields", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelEntries_authorDetails(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AuthorDetails, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Author)
+	fc.Result = res
+	return ec.marshalOAuthor2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_authorDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "AuthorId":
+				return ec.fieldContext_Author_AuthorId(ctx, field)
+			case "FirstName":
+				return ec.fieldContext_Author_FirstName(ctx, field)
+			case "LastName":
+				return ec.fieldContext_Author_LastName(ctx, field)
+			case "Email":
+				return ec.fieldContext_Author_Email(ctx, field)
+			case "MobileNo":
+				return ec.fieldContext_Author_MobileNo(ctx, field)
+			case "IsActive":
+				return ec.fieldContext_Author_IsActive(ctx, field)
+			case "ProfileImagePath":
+				return ec.fieldContext_Author_ProfileImagePath(ctx, field)
+			case "CreatedOn":
+				return ec.fieldContext_Author_CreatedOn(ctx, field)
+			case "CreatedBy":
+				return ec.fieldContext_Author_CreatedBy(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Author", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelEntries_memberProfile(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntries) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MemberProfile, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.MemberProfile)
+	fc.Result = res
+	return ec.marshalOMemberProfile2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ChannelEntries_memberProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelEntries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MemberProfile_id(ctx, field)
+			case "memberId":
+				return ec.fieldContext_MemberProfile_memberId(ctx, field)
+			case "profileName":
+				return ec.fieldContext_MemberProfile_profileName(ctx, field)
+			case "profileSlug":
+				return ec.fieldContext_MemberProfile_profileSlug(ctx, field)
+			case "profilePage":
+				return ec.fieldContext_MemberProfile_profilePage(ctx, field)
+			case "memberDetails":
+				return ec.fieldContext_MemberProfile_memberDetails(ctx, field)
+			case "companyName":
+				return ec.fieldContext_MemberProfile_companyName(ctx, field)
+			case "companyLocation":
+				return ec.fieldContext_MemberProfile_companyLocation(ctx, field)
+			case "companyLogo":
+				return ec.fieldContext_MemberProfile_companyLogo(ctx, field)
+			case "about":
+				return ec.fieldContext_MemberProfile_about(ctx, field)
+			case "seoTitle":
+				return ec.fieldContext_MemberProfile_seoTitle(ctx, field)
+			case "seoDescription":
+				return ec.fieldContext_MemberProfile_seoDescription(ctx, field)
+			case "seoKeyword":
+				return ec.fieldContext_MemberProfile_seoKeyword(ctx, field)
+			case "linkedin":
+				return ec.fieldContext_MemberProfile_linkedin(ctx, field)
+			case "twitter":
+				return ec.fieldContext_MemberProfile_twitter(ctx, field)
+			case "website":
+				return ec.fieldContext_MemberProfile_website(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_MemberProfile_createdBy(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_MemberProfile_createdOn(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_MemberProfile_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
+			case "claimStatus":
+				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
+			case "IsActive":
+				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelEntriesDetails_channelEntriesList(ctx context.Context, field graphql.CollectedField, obj *model.ChannelEntriesDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ChannelEntriesDetails_channelEntriesList(ctx, field)
 	if err != nil {
@@ -5407,14 +5363,6 @@ func (ec *executionContext) fieldContext_ChannelEntriesDetails_channelEntriesLis
 				return ec.fieldContext_ChannelEntries_featuredEntry(ctx, field)
 			case "viewCount":
 				return ec.fieldContext_ChannelEntries_viewCount(ctx, field)
-			case "categories":
-				return ec.fieldContext_ChannelEntries_categories(ctx, field)
-			case "additionalFields":
-				return ec.fieldContext_ChannelEntries_additionalFields(ctx, field)
-			case "authorDetails":
-				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
-			case "memberProfile":
-				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
 			case "author":
 				return ec.fieldContext_ChannelEntries_author(ctx, field)
 			case "sortOrder":
@@ -5431,6 +5379,14 @@ func (ec *executionContext) fieldContext_ChannelEntriesDetails_channelEntriesLis
 				return ec.fieldContext_ChannelEntries_excerpt(ctx, field)
 			case "imageAltTag":
 				return ec.fieldContext_ChannelEntries_imageAltTag(ctx, field)
+			case "categories":
+				return ec.fieldContext_ChannelEntries_categories(ctx, field)
+			case "additionalFields":
+				return ec.fieldContext_ChannelEntries_additionalFields(ctx, field)
+			case "authorDetails":
+				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
+			case "memberProfile":
+				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
 		},
@@ -14029,347 +13985,6 @@ func (ec *executionContext) fieldContext_MemberSettings_notificationUsers(ctx co
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_memberLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_memberLogin(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MemberLogin(rctx, fc.Args["email"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_memberLogin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_memberLogin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_verifyMemberOtp(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_verifyMemberOtp(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().VerifyMemberOtp(rctx, fc.Args["email"].(string), fc.Args["otp"].(int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.LoginDetails)
-	fc.Result = res
-	return ec.marshalNLoginDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐLoginDetails(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_verifyMemberOtp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "memberProfileData":
-				return ec.fieldContext_LoginDetails_memberProfileData(ctx, field)
-			case "token":
-				return ec.fieldContext_LoginDetails_token(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type LoginDetails", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_verifyMemberOtp_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_memberProfileUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_memberProfileUpdate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.Auth == nil {
-				return nil, errors.New("directive auth is not implemented")
-			}
-			return ec.directives.Auth(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_memberProfileUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_memberProfileUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_memberclaimnow(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_memberclaimnow(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().Memberclaimnow(rctx, fc.Args["input"].(model.ClaimData), fc.Args["profileId"].(*int), fc.Args["profileSlug"].(*string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.Auth == nil {
-				return nil, errors.New("directive auth is not implemented")
-			}
-			return ec.directives.Auth(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_memberclaimnow(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_memberclaimnow_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_profileNameVerification(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_profileNameVerification(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ProfileNameVerification(rctx, fc.Args["profileSlug"].(string), fc.Args["profileId"].(int))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.Auth == nil {
-				return nil, errors.New("directive auth is not implemented")
-			}
-			return ec.directives.Auth(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_profileNameVerification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_profileNameVerification_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_updateChannelEntryViewCount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_updateChannelEntryViewCount(ctx, field)
 	if err != nil {
@@ -14869,6 +14484,347 @@ func (ec *executionContext) fieldContext_Mutation_jobApplication(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_jobApplication_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_memberLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_memberLogin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MemberLogin(rctx, fc.Args["email"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_memberLogin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_memberLogin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_verifyMemberOtp(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_verifyMemberOtp(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().VerifyMemberOtp(rctx, fc.Args["email"].(string), fc.Args["otp"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.LoginDetails)
+	fc.Result = res
+	return ec.marshalNLoginDetails2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐLoginDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_verifyMemberOtp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "memberProfileData":
+				return ec.fieldContext_LoginDetails_memberProfileData(ctx, field)
+			case "token":
+				return ec.fieldContext_LoginDetails_token(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LoginDetails", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_verifyMemberOtp_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_memberProfileUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_memberProfileUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().MemberProfileUpdate(rctx, fc.Args["profiledata"].(model.ProfileData))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_memberProfileUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_memberProfileUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_memberclaimnow(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_memberclaimnow(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().Memberclaimnow(rctx, fc.Args["input"].(model.ClaimData), fc.Args["profileId"].(*int), fc.Args["profileSlug"].(*string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_memberclaimnow(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_memberclaimnow_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_profileNameVerification(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_profileNameVerification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ProfileNameVerification(rctx, fc.Args["profileSlug"].(string), fc.Args["profileId"].(int))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_profileNameVerification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_profileNameVerification_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -17608,7 +17564,7 @@ func (ec *executionContext) _Query_channelEntriesList(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["channelId"].(*int), fc.Args["categoryId"].(*int), fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["title"].(*string), fc.Args["categoryChildId"].(*int), fc.Args["categorySlug"].(*string), fc.Args["categoryChildSlug"].(*string), fc.Args["requireData"].(*model.RequireData))
+			return ec.resolvers.Query().ChannelEntriesList(rctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["filter"].(*model.EntryFilter), fc.Args["requireData"].(*model.RequireData))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -17775,14 +17731,6 @@ func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Co
 				return ec.fieldContext_ChannelEntries_featuredEntry(ctx, field)
 			case "viewCount":
 				return ec.fieldContext_ChannelEntries_viewCount(ctx, field)
-			case "categories":
-				return ec.fieldContext_ChannelEntries_categories(ctx, field)
-			case "additionalFields":
-				return ec.fieldContext_ChannelEntries_additionalFields(ctx, field)
-			case "authorDetails":
-				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
-			case "memberProfile":
-				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
 			case "author":
 				return ec.fieldContext_ChannelEntries_author(ctx, field)
 			case "sortOrder":
@@ -17799,6 +17747,14 @@ func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Co
 				return ec.fieldContext_ChannelEntries_excerpt(ctx, field)
 			case "imageAltTag":
 				return ec.fieldContext_ChannelEntries_imageAltTag(ctx, field)
+			case "categories":
+				return ec.fieldContext_ChannelEntries_categories(ctx, field)
+			case "additionalFields":
+				return ec.fieldContext_ChannelEntries_additionalFields(ctx, field)
+			case "authorDetails":
+				return ec.fieldContext_ChannelEntries_authorDetails(ctx, field)
+			case "memberProfile":
+				return ec.fieldContext_ChannelEntries_memberProfile(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEntries", field.Name)
 		},
@@ -17811,127 +17767,6 @@ func (ec *executionContext) fieldContext_Query_channelEntryDetail(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_channelEntryDetail_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getMemberProfileDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getMemberProfileDetails(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().GetMemberProfileDetails(rctx, fc.Args["id"].(*int), fc.Args["profileSlug"].(*string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.Auth == nil {
-				return nil, errors.New("directive auth is not implemented")
-			}
-			return ec.directives.Auth(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.MemberProfile); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.MemberProfile`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.MemberProfile)
-	fc.Result = res
-	return ec.marshalNMemberProfile2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getMemberProfileDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_MemberProfile_id(ctx, field)
-			case "memberId":
-				return ec.fieldContext_MemberProfile_memberId(ctx, field)
-			case "profileName":
-				return ec.fieldContext_MemberProfile_profileName(ctx, field)
-			case "profileSlug":
-				return ec.fieldContext_MemberProfile_profileSlug(ctx, field)
-			case "profilePage":
-				return ec.fieldContext_MemberProfile_profilePage(ctx, field)
-			case "memberDetails":
-				return ec.fieldContext_MemberProfile_memberDetails(ctx, field)
-			case "companyName":
-				return ec.fieldContext_MemberProfile_companyName(ctx, field)
-			case "companyLocation":
-				return ec.fieldContext_MemberProfile_companyLocation(ctx, field)
-			case "companyLogo":
-				return ec.fieldContext_MemberProfile_companyLogo(ctx, field)
-			case "about":
-				return ec.fieldContext_MemberProfile_about(ctx, field)
-			case "seoTitle":
-				return ec.fieldContext_MemberProfile_seoTitle(ctx, field)
-			case "seoDescription":
-				return ec.fieldContext_MemberProfile_seoDescription(ctx, field)
-			case "seoKeyword":
-				return ec.fieldContext_MemberProfile_seoKeyword(ctx, field)
-			case "linkedin":
-				return ec.fieldContext_MemberProfile_linkedin(ctx, field)
-			case "twitter":
-				return ec.fieldContext_MemberProfile_twitter(ctx, field)
-			case "website":
-				return ec.fieldContext_MemberProfile_website(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_MemberProfile_createdBy(ctx, field)
-			case "createdOn":
-				return ec.fieldContext_MemberProfile_createdOn(ctx, field)
-			case "modifiedOn":
-				return ec.fieldContext_MemberProfile_modifiedOn(ctx, field)
-			case "modifiedBy":
-				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
-			case "claimStatus":
-				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
-			case "IsActive":
-				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getMemberProfileDetails_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -18943,6 +18778,127 @@ func (ec *executionContext) fieldContext_Query_getMemberDetails(ctx context.Cont
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Member", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getMemberProfileDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getMemberProfileDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().GetMemberProfileDetails(rctx, fc.Args["id"].(*int), fc.Args["profileSlug"].(*string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.MemberProfile); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *spurtcms-graphql/graph/model.MemberProfile`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.MemberProfile)
+	fc.Result = res
+	return ec.marshalNMemberProfile2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getMemberProfileDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MemberProfile_id(ctx, field)
+			case "memberId":
+				return ec.fieldContext_MemberProfile_memberId(ctx, field)
+			case "profileName":
+				return ec.fieldContext_MemberProfile_profileName(ctx, field)
+			case "profileSlug":
+				return ec.fieldContext_MemberProfile_profileSlug(ctx, field)
+			case "profilePage":
+				return ec.fieldContext_MemberProfile_profilePage(ctx, field)
+			case "memberDetails":
+				return ec.fieldContext_MemberProfile_memberDetails(ctx, field)
+			case "companyName":
+				return ec.fieldContext_MemberProfile_companyName(ctx, field)
+			case "companyLocation":
+				return ec.fieldContext_MemberProfile_companyLocation(ctx, field)
+			case "companyLogo":
+				return ec.fieldContext_MemberProfile_companyLogo(ctx, field)
+			case "about":
+				return ec.fieldContext_MemberProfile_about(ctx, field)
+			case "seoTitle":
+				return ec.fieldContext_MemberProfile_seoTitle(ctx, field)
+			case "seoDescription":
+				return ec.fieldContext_MemberProfile_seoDescription(ctx, field)
+			case "seoKeyword":
+				return ec.fieldContext_MemberProfile_seoKeyword(ctx, field)
+			case "linkedin":
+				return ec.fieldContext_MemberProfile_linkedin(ctx, field)
+			case "twitter":
+				return ec.fieldContext_MemberProfile_twitter(ctx, field)
+			case "website":
+				return ec.fieldContext_MemberProfile_website(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_MemberProfile_createdBy(ctx, field)
+			case "createdOn":
+				return ec.fieldContext_MemberProfile_createdOn(ctx, field)
+			case "modifiedOn":
+				return ec.fieldContext_MemberProfile_modifiedOn(ctx, field)
+			case "modifiedBy":
+				return ec.fieldContext_MemberProfile_modifiedBy(ctx, field)
+			case "claimStatus":
+				return ec.fieldContext_MemberProfile_claimStatus(ctx, field)
+			case "IsActive":
+				return ec.fieldContext_MemberProfile_IsActive(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MemberProfile", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getMemberProfileDetails_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -23791,6 +23747,68 @@ func (ec *executionContext) unmarshalInputClaimData(ctx context.Context, obj int
 	return &it, nil
 }
 
+func (ec *executionContext) unmarshalInputEntryFilter(ctx context.Context, obj interface{}) (*model.EntryFilter, error) {
+	var it model.EntryFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"title", "keyword", "categorySlug", "channelId", "categoryId", "linkChildCategories"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "title":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Title = graphql.OmittableOf(data)
+		case "keyword":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyword"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.Keyword = graphql.OmittableOf(data)
+		case "categorySlug":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categorySlug"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CategorySlug = graphql.OmittableOf(data)
+		case "channelId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.ChannelID = graphql.OmittableOf(data)
+		case "categoryId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.CategoryID = graphql.OmittableOf(data)
+		case "linkChildCategories":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("linkChildCategories"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return &it, err
+			}
+			it.LinkChildCategories = graphql.OmittableOf(data)
+		}
+	}
+
+	return &it, nil
+}
+
 func (ec *executionContext) unmarshalInputJobFilter(ctx context.Context, obj interface{}) (*model.JobFilter, error) {
 	var it model.JobFilter
 	asMap := map[string]interface{}{}
@@ -24471,7 +24489,7 @@ func (ec *executionContext) unmarshalInputcustomerInput(ctx context.Context, obj
 			it.IsActive = graphql.OmittableOf(data)
 		case "profileImage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileImage"))
-			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return &it, err
 			}
@@ -25239,23 +25257,6 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "categories":
-			out.Values[i] = ec._ChannelEntries_categories(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "additionalFields":
-			out.Values[i] = ec._ChannelEntries_additionalFields(ctx, field, obj)
-		case "authorDetails":
-			out.Values[i] = ec._ChannelEntries_authorDetails(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "memberProfile":
-			out.Values[i] = ec._ChannelEntries_memberProfile(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "author":
 			out.Values[i] = ec._ChannelEntries_author(ctx, field, obj)
 		case "sortOrder":
@@ -25272,6 +25273,14 @@ func (ec *executionContext) _ChannelEntries(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._ChannelEntries_excerpt(ctx, field, obj)
 		case "imageAltTag":
 			out.Values[i] = ec._ChannelEntries_imageAltTag(ctx, field, obj)
+		case "categories":
+			out.Values[i] = ec._ChannelEntries_categories(ctx, field, obj)
+		case "additionalFields":
+			out.Values[i] = ec._ChannelEntries_additionalFields(ctx, field, obj)
+		case "authorDetails":
+			out.Values[i] = ec._ChannelEntries_authorDetails(ctx, field, obj)
+		case "memberProfile":
+			out.Values[i] = ec._ChannelEntries_memberProfile(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -26643,41 +26652,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "memberLogin":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_memberLogin(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "verifyMemberOtp":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_verifyMemberOtp(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "memberProfileUpdate":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_memberProfileUpdate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "memberclaimnow":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_memberclaimnow(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "profileNameVerification":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_profileNameVerification(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "updateChannelEntryViewCount":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateChannelEntryViewCount(ctx, field)
@@ -26723,6 +26697,41 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "jobApplication":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_jobApplication(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "memberLogin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_memberLogin(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "verifyMemberOtp":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_verifyMemberOtp(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "memberProfileUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_memberProfileUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "memberclaimnow":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_memberclaimnow(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "profileNameVerification":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_profileNameVerification(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -27369,28 +27378,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getMemberProfileDetails":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getMemberProfileDetails(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "ecommerceProductList":
 			field := field
 
@@ -27621,6 +27608,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getMemberDetails(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getMemberProfileDetails":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getMemberProfileDetails(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -28494,10 +28503,6 @@ func (ec *executionContext) _orderPayment(ctx context.Context, sel ast.Selection
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAuthor2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx context.Context, sel ast.SelectionSet, v model.Author) graphql.Marshaler {
-	return ec._Author(ctx, sel, &v)
-}
-
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -28560,50 +28565,6 @@ func (ec *executionContext) marshalNCategory2ᚕspurtcmsᚑgraphqlᚋgraphᚋmod
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNCategory2spurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategory(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNCategory2ᚕᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v [][]model.Category) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNCategory2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -29735,6 +29696,13 @@ func (ec *executionContext) marshalOAny2interface(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) marshalOAuthor2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐAuthor(ctx context.Context, sel ast.SelectionSet, v *model.Author) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Author(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -29761,6 +29729,53 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) marshalOCategory2ᚕᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v [][]model.Category) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCategory2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategoryᚄ(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalOCategory2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -29773,6 +29788,14 @@ func (ec *executionContext) marshalOEcommerceCart2ᚖspurtcmsᚑgraphqlᚋgraph�
 		return graphql.Null
 	}
 	return ec._EcommerceCart(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOEntryFilter2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐEntryFilter(ctx context.Context, v interface{}) (*model.EntryFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputEntryFilter(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOField2ᚕspurtcmsᚑgraphqlᚋgraphᚋmodelᚐFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Field) graphql.Marshaler {
@@ -29979,6 +30002,13 @@ func (ec *executionContext) marshalOMemberGroup2ᚕspurtcmsᚑgraphqlᚋgraphᚋ
 	return ret
 }
 
+func (ec *executionContext) marshalOMemberProfile2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐMemberProfile(ctx context.Context, sel ast.SelectionSet, v *model.MemberProfile) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MemberProfile(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOOrderSummary2ᚖspurtcmsᚑgraphqlᚋgraphᚋmodelᚐOrderSummary(ctx context.Context, v interface{}) (*model.OrderSummary, error) {
 	if v == nil {
 		return nil, nil
@@ -30125,22 +30155,6 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 		return graphql.Null
 	}
 	res := graphql.MarshalTime(*v)
-	return res
-}
-
-func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalUpload(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v *graphql.Upload) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalUpload(*v)
 	return res
 }
 

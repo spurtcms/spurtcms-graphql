@@ -9,6 +9,31 @@ import (
 	"spurtcms-graphql/graph/model"
 )
 
+// MemberLogin is the resolver for the memberLogin field.
+func (r *mutationResolver) MemberLogin(ctx context.Context, email string) (bool, error) {
+	return MemberLogin(r.DB, ctx, email)
+}
+
+// VerifyMemberOtp is the resolver for the verifyMemberOtp field.
+func (r *mutationResolver) VerifyMemberOtp(ctx context.Context, email string, otp int) (*model.LoginDetails, error) {
+	return VerifyMemberOtp(r.DB, ctx, email, otp)
+}
+
+// MemberProfileUpdate is the resolver for the memberProfileUpdate field.
+func (r *mutationResolver) MemberProfileUpdate(ctx context.Context, profiledata model.ProfileData) (bool, error) {
+	return MemberProfileUpdate(r.DB, ctx, profiledata)
+}
+
+// Memberclaimnow is the resolver for the memberclaimnow field.
+func (r *mutationResolver) Memberclaimnow(ctx context.Context, input model.ClaimData, profileID *int, profileSlug *string) (bool, error) {
+	return Memberclaimnow(r.DB, ctx, input, profileID, profileSlug)
+}
+
+// ProfileNameVerification is the resolver for the profileNameVerification field.
+func (r *mutationResolver) ProfileNameVerification(ctx context.Context, profileSlug string, profileID int) (bool, error) {
+	return VerifyProfileName(r.DB, ctx, profileSlug, profileID)
+}
+
 // TemplateMemberLogin is the resolver for the templateMemberLogin field.
 func (r *mutationResolver) TemplateMemberLogin(ctx context.Context, username *string, email *string, password string) (string, error) {
 	return TemplateMemberLogin(r.DB, ctx, username, email, password)
@@ -37,4 +62,9 @@ func (r *queryResolver) MemberProfileDetails(ctx context.Context) (*model.Member
 // GetMemberDetails is the resolver for the getMemberDetails field.
 func (r *queryResolver) GetMemberDetails(ctx context.Context) (*model.Member, error) {
 	return GetMemberDetails(r.DB, ctx)
+}
+
+// GetMemberProfileDetails is the resolver for the getMemberProfileDetails field.
+func (r *queryResolver) GetMemberProfileDetails(ctx context.Context, id *int, profileSlug *string) (*model.MemberProfile, error) {
+	return GetMemberProfileDetails(r.DB, ctx, id, profileSlug)
 }

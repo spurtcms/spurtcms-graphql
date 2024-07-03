@@ -27,7 +27,6 @@ import (
 	memberpkg "github.com/spurtcms/member"
 
 	teampkg "github.com/spurtcms/team"
-
 )
 
 type key string
@@ -91,11 +90,11 @@ var (
 	// OwndeskChannelId               = 108
 	EmailImagePath              MailImages
 	SocialMediaLinks            SocialMedias
-	OwndeskLoginEnquiryTemplate    = "owndeskloginenquiry"
-	OwndeskLoginTemplate           = "owndesklogin"
-	OwndeskClaimnowTemplate        = "owndeskclaimrequest"
-	OwndeskClaimSubmitTemplate     = "owndeskclaimsubmit"
-	LocalLoginType                 = "member"
+	OwndeskLoginEnquiryTemplate = "owndeskloginenquiry"
+	OwndeskLoginTemplate        = "owndesklogin"
+	OwndeskClaimnowTemplate     = "owndeskclaimrequest"
+	OwndeskClaimSubmitTemplate  = "owndeskclaimsubmit"
+	LocalLoginType              = "member"
 	TokenExpiryTime             = 1
 	ErrorLog                    *log.Logger
 	WarnLog                     *log.Logger
@@ -137,8 +136,9 @@ var (
 	ErrJsonUnMarshal         = errors.New("failed to unmarshall the json")
 	ErrClaimMail             = errors.New("failed to send claim request mail to the admin")
 	ErrClaimSubmitMail       = errors.New("failed to send claim request submission status mail to the user")
-	ErrLoginClaimMail     = errors.New("current login email sholuld not be used in another claim")
-	ErrLoginClaimMob      = errors.New("current login mobile number sholuld not be used in another claim")
+	ErrLoginClaimMail        = errors.New("current login email sholuld not be used in another claim")
+	ErrLoginClaimMob         = errors.New("current login mobile number sholuld not be used in another claim")
+	ErrFetchEntries          = errors.New("failed to fetch the channel Entries data")
 )
 
 func init() {
@@ -270,7 +270,7 @@ func HashingPassword(pass string) (string, error) {
 
 func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]teampkg.TblUser, []string, error) {
 
-	_,adminDetails,err := TeamInstance.GetUserById(0,adminIds)
+	_, adminDetails, err := TeamInstance.GetUserById(0, adminIds)
 
 	if err != nil {
 
@@ -434,4 +434,3 @@ func IsValidBase64(input string) (isvalid bool, base64Data string, extension str
 
 	return true, base64Data, ext
 }
-

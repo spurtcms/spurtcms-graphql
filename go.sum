@@ -122,6 +122,8 @@ github.com/spurtcms/categories v0.0.4 h1:F8i5/8nD4mBEUrzOA/FlNi48dFslEoqR9m+i0mI
 github.com/spurtcms/categories v0.0.4/go.mod h1:Am2g6yC0zCETXop33UbWCjPheIyyQLZ4pSeCOM7vMyI=
 github.com/spurtcms/channels v0.0.10 h1:FHUEcYbNZHBkwMVXdpaZtLEQR+7mOxXG85cL57RZmtY=
 github.com/spurtcms/channels v0.0.10/go.mod h1:Wxzi7HsQwxtQySzNh5tqlJCxKhi76a2wREbx4UMukZU=
+github.com/spurtcms/channels v0.0.12 h1:G/XfLGLB5ZYNgv//2U+SWZ0e22Ed6YNXbVeXyaEEgUs=
+github.com/spurtcms/channels v0.0.12/go.mod h1:U2n4dtvC6RVCpn0Q0W0A1PRpEn+n3ypmIUGNQada9zo=
 github.com/spurtcms/ecommerce v0.0.1 h1:Oe/CG5A0g0c0jfKYlqAwYLOPc2fghpOYxFdaAUw009c=
 github.com/spurtcms/ecommerce v0.0.1/go.mod h1:Vxk/EllY2w71xSLTRSizovB2BwXaXTVQ8Ts7ADPYjuQ=
 github.com/spurtcms/member v0.0.13 h1:w4we5phSdxhw7hhUKlz0TmBLISZmEs1E0rIqQnj0CqQ=

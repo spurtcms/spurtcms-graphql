@@ -10,7 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
 	github.com/spurtcms/auth v0.0.8
-	github.com/spurtcms/channels v0.0.10
+	github.com/spurtcms/channels v0.0.12
 	github.com/spurtcms/ecommerce v0.0.1
 	github.com/spurtcms/member v0.0.13
 	github.com/spurtcms/pkgcontent v1.1.15

@@ -240,7 +240,7 @@ input customerInput{
 	username:         String
 	password:         String
 	isActive:         Int
-	profileImage:     Upload
+	profileImage:     String
 	city:             String
 	state:            String
 	country:          String

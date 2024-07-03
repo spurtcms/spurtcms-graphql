@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"spurtcms-graphql/graph/model"
 
@@ -19,11 +20,14 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 
 	// if !ok {
 
-	// 	ErrorLog.Printf("Gin instance retrieval context error: %v", ok)
+	// 	fmtErr := fmt.Errorf("%v: %v", ErrGinInstance, ok)
 
+	// 	ErrorLog.Printf("%v", fmtErr)
+
+	// 	return false, fmtErr
 	// }
 
-	channelList,channelCount, err := ChannelInstance.ListChannel(limit,offset,channels.Filter{},true,false)
+	channelList, channelCount, err := ChannelInstance.ListChannel(limit, offset, channels.Filter{}, true, false)
 
 	if err != nil {
 
@@ -55,355 +59,117 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 }
 
 // this function provides the published channel entries list under a channel and channel entry details for a particular channeel entry by using its id
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string, requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, limit, offset int, filter *model.EntryFilter, requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
 
 	c, ok := ctx.Value(ContextKey).(*gin.Context)
 
 	if !ok {
 
-		ErrorLog.Printf("Gin instance retrieval context error: %v", ok)
+		fmtErr := fmt.Errorf("%v: %v", ErrGinInstance, ok)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		return &model.ChannelEntriesDetails{}, fmtErr
 	}
 
-	token, _ := c.Get("token")
+	var (
+		channelId, categoryId int
 
-	// memberid := c.GetInt("memberid")
+		title, keyword, categorySlug,status string
 
-	// if categoryChildId != 0 || categoryChildSlug != "0"{
+		linkChildCategories,memberprofileflg,authorflg,categoriesflg,fieldsflg bool
+	)
 
+	if filter != nil {
 
-	// }
+		if filter.ChannelID.IsSet() && filter.ChannelID.Value() != nil {
 
-	ChannelInstance.ChannelEntriesList(channels.Entries{Limit: limit,Offset: offset,ChannelId: *channelID,Keyword: *title,Status: "Published",CategoryId: *categoryChildId,CategorySlug:  *categorySlug,})
+			channelId = *filter.ChannelID.Value()
+		}
 
-	channelAuth := channel.Channel{Authority: GetAuthorization(token.(string), db)}
+		if filter.CategoryID.IsSet() && filter.CategoryID.Value() != nil {
 
-	var channelEntries []channel.TblChannelEntries
+			categoryId = *filter.CategoryID.Value()
+		}
 
-	var count int64
+		if filter.Title.IsSet() && filter.Title.Value() != nil {
 
-	var err error
+			title = *filter.Title.Value()
+		}
 
-	var memberprofileflg, authorflg, categoriesflg, fieldsflg bool
+		if filter.Keyword.IsSet() && filter.Keyword.Value() != nil {
+
+			keyword = *filter.Keyword.Value()
+		}
+
+		if filter.CategorySlug.IsSet() && filter.CategorySlug.Value() != nil {
+
+			categorySlug = *filter.CategorySlug.Value()
+		}
+
+		if filter.LinkChildCategories.IsSet() && filter.LinkChildCategories.Value() != nil {
+
+			linkChildCategories = *filter.LinkChildCategories.Value()
+		}
+
+	}
 
 	if requireData != nil {
 
-		if requireData.MemberProfile.IsSet() {
+		if requireData.MemberProfile.IsSet() && requireData.MemberProfile.Value() != nil {
 
 			memberprofileflg = *requireData.MemberProfile.Value()
 		}
 
-		if requireData.AuthorDetails.IsSet() {
+		if requireData.AuthorDetails.IsSet() && requireData.AuthorDetails.Value() != nil{
 
 			authorflg = *requireData.AuthorDetails.Value()
 		}
 
-		if requireData.Categories.IsSet() {
+		if requireData.Categories.IsSet() && requireData.Categories.Value() != nil {
 
 			categoriesflg = *requireData.Categories.Value()
 		}
 
-		if requireData.AdditionalFields.IsSet() {
+		if requireData.AdditionalFields.IsSet() && requireData.AdditionalFields.Value() != nil {
 
 			fieldsflg = *requireData.AdditionalFields.Value()
 		}
 	}
 
-	channelEntries, count, err = channelAuth.GetGraphqlAllChannelEntriesList(channelID, categoryId, limit, offset, SectionTypeId, MemberFieldTypeId, PathUrl, title, categoryChildId, categorySlug, categoryChildSlug, authorflg, memberprofileflg, categoriesflg, fieldsflg)
+	EntryInputs := channels.EntriesInputs{
+		ChannelId: channelId,
+		Limit: limit,
+		Offset: offset,
+		Keyword: keyword,
+		Title: title,
+		Status: status,
+		CategoryId: categoryId,
+		CategorySlug: categorySlug,
+		SelectedCategoryFilter: linkChildCategories,
+		SectionFieldTypeId: SectionTypeId,
+		MemberFieldTypeId: MemberFieldTypeId,
+		TotalCount: true,
+		GetMemberProfile: memberprofileflg,
+		GetAdditionalFields: fieldsflg,
+		GetAuthorDetails: authorflg,
+		GetLinkedCategories: categoriesflg,
+	}
 
-	if err != nil {
+	_,_,_,err := ChannelInstance.FlexibleChannelEntriesList(EntryInputs)
+
+	if err != nil{
+
+		fmtErr := fmt.Errorf("%v: %v", ErrFetchEntries, err)
+
+		ErrorLog.Printf("%v", fmtErr)
+
+		c.AbortWithError(500,fmtErr)
 
 		return &model.ChannelEntriesDetails{}, err
-
 	}
 
-	conv_channelEntries := make([]model.ChannelEntries, len(channelEntries))
-
-	for index, entry := range channelEntries {
-
-		conv_categories := make([][]model.Category, len(entry.Categories))
-
-		for cat_index, categories := range entry.Categories {
-
-			conv_categoryz := make([]model.Category, len(categories))
-
-			for i, category := range categories {
-
-				categoryModon := category.ModifiedOn
-
-				categoryModBy := category.ModifiedBy
-
-				conv_category := model.Category{
-					ID:           category.Id,
-					CategoryName: category.CategoryName,
-					CategorySlug: category.CategorySlug,
-					Description:  category.Description,
-					ImagePath:    category.ImagePath,
-					CreatedOn:    category.CreatedOn,
-					CreatedBy:    category.CreatedBy,
-					ModifiedOn:   &categoryModon,
-					ModifiedBy:   &categoryModBy,
-					ParentID:     category.ParentId,
-				}
-
-				conv_categoryz[i] = conv_category
-
-			}
-
-			conv_categories[cat_index] = conv_categoryz
-		}
-
-		conv_channelEntries[index].Categories = conv_categories
-
-		authorMobnumber := entry.AuthorDetail.MobileNo
-
-		authorIsActive := entry.AuthorDetail.IsActive
-
-		authorProfileImage := entry.AuthorDetail.ProfileImagePath
-
-		authorDetails := model.Author{
-			AuthorID:         entry.AuthorDetail.AuthorID,
-			FirstName:        entry.AuthorDetail.FirstName,
-			LastName:         entry.AuthorDetail.LastName,
-			Email:            entry.AuthorDetail.Email,
-			MobileNo:         &authorMobnumber,
-			IsActive:         &authorIsActive,
-			ProfileImagePath: &authorProfileImage,
-			CreatedOn:        entry.AuthorDetail.CreatedOn,
-			CreatedBy:        entry.AuthorDetail.CreatedBy,
-		}
-
-		conv_channelEntries[index].AuthorDetails = authorDetails
-
-		conv_sections := make([]model.Section, len(entry.Sections))
-
-		for section_index, section := range entry.Sections {
-
-			sectionId := section.Id
-
-			sectionModon := section.ModifiedOn
-
-			sectionModBy := section.ModifiedBy
-
-			conv_section := model.Section{
-				SectionID:     &sectionId,
-				SectionName:   section.FieldName,
-				SectionTypeID: section.FieldTypeId,
-				CreatedOn:     section.CreatedOn,
-				CreatedBy:     section.CreatedBy,
-				ModifiedOn:    &sectionModon,
-				ModifiedBy:    &sectionModBy,
-				OrderIndex:    section.OrderIndex,
-			}
-
-			conv_sections[section_index] = conv_section
-
-		}
-
-		conv_fields := make([]model.Field, len(entry.Fields))
-
-		for field_index, field := range entry.Fields {
-
-			fieldValueModon := field.FieldValue.ModifiedOn
-
-			fieldValueModBy := field.FieldValue.ModifiedBy
-
-			conv_field_value := model.FieldValue{
-				ID:         field.FieldValue.FieldId,
-				FieldValue: field.FieldValue.FieldValue,
-				CreatedOn:  field.FieldValue.CreatedOn,
-				CreatedBy:  field.FieldValue.CreatedBy,
-				ModifiedOn: &fieldValueModon,
-				ModifiedBy: &fieldValueModBy,
-			}
-
-			conv_fieldOptions := make([]model.FieldOptions, len(field.FieldOptions))
-
-			for option_index, field_option := range field.FieldOptions {
-
-				optionModOn := field_option.ModifiedOn
-
-				optionModBy := field_option.ModifiedBy
-
-				conv_fieldOption := model.FieldOptions{
-					ID:          field_option.Id,
-					OptionName:  field_option.OptionName,
-					OptionValue: field_option.OptionValue,
-					CreatedOn:   field_option.CreatedOn,
-					CreatedBy:   field_option.CreatedBy,
-					ModifiedOn:  &optionModOn,
-					ModifiedBy:  &optionModBy,
-				}
-
-				conv_fieldOptions[option_index] = conv_fieldOption
-			}
-
-			fieldModon := field.ModifiedOn
-
-			fieldModBy := field.ModifiedBy
-
-			fieldDateTime := field.DatetimeFormat
-
-			fieldTime := field.TimeFormat
-
-			fieldSectionParentId := field.SectionParentId
-
-			fieldCharAllowed := field.CharacterAllowed
-
-			conv_field := model.Field{
-				FieldID:          field.Id,
-				FieldName:        field.FieldName,
-				FieldTypeID:      field.FieldTypeId,
-				MandatoryField:   field.MandatoryField,
-				OptionExist:      field.OptionExist,
-				CreatedOn:        field.CreatedOn,
-				CreatedBy:        field.CreatedBy,
-				ModifiedOn:       &fieldModon,
-				ModifiedBy:       &fieldModBy,
-				FieldDesc:        field.FieldDesc,
-				OrderIndex:       field.OrderIndex,
-				ImagePath:        field.ImagePath,
-				DatetimeFormat:   &fieldDateTime,
-				TimeFormat:       &fieldTime,
-				SectionParentID:  &fieldSectionParentId,
-				CharacterAllowed: &fieldCharAllowed,
-				FieldTypeName:    field.FieldTypeName,
-				FieldValue:       &conv_field_value,
-				FieldOptions:     conv_fieldOptions,
-			}
-
-			conv_fields[field_index] = conv_field
-
-		}
-
-		additionalFields := model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
-
-		conv_channelEntries[index].AdditionalFields = &additionalFields
-
-		memberProfileId := entry.MemberProfile.Id
-		memberProfileMemId := entry.MemberProfile.MemberId
-		memberProfileName := entry.MemberProfile.ProfileName
-		memberProfileSlug := entry.MemberProfile.ProfileSlug
-		memberProfilePage := entry.MemberProfile.ProfilePage
-		memberProfileMemDetails := entry.MemberProfile.MemberDetails
-		memberProfileComName := entry.MemberProfile.CompanyName
-		memberProfileComLocation := entry.MemberProfile.CompanyLocation
-		memberProfileComLogo := entry.MemberProfile.CompanyLogo
-		memberProfileAbout := entry.MemberProfile.About
-		memberProfileSeoTitle := entry.MemberProfile.SeoTitle
-		memberProfileSeoDesc := entry.MemberProfile.SeoDescription
-		memberProfileSeoKey := entry.MemberProfile.SeoKeyword
-		memberProfileCreateBy := entry.MemberProfile.CreatedBy
-		memberProfileCreateOn := entry.MemberProfile.CreatedOn
-		memberProfileModon := entry.MemberProfile.ModifiedOn
-		memberProfileModBy := entry.MemberProfile.ModifiedBy
-		memberProfileLinkedin := entry.MemberProfile.Linkedin
-		memberProfileTwitter := entry.MemberProfile.Twitter
-		memberProfileWeb := entry.MemberProfile.Website
-		memberProfileClaim := entry.MemberProfile.ClaimStatus
-
-		MemberProfile := model.MemberProfile{
-			ID:              &memberProfileId,
-			MemberID:        &memberProfileMemId,
-			ProfileName:     &memberProfileName,
-			ProfileSlug:     &memberProfileSlug,
-			ProfilePage:     &memberProfilePage,
-			MemberDetails:   &memberProfileMemDetails,
-			CompanyName:     &memberProfileComName,
-			CompanyLocation: &memberProfileComLocation,
-			CompanyLogo:     &memberProfileComLogo,
-			About:           &memberProfileAbout,
-			SeoTitle:        &memberProfileSeoTitle,
-			SeoDescription:  &memberProfileSeoDesc,
-			SeoKeyword:      &memberProfileSeoKey,
-			CreatedBy:       &memberProfileCreateBy,
-			CreatedOn:       &memberProfileCreateOn,
-			ModifiedOn:      &memberProfileModon,
-			ModifiedBy:      &memberProfileModBy,
-			Linkedin:        &memberProfileLinkedin,
-			Twitter:         &memberProfileTwitter,
-			Website:         &memberProfileWeb,
-			ClaimStatus:     &memberProfileClaim,
-		}
-
-		conv_channelEntries[index].MemberProfile = MemberProfile
-
-		conv_channelEntries[index].Author = &entry.Author
-
-		conv_channelEntries[index].CategoriesID = entry.CategoriesId
-
-		conv_channelEntries[index].ChannelID = entry.ChannelId
-
-		conv_channelEntries[index].CoverImage = entry.CoverImage
-
-		conv_channelEntries[index].CreateTime = &entry.CreateTime
-
-		conv_channelEntries[index].CreatedBy = entry.CreatedBy
-
-		conv_channelEntries[index].CreatedOn = entry.CreatedOn
-
-		conv_channelEntries[index].Description = entry.Description
-
-		conv_channelEntries[index].Excerpt = &entry.Excerpt
-
-		conv_channelEntries[index].FeaturedEntry = entry.Feature
-
-		conv_channelEntries[index].ID = entry.Id
-
-		conv_channelEntries[index].IsActive = entry.IsActive
-
-		conv_channelEntries[index].Keyword = entry.Keyword
-
-		conv_channelEntries[index].MetaDescription = entry.MetaDescription
-
-		conv_channelEntries[index].MetaTitle = entry.MetaTitle
-
-		modifiedBy := entry.ModifiedBy
-
-		conv_channelEntries[index].ModifiedBy = &modifiedBy
-
-		modifiedOn := entry.ModifiedOn
-
-		conv_channelEntries[index].ModifiedOn = &modifiedOn
-
-		publishedOn := entry.PublishedTime
-
-		conv_channelEntries[index].PublishedTime = &publishedOn
-
-		readingTime := entry.ReadingTime
-
-		conv_channelEntries[index].ReadingTime = &readingTime
-
-		conv_channelEntries[index].RelatedArticles = entry.RelatedArticles
-
-		conv_channelEntries[index].Slug = entry.Slug
-
-		sortOrder := entry.SortOrder
-
-		conv_channelEntries[index].SortOrder = &sortOrder
-
-		conv_channelEntries[index].Status = entry.Status
-
-		tags := entry.Tags
-
-		conv_channelEntries[index].Tags = &tags
-
-		conv_channelEntries[index].ThumbnailImage = entry.ThumbnailImage
-
-		conv_channelEntries[index].Title = entry.Title
-
-		conv_channelEntries[index].UserID = entry.UserId
-
-		conv_channelEntries[index].ViewCount = entry.ViewCount
-
-		imageAltTag := entry.ImageAltTag
-
-		conv_channelEntries[index].ImageAltTag = &imageAltTag
-
-	}
-
-	channelEntryDetails := model.ChannelEntriesDetails{ChannelEntriesList: conv_channelEntries, Count: int(count)}
-
-	return &channelEntryDetails, nil
+	return &model.ChannelEntriesDetails{}, nil
 
 }
 
@@ -679,8 +445,8 @@ func ChannelEntryDetail(db *gorm.DB, ctx context.Context, channelEntryId, channe
 		RelatedArticles:  channelEntry.RelatedArticles,
 		Categories:       conv_categories,
 		AdditionalFields: additionalFields,
-		MemberProfile:    MemberProfile,
-		AuthorDetails:    authorDetails,
+		MemberProfile:    &MemberProfile,
+		AuthorDetails:    &authorDetails,
 		FeaturedEntry:    channelEntry.Feature,
 		ViewCount:        channelEntry.ViewCount,
 		Author:           &channelEntry.Author,

@@ -47,10 +47,6 @@ type ChannelEntries{
 	relatedArticles:      String!
 	featuredEntry:        Int!
 	viewCount:            Int!
-	categories:           [[Category!]!]!
-	additionalFields:     AdditionalFields
-	authorDetails:        Author!
-	memberProfile:        MemberProfile!
 	author:               String
 	sortOrder:            Int
 	createTime:           Time
@@ -59,6 +55,10 @@ type ChannelEntries{
 	tags:                 String
 	excerpt:              String
 	imageAltTag:          String
+	categories:           [[Category!]!]
+	additionalFields:     AdditionalFields
+	authorDetails:        Author
+	memberProfile:        MemberProfile
 }
 
 type Author{
@@ -72,32 +72,6 @@ type Author{
 	CreatedOn:            Time!
 	CreatedBy:            Int!      
 }
-
-type MemberProfile{
-	id:                Int
-	memberId:          Int
-	profileName:       String
-	profileSlug:       String
-	profilePage:       String
-	memberDetails:     Any
-	companyName:       String
-	companyLocation:   String
-	companyLogo:       String
-	about:             String
-	seoTitle:          String
-	seoDescription:    String
-	seoKeyword:        String
-	linkedin:          String
-	twitter:           String
-	website:           String
-	createdBy:         Int
-	createdOn:         Time
-	modifiedOn:        Time 
-	modifiedBy:        Int 
-	claimStatus:       Int 
-	IsActive:          Int    
-}
-
 
 type AdditionalFields{
 	sections:   [Section!]
@@ -156,42 +130,14 @@ type FieldOptions{
 	modifiedBY:        Int
 }
 
-type LoginDetails{
-	memberProfileData:  MemberProfile!
-	token:              String! 
-}
-
-type EmailTemplate{
-	id:                Int!
-	templateName:      String!
-	templateSlug:      String!
-	templateSubject:   String!
-	templateMessage:   String! 
-	IsActive:          Int!
-	createdOn:         Time!
-	createdBy:         Int!
-	modifiedOn:        Time
-	modifiedBy:        Int
-	isDeleted:         Int!
-	deletedOn:         Time
-	deletedBy:         Int
-	isDefault:         Int
-}
-
 extend type Query{
     channelList(limit: Int!,offset: Int!): ChannelDetails! @auth
 	channelDetail(channelId: Int,channelSlug: String): Channel! @auth
-    channelEntriesList(channelId: Int,categoryId: Int,limit: Int!,offset: Int!, title: String,categoryChildId: Int,categorySlug: String,categoryChildSlug: String,requireData: RequireData): ChannelEntriesDetails! @auth
+    channelEntriesList(limit: Int!,offset: Int!,filter: EntryFilter,requireData: RequireData): ChannelEntriesDetails! @auth
 	channelEntryDetail(categoryId: Int,channelId: Int,channelEntryId: Int,slug: String,categoryChildId: Int,profileSlug: String): ChannelEntries! @auth
-	getMemberProfileDetails(id: Int,profileSlug: String): MemberProfile! @auth
 }
 
 extend type Mutation{
-    memberLogin(email: String!): Boolean!
-	verifyMemberOtp(email: String!, otp: Int!): LoginDetails!
-	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
-	memberclaimnow(input: ClaimData!,profileId: Int,profileSlug: String): Boolean! @auth
-	profileNameVerification(profileSlug: String!, profileId: Int!): Boolean! @auth
 	updateChannelEntryViewCount(entryId: Int,slug: String): Boolean! @auth
 }
 
@@ -217,6 +163,15 @@ input ClaimData{
 	workMail:        String!
     companyNumber:   LargeInt!
 	personName:      String!
+}
+
+input EntryFilter{
+	title:               String
+	keyword:             String
+	categorySlug:        String
+	channelId:           Int
+	categoryId:          Int
+	linkChildCategories: Boolean
 }
 
 input RequireData{

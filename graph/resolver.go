@@ -31,8 +31,8 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 	return controller.Channellist(db, ctx, limit, offset)
 }
 
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, channelID, categoryId *int, limit, offset int, title *string, categoryChildId *int, categorySlug, categoryChildSlug *string, reduireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
-	return controller.ChannelEntriesList(db, ctx, channelID, categoryId, limit, offset, title, categoryChildId, categorySlug, categoryChildSlug, reduireData)
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, limit, offset int, filter *model.EntryFilter ,requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
+	return controller.ChannelEntriesList(db, ctx, limit, offset, filter, requireData)
 }
 
 func MemberUpdate(db *gorm.DB, ctx context.Context, memberdata model.MemberDetails) (bool, error) {
