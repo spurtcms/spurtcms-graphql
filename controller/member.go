@@ -411,6 +411,22 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 				return false, err
 			}
+		} else if ecomMod == 2 {
+
+			var count int64
+
+			if err := db.Table("tbl_jobs_applicants").Where("is_deleted = 0 and username = ?", input.Username.Value()).Count(&count).Error; err != nil {
+
+				return false, err
+			}
+
+			if count > 0 {
+				err = errors.New("username already taken")
+
+				c.AbortWithError(422, err)
+
+				return false, err
+			}
 		}
 
 	}
@@ -429,10 +445,9 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 			return isMemberExists, err
 		}
+		var count int64
 
 		if ecomMod == 1 {
-
-			var count int64
 
 			if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and email = ?", input.Email).Count(&count).Error; err != nil {
 
@@ -442,6 +457,21 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			if count > 0 {
 
 				err = errors.New("customer already exists")
+
+				c.AbortWithError(422, err)
+
+				return false, err
+			}
+		} else if ecomMod == 2 {
+
+			if err := db.Table("tbl_jobs_applicants").Where("is_deleted = 0 and email = ?", input.Email).Count(&count).Error; err != nil {
+
+				return false, err
+			}
+
+			if count > 0 {
+
+				err = errors.New("applicant email already exists")
 
 				c.AbortWithError(422, err)
 
@@ -489,6 +519,26 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 			return isRegistered, err
 		}
+	} else if isRegistered && ecomMod == 2 {
+
+		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+		var newApplicant = model.ApplicationInput{
+			Name:      memberDetails.FirstName,
+			EmailID:   memberDetails.Email,
+			MobileNo:  memberDetails.MobileNo,
+			Password:  memberDetails.Password,
+			CreatedOn: createdOn,
+			CreatedBy: memberData.Id,
+		}
+
+		if err := db.Table("tbl_jobs_applicants").Create(&newApplicant).Error; err != nil {
+
+			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return isRegistered, err
+		}
+
 	}
 
 	return true, nil
@@ -677,11 +727,11 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 }
 
-func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string, ecomModule *int) (string, error) {
+func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string, module *int) (string, error) {
 
 	var (
 		memberSettings model.MemberSettings
-		ecomModuleInt  int
+		moduleInt      int
 	)
 
 	if err := db.Debug().Table("tbl_member_settings").First(&memberSettings).Error; err != nil {
@@ -712,15 +762,15 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 	}
 
-	if ecomModule != nil {
+	if module != nil {
 
-		ecomModuleInt = *ecomModule
+		moduleInt = *module
 
 	}
 
 	memberLogin.Password = password
 
-	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"), LocalLoginType, ecomModuleInt)
+	token, err := Mem.CheckMemberLogin(memberLogin, db, os.Getenv("JWT_SECRET"), LocalLoginType, moduleInt)
 
 	if err != nil {
 

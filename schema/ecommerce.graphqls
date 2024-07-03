@@ -92,7 +92,7 @@ type EcommerceOrder{
 	id:                Int!
 	uuid:           String!
 	customerId:        Int!
-	status:            Int!
+	orderStatus:       Int!
 	shippingAddress:   String!
 	isDeleted:         Int!
 	createdOn:         Time!

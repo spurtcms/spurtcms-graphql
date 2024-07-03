@@ -10,8 +10,8 @@ import (
 )
 
 // TemplateMemberLogin is the resolver for the templateMemberLogin field.
-func (r *mutationResolver) TemplateMemberLogin(ctx context.Context, username *string, email *string, password string, ecomModule *int) (string, error) {
-	return TemplateMemberLogin(r.DB, ctx, username, email, password, ecomModule)
+func (r *mutationResolver) TemplateMemberLogin(ctx context.Context, username *string, email *string, password string, module *int) (string, error) {
+	return TemplateMemberLogin(r.DB, ctx, username, email, password, module)
 }
 
 // MemberRegister is the resolver for the memberRegister field.

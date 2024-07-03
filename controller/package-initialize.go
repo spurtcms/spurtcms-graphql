@@ -13,7 +13,8 @@ var (
 	// NewRole            *role.PermissionConfig
 	// ChannelConfig      *chn.Channel
 	// CategoryConfig     *cat.Categories
-	MemberConfig *memberPkg.Member
+	MemberAuthInstance *memberPkg.Member
+	MemberInstance     *memberPkg.Member
 	// MemberaccessConfig *memaccess.AccessControl
 )
 
@@ -30,24 +31,22 @@ func AuthConfig() *newauth.Auth {
 
 func GetMemberInstance() *memberPkg.Member {
 
-	MemberConfig = memberPkg.MemberSetup(memberPkg.Config{
+	MemberAuthInstance = memberPkg.MemberSetup(memberPkg.Config{
 		DB:               DB,
 		AuthEnable:       true,
-		PermissionEnable: true,
+		PermissionEnable: false,
 		Auth:             NewAuth,
 	})
 
-	return MemberConfig
+	return MemberAuthInstance
 }
 
 func GetMemberInstanceWithoutAuth() *memberPkg.Member {
 
-	MemberConfig = memberPkg.MemberSetup(memberPkg.Config{
-		DB:               DB,
-		AuthEnable:       false,
-		PermissionEnable: true,
-		Auth:             NewAuth,
+	MemberInstance = memberPkg.MemberSetup(memberPkg.Config{
+		DB:   DB,
+		Auth: NewAuth,
 	})
 
-	return MemberConfig
+	return MemberInstance
 }
