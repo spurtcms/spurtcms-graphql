@@ -522,14 +522,16 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 	} else if isRegistered && ecomMod == 2 {
 
 		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+		isDeleted := 0
 
-		var newApplicant = model.ApplicationInput{
+		var newApplicant = model.ApplicantRegister{
 			Name:      memberDetails.FirstName,
 			EmailID:   memberDetails.Email,
 			MobileNo:  memberDetails.MobileNo,
 			Password:  memberDetails.Password,
-			CreatedOn: createdOn,
-			CreatedBy: memberData.Id,
+			CreatedOn: &createdOn,
+			CreatedBy: &memberData.Id,
+			IsDeleted: &isDeleted,
 		}
 
 		if err := db.Table("tbl_jobs_applicants").Create(&newApplicant).Error; err != nil {

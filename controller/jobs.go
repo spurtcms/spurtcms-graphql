@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"spurtcms-graphql/graph/model"
+	"spurtcms-graphql/storage"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -242,76 +242,271 @@ func JobDetail(db *gorm.DB, ctx context.Context, id *int, jobSlug *string) (*mod
 	return jobDetail, nil
 }
 
+func ApplicantDetails(db *gorm.DB, ctx context.Context) (*model.ApplicantDetails, error) {
+
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+		ErrorLog.Printf("Applicant Details Context error: %v", ok)
+	}
+
+	memberId := c.GetInt("memberid")
+
+	if memberId == 0 {
+
+		ErrorLog.Printf("Applicant Details context error: %s", ErrUnauthorizedAccess)
+
+		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorizedAccess)
+	}
+
+	var (
+		applicantDetails      model.ApplicantDetails
+		imagePath, resumePath string
+	)
+
+	if err := db.Debug().Table("tbl_jobs_applicants").Where("is_deleted = 0 and status = 1 and member_id = ?", memberId).First(&applicantDetails).Error; err != nil {
+
+		ErrorLog.Printf("%s: %s", ErrApplicantNotFound, err)
+
+		c.AbortWithError(http.StatusUnprocessableEntity, err)
+
+		return &model.ApplicantDetails{}, err
+	}
+
+	fmt.Println("applicantImage", *applicantDetails.ImagePath)
+
+	if *applicantDetails.StorageType == "aws" && applicantDetails.ImagePath != nil && applicantDetails.StorageType != nil && *applicantDetails.ImagePath != "" {
+
+		imagePath = "image-resize?name=" + *applicantDetails.ImagePath
+
+	} else if *applicantDetails.StorageType == "local" && applicantDetails.ImagePath != nil && applicantDetails.StorageType != nil && *applicantDetails.ImagePath != "" {
+
+		imagePath = *applicantDetails.ImagePath
+
+	} else {
+
+		imagePath = ""
+	}
+
+	applicantDetails.ImagePath = &imagePath
+
+	if *applicantDetails.StorageType == "aws" && applicantDetails.ResumePath != nil && applicantDetails.StorageType != nil && *applicantDetails.ResumePath != "" {
+
+		resumePath = "image-resize?name=" + *applicantDetails.ResumePath
+
+	} else if *applicantDetails.StorageType == "local" && applicantDetails.ResumePath != nil && applicantDetails.StorageType != nil && *applicantDetails.ResumePath != "" {
+
+		resumePath = *applicantDetails.ResumePath
+	} else {
+
+		resumePath = ""
+	}
+
+	applicantDetails.ResumePath = &resumePath
+
+	return &applicantDetails, nil
+}
+
 func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.ApplicationInput) (bool, error) {
 
-	applicationInfo := applicationDetails
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
 
-	applicantImage := applicationInfo.ApplicantImage
+	if !ok {
 
-	resume := applicationInfo.Resume
+		ErrorLog.Printf("job Application context error: %v", ok)
+	}
 
-	ImgBase64Data, err := io.ReadAll(applicantImage.File)
+	memberid := c.GetInt("memberid")
 
-	resumeBase64Data, err := io.ReadAll(resume.File)
+	if memberid == 0 {
+
+		ErrorLog.Printf("job Application context error: %s", ErrUnauthorizedAccess)
+
+		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorizedAccess)
+
+		return false, ErrUnauthorizedAccess
+
+	}
+
+	var (
+		applicantDetails                                                    model.ApplicantDetails
+		result                                                              *gorm.DB
+		applicationData                                                     model.ApplicantDetails
+		imageName, imagePath, resumeName, resumePath, base64Data, extension string
+		storageType                                                         StorageType
+		err                                                                 error
+		isValidBase64                                                       bool
+	)
+
+	storageType, err = GetStorageType(db)
 
 	if err != nil {
 
 		return false, err
 	}
 
-	ImgTargetPath := filepath.Join("uploads/images", applicantImage.Filename)
+	result = db.Debug().Table("tbl_jobs_applicants").Where("is_deleted = 0 and member_id = ? and status = 1", memberid).First(&applicantDetails)
+	if result.Error != nil {
 
-	// Create the target file
-	out, err := os.Create(ImgTargetPath)
-	if err != nil {
-		return false, errors.New("failed to create file")
-	}
-	defer out.Close()
-
-	// Copy the uploaded file to the target file
-	err = os.WriteFile(fmt.Sprintf("uploads/images/%v", applicantImage.Filename), ImgBase64Data, os.ModePerm)
-
-	if err != nil {
-
-		return false, errors.New("failed to copy file")
+		return false, result.Error
 	}
 
-	resumeTargetPath := filepath.Join("uploads/resumes", resume.Filename)
+	applicationData.JobID = &applicationDetails.JobID
 
-	out, err = os.Create(resumeTargetPath)
+	applicationData.ApplicantID = &memberid
 
-	if err != nil {
+	applicationData.CreatedBy = &memberid
 
-		return false, errors.New("failed to create file")
+	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+	applicationData.CreatedOn = &currentTime
+
+	applicationData.Name = &applicationDetails.Name
+
+	applicationData.EmailID = &applicationDetails.EmailID
+
+	applicationData.MobileNo = &applicationDetails.MobileNo
+
+	if applicationDetails.JobType.IsSet() && applicationDetails.JobType.Value() != nil {
+
+		applicationData.JobType = applicationDetails.JobType.Value()
 	}
 
-	defer out.Close()
+	applicationData.Location = &applicationDetails.Location
 
-	err = os.WriteFile(fmt.Sprintf("uploads/resumes/%v", resume.Filename), resumeBase64Data, os.ModePerm)
+	applicationData.Education = &applicationDetails.Education
 
-	if err != nil {
+	applicationData.Graduation = &applicationDetails.Graduation
 
-		return false, errors.New("failed to copy file")
+	if applicationDetails.CompanyName.IsSet() && applicationDetails.CompanyName.Value() != nil {
+
+		applicationData.CompanyName = applicationDetails.CompanyName.Value()
 	}
 
-	var newMember model.Member
+	applicationData.Experience = &applicationDetails.Experience
 
-	newMember.FirstName = applicationInfo.Name
+	applicationData.Skills = &applicationDetails.Skills
 
-	newMember.Email = applicationInfo.EmailID
+	if applicationDetails.Image != "" {
 
-	newMember.MobileNo = applicationInfo.MobileNo
+		isValidBase64, base64Data, extension = IsValidBase64(applicationDetails.Image)
 
-	newMember.IsActive = 1
+		if isValidBase64 && base64Data != "" {
 
-	newMember.MemberGroupID = 1
+			rand_num := strconv.Itoa(int(time.Now().Unix()))
 
-	newMember.ProfileImagePath = fmt.Sprintf("uploads/images/%v", applicantImage.Filename)
+			imageName = "IMG-" + rand_num + "." + extension
 
-	newMember.CreatedOn, _ = time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+			if storageType.SelectedType == "aws" {
 
-	result := db.Table("tbl_members").Create(&newMember)
+				fmt.Printf("aws-S3 storage selected\n")
 
+				imagePath = "member/" + imageName
+
+				err = storage.UploadFileS3(storageType.Aws, nil, base64Data, imagePath)
+				if err != nil {
+
+					fmt.Printf("image upload failed %v\n", err)
+
+					return false, ErrUpload
+
+				}
+
+			} else if storageType.SelectedType == "azure" {
+
+				fmt.Printf("azure storage selected")
+
+			} else if storageType.SelectedType == "drive" {
+
+				fmt.Println("drive storage selected")
+			}
+		} else if strings.Contains(applicationDetails.Image, "image-resize?name") {
+
+			imagePath = strings.ReplaceAll(applicationDetails.Image, "image-resize?name=", "")
+
+		} else {
+
+			ErrorLog.Printf("%v", "illegal base64 data")
+
+			return false, errors.New("illegal base64 data ")
+
+		}
+
+		applicationData.ImagePath = &imagePath
+
+		applicationData.Image = &imageName
+
+	}
+
+	isDeleted := 0
+
+	applicationData.IsDeleted = &isDeleted
+
+	if applicationDetails.CurrentSalary.IsSet() && applicationDetails.CurrentSalary.Value() != nil {
+
+		applicationData.CurrentSalary = applicationDetails.CurrentSalary.Value()
+	}
+
+	if applicationDetails.ExpectedSalary.IsSet() && applicationDetails.ExpectedSalary.Value() != nil {
+
+		applicationData.ExpectedSalary = applicationDetails.ExpectedSalary.Value()
+	}
+
+	if applicationDetails.Resume != "" {
+
+		isValidBase64, base64Data, extension = IsValidBase64(applicationDetails.Resume)
+
+		if isValidBase64 && base64Data != "" {
+
+			rand_num := strconv.Itoa(int(time.Now().Unix()))
+
+			resumeName = "RES-" + rand_num + "." + extension
+
+			if storageType.SelectedType == "aws" {
+
+				fmt.Printf("aws-S3 storage selected\n")
+
+				resumePath = "member/" + resumeName
+
+				err = storage.UploadFileS3(storageType.Aws, nil, base64Data, resumePath)
+				if err != nil {
+
+					fmt.Printf("image upload failed %v\n", err)
+
+					return false, ErrUpload
+
+				}
+
+			} else if storageType.SelectedType == "azure" {
+
+				fmt.Printf("azure storage selected")
+
+			} else if storageType.SelectedType == "drive" {
+
+				fmt.Println("drive storage selected")
+			}
+
+		} else if strings.Contains(applicationDetails.Resume, "image-resize?name") {
+
+			resumePath = strings.ReplaceAll(applicationDetails.Resume, "image-resize?name=", "")
+
+		} else {
+
+			ErrorLog.Printf("%v", "illegal base64 data")
+
+			return false, errors.New("illegal base64 data ")
+
+		}
+
+		applicationData.ResumePath = &resumePath
+
+		applicationData.ResumeName = &resumeName
+
+	}
+
+	applicationData.StorageType = &storageType.SelectedType
+
+	result = db.Debug().Table("tbl_jobs_registers").Create(&applicationData)
 	if result.Error != nil {
 
 		return false, result.Error

@@ -35,15 +35,60 @@ type Job{
     modifiedBy:        Int
 }
 
+type ApplicantDetails{
+    id:              Int
+    jobId:           Int
+    memberId:        Int
+    applicantId:     Int
+    name:            String
+    emailId:         String
+    mobileNo:        String
+    jobType:         String
+    gender:          String
+    location:        String
+    education:       String
+    graduation:      Int
+    companyName:     String
+    experience:      Int
+    skills:          String
+    imagePath:       String
+    image:           String
+    createdOn:       Time
+    createdBy:       Int
+    modifiedOn:      Time
+    modifiedBy:      Int
+    isDeleted:       Int
+    deletedOn:       Time
+    deletedBy:       Int
+    currentSalary:   Int
+    expectedSalary:  Int
+    status:          Int
+    resumePath:      String
+    resumeName:      String
+    storageType:     String
+}
+
 type JobsList{
     jobs: [Job!]!
     count: Int!
+}
+
+type applicantRegister{
+    name:  String!
+    emailId: String!
+    mobileNo: String!
+    password: String!
+    createdOn : Time
+    createdBy: Int
+    isDeleted: Int
+
 }
 
 
 extend type Query{
     jobsList(limit:Int!,offset: Int!,filter: JobFilter) : JobsList! 
     jobDetail(Id: Int,jobSlug: String):Job!
+    applicantDetails: ApplicantDetails! @auth
 }
 
 extend type Mutation{
@@ -52,10 +97,10 @@ extend type Mutation{
 
 input applicationInput{
     name:            String!
-    password:        String!
+    jobId:           Int!
     emailId:         String!
     mobileNo:        String!
-    jobType:         String!
+    jobType:         String
     gender:          String!
     location:        String!
     education:       String!
@@ -63,13 +108,10 @@ input applicationInput{
     companyName:     String
     experience:      Int!
     skills:          String!
-    applicantImage:  Upload!
+    image:           String!
     currentSalary:   Int
-    expectedSalary:  Int!
-    resume:          Upload!
-    createdOn:       Time!
-    createdBy:       Int!
-    isDeleted:       Int
+    expectedSalary:  Int
+    resume:          String!
 }
 
 input JobFilter{

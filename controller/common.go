@@ -129,6 +129,8 @@ var (
 	ErrLoginClaimMail     = errors.New("current login email sholuld not be used in another claim")
 	ErrLoginClaimMob      = errors.New("current login mobile number sholuld not be used in another claim")
 	ErrMobileExist        = errors.New("mobile number already exists")
+	ErrUnauthorizedAccess = errors.New("unauthorized access")
+	ErrApplicantNotFound  = errors.New("applicant not found")
 )
 
 func init() {
@@ -506,7 +508,7 @@ func ImageResize(c *gin.Context) {
 
 func IsValidBase64(input string) (isvalid bool, base64Data string, extension string) {
 
-	if !strings.Contains(input, "data:image/png;base64") && !strings.Contains(input, "data:image/jpeg;base64") && !strings.Contains(input, "data:image/jpg;base64") && !strings.Contains(input, "data:image/svg;base64") {
+	if !strings.Contains(input, "data:image/png;base64") && !strings.Contains(input, "data:image/jpeg;base64") && !strings.Contains(input, "data:image/jpg;base64") && !strings.Contains(input, "data:image/svg;base64") && !strings.Contains(input, "data:application/pdf;base64") {
 
 		return false, "", ""
 	}

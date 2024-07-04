@@ -162,3 +162,7 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 func EcommerceOrderStatusNames(db *gorm.DB, ctx context.Context) ([]model.OrderStatusNames, error) {
 	return controller.EcommerceOrderStatusNames(db, ctx)
 }
+
+func ApplicantDetails(db *gorm.DB, ctx context.Context) (*model.ApplicantDetails, error) {
+	return controller.ApplicantDetails(db, ctx)
+}
