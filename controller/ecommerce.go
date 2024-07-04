@@ -699,7 +699,7 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 		query = query.Where("p.product_slug = ?", *productSlug)
 	}
 
-	if err := query.Select("p.*,o.id as order_id,o.uuid as order_unique_id,o.status as order_status,o.customer_id as order_customer,o.created_on as order_time,o.shipping_address as shipping_details,d.quantity as order_quantity,d.price as order_price,d.tax as order_tax ,op.payment_mode").First(&orderedProduct).Error; err != nil {
+	if err := query.Select("p.*,o.id as order_id,o.uuid as order_unique_id,o.status as order_status,o.customer_id as order_customer,o.created_on as order_time,o.shipping_address as shipping_details,d.quantity as order_quantity,d.price as order_price,o.tax as order_tax ,op.payment_mode").First(&orderedProduct).Error; err != nil {
 
 		return &model.EcomOrderedProductDetails{}, err
 	}
