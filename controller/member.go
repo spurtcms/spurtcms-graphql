@@ -1087,21 +1087,21 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 	if profiledata.CompanyLogo.IsSet() && profiledata.CompanyLogo.Value() != nil && memProfile.CompanyLogo != *profiledata.CompanyLogo.Value() {
 
 		var fileName, filePath string
+
 		var imageData = *profiledata.CompanyLogo.Value()
+
 		var storageType StorageType
 
 		storageType, err = GetStorageType(db)
+
 		if err != nil {
 
 			return false, err
 		}
 
-		fmt.Println("imae", imageData)
-
 		if imageData != "" {
 
 			isValidBase64, base64Data, extension := IsValidBase64(imageData)
-			fmt.Println("isvali", isValidBase64)
 
 			if isValidBase64 && base64Data != "" {
 
@@ -1116,6 +1116,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 					fmt.Printf("aws-S3 storage selected\n")
 
 					err = storage.UploadFileS3(storageType.Aws, nil, base64Data, filePath)
+
 					if err != nil {
 
 						fmt.Printf("image upload failed %v\n", err)
@@ -1138,6 +1139,7 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 				filePath = strings.ReplaceAll(imageData, "image-resize?name=", "")
 
 			} else {
+
 				ErrorLog.Printf("%v", "illegal base64 data")
 
 				return false, errors.New("illegal base64 data ")
@@ -1302,14 +1304,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 			return false, ErrLoginClaimMail
 
-		} else if memberid == 0 {
-
-			return false, ErrMailExist
-
-		} else {
-
-			return false, ErrMailExist
 		}
+
+		return false, ErrMailExist
 
 	}
 
@@ -1323,14 +1320,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 			return false, ErrLoginClaimMob
 
-		} else if memberid == 0 {
-
-			return false, ErrMobileExist
-
-		} else {
-
-			return false, ErrMobileExist
 		}
+
+		return false, ErrMobileExist
 
 	}
 

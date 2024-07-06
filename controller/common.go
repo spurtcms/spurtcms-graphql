@@ -393,7 +393,7 @@ func GenerateFileName(imageData string) (fileName string) {
 
 func ImageResize(c *gin.Context) {
 
-	fileName := c.Query("filename")
+	fileName := c.Query("name")
 
 	filePath := c.Query("path")
 
@@ -412,37 +412,22 @@ func ImageResize(c *gin.Context) {
 
 	var byteData []byte
 
-	if storageType.SelectedType == "aws" {
+	rawObject, err := storage.GetObjectFromS3(storageType.Aws, filePath+fileName)
 
-		rawObject, err := storage.GetObjectFromS3(storageType.Aws, filePath+fileName)
+	if err != nil {
 
-		if err != nil {
+		fmt.Println(err)
 
-			fmt.Println(err)
-
-			c.AbortWithError(500, fmt.Errorf("%v-%v", ErrGetImage, err))
-
-			return
-		}
-
-		buf := new(bytes.Buffer)
-
-		buf.ReadFrom(rawObject.Body)
-
-		byteData = buf.Bytes()
-
-	} else if storageType.SelectedType == "azure" {
-
-		fmt.Printf("azure storage selected")
-
-		return
-
-	} else if storageType.SelectedType == "drive" {
-
-		fmt.Println("drive storage selected")
+		c.AbortWithError(500, fmt.Errorf("%v-%v", ErrGetImage, err))
 
 		return
 	}
+
+	buf := new(bytes.Buffer)
+
+	buf.ReadFrom(rawObject.Body)
+
+	byteData = buf.Bytes()
 
 	extType := strings.Trim(extension, ".")
 
