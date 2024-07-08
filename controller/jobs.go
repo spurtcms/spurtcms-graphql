@@ -86,7 +86,7 @@ func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *m
 
 	if jobLocation != "" {
 
-		listQuery = listQuery.Where("job_location = ?", jobLocation)
+		listQuery = listQuery.Where("LOWER(TRIM(job_location)) = LOWER(TRIM(?))", jobLocation)
 	}
 
 	if categorySlug != "" {
@@ -195,9 +195,9 @@ func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *m
 
 	if len(jobs) <= 0 {
 
-		c.AbortWithError(500, ErrRecordNotFound)
+		c.AbortWithError(http.StatusInternalServerError, ErrRecordNotFound)
 
-		return nil, ErrRecordNotFound
+		return &model.JobsList{}, ErrRecordNotFound
 	}
 
 	countQuery := listQuery.Count(&count)
