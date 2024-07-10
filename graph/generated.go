@@ -790,7 +790,6 @@ type Job{
 type ApplicantDetails{
     id:              Int
     jobId:           Int
-    memberId:        Int
     applicantId:     Int
     name:            String
     emailId:         String
@@ -2254,47 +2253,6 @@ func (ec *executionContext) _ApplicantDetails_jobId(ctx context.Context, field g
 }
 
 func (ec *executionContext) fieldContext_ApplicantDetails_jobId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ApplicantDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ApplicantDetails_memberId(ctx context.Context, field graphql.CollectedField, obj *model.ApplicantDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ApplicantDetails_memberId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.MemberID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ApplicantDetails_memberId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ApplicantDetails",
 		Field:      field,
@@ -20229,8 +20187,6 @@ func (ec *executionContext) fieldContext_Query_applicantDetails(ctx context.Cont
 				return ec.fieldContext_ApplicantDetails_id(ctx, field)
 			case "jobId":
 				return ec.fieldContext_ApplicantDetails_jobId(ctx, field)
-			case "memberId":
-				return ec.fieldContext_ApplicantDetails_memberId(ctx, field)
 			case "applicantId":
 				return ec.fieldContext_ApplicantDetails_applicantId(ctx, field)
 			case "name":
@@ -26980,8 +26936,6 @@ func (ec *executionContext) _ApplicantDetails(ctx context.Context, sel ast.Selec
 			out.Values[i] = ec._ApplicantDetails_id(ctx, field, obj)
 		case "jobId":
 			out.Values[i] = ec._ApplicantDetails_jobId(ctx, field, obj)
-		case "memberId":
-			out.Values[i] = ec._ApplicantDetails_memberId(ctx, field, obj)
 		case "applicantId":
 			out.Values[i] = ec._ApplicantDetails_applicantId(ctx, field, obj)
 		case "name":
