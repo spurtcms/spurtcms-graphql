@@ -16,7 +16,6 @@ type AdditionalFields struct {
 type ApplicantDetails struct {
 	ID             *int       `json:"id,omitempty"`
 	JobID          *int       `json:"jobId,omitempty"`
-	MemberID       *int       `json:"memberId,omitempty"`
 	ApplicantID    *int       `json:"applicantId,omitempty"`
 	Name           *string    `json:"name,omitempty"`
 	EmailID        *string    `json:"emailId,omitempty"`

@@ -492,7 +492,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 		return &model.EcommerceProducts{}, err
 	}
 
-	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_order_payments op on op.order_id = o.id").Where("p.is_deleted = 0 and o.is_deleted = 0 and o.customer_id = ?", customerId)
+	query := db.Debug().Table("tbl_ecom_products as p").Joins("inner join tbl_ecom_product_order_details d on d.product_id = p.id").Joins("inner join tbl_ecom_product_orders o on o.id = d.order_id").Joins("inner join tbl_ecom_order_payments op on op.order_id = o.id").Joins("inner join tbl_ecom_statuses oe on o.order_status = oe.id").Where("p.is_deleted = 0 and o.is_deleted = 0 and o.customer_id = ?", customerId)
 
 	var (
 		status, searchKeyword, orderId, startingDate, endingDate string
@@ -551,7 +551,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	if upcomingOrders == 1 {
 
-		query = query.Where("o.status in (?)", []string{"placed", "outofdelivery", "shipped"})
+		query = query.Where("o.status in (?)", []string{"placed", "Order Confirmed", "shipped"})
 
 	} else if orderHistory == 1 {
 
@@ -633,7 +633,7 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 		query = query.Order("o.id desc")
 	}
 
-	if err := query.Select("p.*,o.id as order_id,o.uuid as order_unique_id,o.status as order_status,o.customer_id as order_customer,o.created_on as order_time,o.shipping_address as shipping_details,d.quantity as order_quantity,d.price as order_price,d.tax as order_tax,op.payment_mode").Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
+	if err := query.Select("p.*,o.id as order_id,o.uuid as order_unique_id,oe.status as order_status,o.customer_id as order_customer,o.created_on as order_time,o.shipping_address as shipping_details,d.quantity as order_quantity,d.price as order_price,d.tax as order_tax,op.payment_mode").Limit(limit).Offset(offset).Find(&orderedProducts).Error; err != nil {
 
 		return &model.EcommerceProducts{}, err
 	}
@@ -699,7 +699,7 @@ func EcommerceProductOrderDetails(db *gorm.DB, ctx context.Context, productID *i
 		query = query.Where("p.product_slug = ?", *productSlug)
 	}
 
-	if err := query.Select("p.*,o.id as order_id,o.uuid as order_unique_id,o.status as order_status,o.customer_id as order_customer,o.created_on as order_time,o.shipping_address as shipping_details,d.quantity as order_quantity,d.price as order_price,o.tax as order_tax ,op.payment_mode").First(&orderedProduct).Error; err != nil {
+	if err := query.Select("p.*,o.id as order_id,o.uuid as order_unique_id,o.order_status as order_status,o.customer_id as order_customer,o.created_on as order_time,o.shipping_address as shipping_details,d.quantity as order_quantity,d.price as order_price,o.tax as order_tax ,op.payment_mode").First(&orderedProduct).Error; err != nil {
 
 		return &model.EcomOrderedProductDetails{}, err
 	}
@@ -910,14 +910,16 @@ func EcommerceCustomerDetails(db *gorm.DB, ctx context.Context) (*model.Customer
 
 	var customerDetails model.CustomerDetails
 
-	if err := db.Table("tbl_ecom_customers").Where("is_deleted = 0 and member_id = ?", memberid).First(&customerDetails).Error; err != nil {
+	if err := db.Debug().Table("tbl_ecom_customers").Where("is_deleted = 0 and member_id = ?", memberid).First(&customerDetails).Error; err != nil {
 
 		return &model.CustomerDetails{}, err
 	}
 
-	if customerDetails.ProfileImagePath != nil {
+	fmt.Println("customerDetails.ProfileImagePath", *customerDetails.ProfileImagePath)
 
-		modified_path := PathUrl + strings.TrimPrefix(*customerDetails.ProfileImagePath, "/")
+	if customerDetails.ProfileImagePath != nil && *customerDetails.ProfileImagePath != "" {
+
+		modified_path := "image-resize?name=" + strings.TrimPrefix(*customerDetails.ProfileImagePath, "/")
 
 		customerDetails.ProfileImagePath = &modified_path
 	}
@@ -1007,25 +1009,31 @@ func CustomerProfileUpdate(db *gorm.DB, ctx context.Context, customerInput model
 						return false, ErrUpload
 
 					}
+				} else if storageType.SelectedType == "azure" {
+
+					fmt.Printf("azure storage selected")
+
+				} else if storageType.SelectedType == "drive" {
+
+					fmt.Println("drive storage selected")
 				}
 
+			} else if strings.Contains(imageData, "image-resize?name") {
+
+				filePath = strings.ReplaceAll(imageData, "image-resize?name=", "")
+
+				indexOf := strings.Index(filePath, "/")
+
+				fileName = filePath[indexOf+1:]
 			}
-		} else if storageType.SelectedType == "azure" {
+			customerDetails["profile_image"] = fileName
 
-			fmt.Printf("azure storage selected")
+			memberDetails["profile_image"] = fileName
 
-		} else if storageType.SelectedType == "drive" {
+			customerDetails["profile_image_path"] = filePath
 
-			fmt.Println("drive storage selected")
+			memberDetails["profile_image_path"] = filePath
 		}
-
-		customerDetails["profile_image"] = fileName
-
-		memberDetails["profile_image"] = fileName
-
-		customerDetails["profile_image_path"] = filePath
-
-		memberDetails["profile_image_path"] = filePath
 
 	}
 

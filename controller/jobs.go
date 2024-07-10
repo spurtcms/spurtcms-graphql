@@ -353,9 +353,9 @@ func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.A
 
 	applicationData.JobID = &applicationDetails.JobID
 
-	applicationData.ApplicantID = &memberid
+	applicationData.ApplicantID = applicantDetails.ID
 
-	applicationData.CreatedBy = &memberid
+	applicationData.CreatedBy = applicantDetails.ID
 
 	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
@@ -506,7 +506,7 @@ func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.A
 
 	applicationData.StorageType = &storageType.SelectedType
 
-	result = db.Debug().Table("tbl_jobs_registers").Create(&applicationData)
+	result = db.Debug().Table("tbl_jobs_registers").Create(&applicationData).Omit("member_id")
 	if result.Error != nil {
 
 		return false, result.Error
