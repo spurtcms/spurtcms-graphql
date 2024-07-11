@@ -39,6 +39,10 @@ func init(){
 	GetTeamInstance()
 
 	GetTeamInstanceWithoutAuth()
+
+	GetChannelInstanceWithoutAuth()
+
+	GetChannelInstance()
 }
 
 // AuthCofing
@@ -134,8 +138,6 @@ func GetChannelInstanceWithoutAuth() *chanPkg.Channel{
 
 	ChannelInstance =  chanPkg.ChannelSetup(chanPkg.Config{
 		DB: DB,
-		AuthEnable: true,
-		PermissionEnable: false,
 		Auth: AuthInstance,
 	})
 

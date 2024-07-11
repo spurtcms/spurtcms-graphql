@@ -1347,7 +1347,7 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, pro
 	slugPresence, err := MemberInstance.CheckProfileSlug(profileSlug, profileID)
 
 	if err != nil {
-
+		
 		return false, err
 	}
 
