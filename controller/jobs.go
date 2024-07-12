@@ -195,9 +195,7 @@ func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *m
 
 	if len(jobs) <= 0 {
 
-		c.AbortWithError(http.StatusInternalServerError, ErrRecordNotFound)
-
-		return &model.JobsList{}, ErrRecordNotFound
+		return &model.JobsList{}, nil
 	}
 
 	countQuery := listQuery.Count(&count)
@@ -242,7 +240,7 @@ func JobDetail(db *gorm.DB, ctx context.Context, id *int, jobSlug *string) (*mod
 	return jobDetail, nil
 }
 
-func ApplicantDetails(db *gorm.DB, ctx context.Context) (*model.ApplicantDetails, error) {
+func ApplicantDetails(db *gorm.DB, ctx context.Context, jobId int, emailId string) (*model.ApplicantDetails, error) {
 
 	c, ok := ctx.Value(ContextKey).(*gin.Context)
 
@@ -260,51 +258,85 @@ func ApplicantDetails(db *gorm.DB, ctx context.Context) (*model.ApplicantDetails
 	}
 
 	var (
-		applicantDetails      model.ApplicantDetails
-		imagePath, resumePath string
+		applicantDetails, finalApplicantDetails model.ApplicantDetails
+		imagePath, resumePath                   string
+		result                                  *gorm.DB
+		count                                   int64
 	)
 
-	if err := db.Debug().Table("tbl_jobs_applicants").Where("is_deleted = 0 and status = 1 and member_id = ?", memberId).First(&applicantDetails).Error; err != nil {
+	query := db.Debug().Table("tbl_jobs_registers").Where("is_deleted = 0 and job_id = ? and email_id = ?", jobId, emailId)
 
-		ErrorLog.Printf("%s: %s", ErrApplicantNotFound, err)
+	result = query.Count(&count)
+	if result.Error != nil {
+		ErrorLog.Printf("%s: %s", ErrApplicantNotFound, result.Error)
 
-		c.AbortWithError(http.StatusUnprocessableEntity, err)
+		c.AbortWithError(http.StatusUnprocessableEntity, result.Error)
 
-		return &model.ApplicantDetails{}, err
+		return &model.ApplicantDetails{}, result.Error
+
 	}
 
-	fmt.Println("applicantImage", *applicantDetails.ImagePath)
+	fmt.Println("count", count)
 
-	if *applicantDetails.StorageType == "aws" && applicantDetails.ImagePath != nil && applicantDetails.StorageType != nil && *applicantDetails.ImagePath != "" {
+	if count > 0 {
 
-		imagePath = "image-resize?name=" + *applicantDetails.ImagePath
+		result = query.First(&applicantDetails)
+		if result.Error != nil {
+			ErrorLog.Printf("%s: %s", ErrApplicantNotFound, result.Error)
 
-	} else if *applicantDetails.StorageType == "local" && applicantDetails.ImagePath != nil && applicantDetails.StorageType != nil && *applicantDetails.ImagePath != "" {
+			c.AbortWithError(http.StatusUnprocessableEntity, result.Error)
 
-		imagePath = *applicantDetails.ImagePath
+			return &model.ApplicantDetails{}, result.Error
+
+		}
+
+		finalApplicantDetails = applicantDetails
+
+	} else {
+
+		if err := db.Debug().Table("tbl_jobs_applicants").Where("is_deleted = 0 and status = 1 and member_id = ?", memberId).First(&applicantDetails).Error; err != nil {
+
+			ErrorLog.Printf("%s: %s", ErrApplicantNotFound, err)
+
+			c.AbortWithError(http.StatusUnprocessableEntity, err)
+
+			return &model.ApplicantDetails{}, err
+		}
+
+		finalApplicantDetails = applicantDetails
+
+	}
+
+	if *finalApplicantDetails.StorageType == "aws" && finalApplicantDetails.ImagePath != nil && finalApplicantDetails.StorageType != nil && *finalApplicantDetails.ImagePath != "" {
+
+		imagePath = "image-resize?name=" + *finalApplicantDetails.ImagePath
+
+	} else if *finalApplicantDetails.StorageType == "local" && finalApplicantDetails.ImagePath != nil && finalApplicantDetails.StorageType != nil && *finalApplicantDetails.ImagePath != "" {
+
+		imagePath = *finalApplicantDetails.ImagePath
 
 	} else {
 
 		imagePath = ""
 	}
 
-	applicantDetails.ImagePath = &imagePath
+	finalApplicantDetails.ImagePath = &imagePath
 
-	if *applicantDetails.StorageType == "aws" && applicantDetails.ResumePath != nil && applicantDetails.StorageType != nil && *applicantDetails.ResumePath != "" {
+	if *finalApplicantDetails.StorageType == "aws" && finalApplicantDetails.ResumePath != nil && finalApplicantDetails.StorageType != nil && *finalApplicantDetails.ResumePath != "" {
 
-		resumePath = "image-resize?name=" + *applicantDetails.ResumePath
+		resumePath = "image-resize?name=" + *finalApplicantDetails.ResumePath
 
-	} else if *applicantDetails.StorageType == "local" && applicantDetails.ResumePath != nil && applicantDetails.StorageType != nil && *applicantDetails.ResumePath != "" {
+	} else if *finalApplicantDetails.StorageType == "local" && finalApplicantDetails.ResumePath != nil && finalApplicantDetails.StorageType != nil && *finalApplicantDetails.ResumePath != "" {
 
-		resumePath = *applicantDetails.ResumePath
+		resumePath = *finalApplicantDetails.ResumePath
 	} else {
 
 		resumePath = ""
 	}
 
-	applicantDetails.ResumePath = &resumePath
+	finalApplicantDetails.ResumePath = &resumePath
 
-	return &applicantDetails, nil
+	return &finalApplicantDetails, nil
 }
 
 func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.ApplicationInput) (bool, error) {
@@ -322,8 +354,6 @@ func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.A
 
 		ErrorLog.Printf("job Application context error: %s", ErrUnauthorizedAccess)
 
-		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorizedAccess)
-
 		return false, ErrUnauthorizedAccess
 
 	}
@@ -336,6 +366,7 @@ func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.A
 		storageType                                                         StorageType
 		err                                                                 error
 		isValidBase64                                                       bool
+		registeredApplicant                                                 int64
 	)
 
 	storageType, err = GetStorageType(db)
@@ -351,165 +382,217 @@ func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.A
 		return false, result.Error
 	}
 
-	applicationData.JobID = &applicationDetails.JobID
+	if applicationDetails.EmailID == *applicantDetails.EmailID {
 
-	applicationData.ApplicantID = applicantDetails.ID
+		applicationData.JobID = &applicationDetails.JobID
 
-	applicationData.CreatedBy = applicantDetails.ID
+		applicationData.EmailID = &applicationDetails.EmailID
 
-	currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+		result = db.Debug().Table("tbl_jobs_registers").Where("job_id = ? and email_id = ? and is_deleted = 0", applicationData.JobID, applicationData.EmailID).Count(&registeredApplicant)
+		if result.Error != nil {
 
-	applicationData.CreatedOn = &currentTime
+			return false, result.Error
+		}
 
-	applicationData.Name = &applicationDetails.Name
+		if registeredApplicant > 0 {
+			err = errors.New("this member has already applied for this job using this emailid")
 
-	applicationData.EmailID = &applicationDetails.EmailID
+			return false, err
+		}
 
-	applicationData.MobileNo = &applicationDetails.MobileNo
+		applicationData.ApplicantID = applicantDetails.ID
 
-	if applicationDetails.JobType.IsSet() && applicationDetails.JobType.Value() != nil {
+		applicationData.CreatedBy = applicantDetails.ID
 
-		applicationData.JobType = applicationDetails.JobType.Value()
-	}
+		currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
-	applicationData.Location = &applicationDetails.Location
+		applicationData.CreatedOn = &currentTime
 
-	applicationData.Education = &applicationDetails.Education
+		applicationData.Name = &applicationDetails.Name
 
-	applicationData.Graduation = &applicationDetails.Graduation
+		applicationData.MobileNo = &applicationDetails.MobileNo
 
-	if applicationDetails.CompanyName.IsSet() && applicationDetails.CompanyName.Value() != nil {
+		if applicationDetails.JobType.IsSet() && applicationDetails.JobType.Value() != nil {
 
-		applicationData.CompanyName = applicationDetails.CompanyName.Value()
-	}
+			applicationData.JobType = applicationDetails.JobType.Value()
+		}
 
-	applicationData.Experience = &applicationDetails.Experience
+		applicationData.Location = &applicationDetails.Location
 
-	applicationData.Skills = &applicationDetails.Skills
+		applicationData.Education = &applicationDetails.Education
 
-	if applicationDetails.Image != "" {
+		applicationData.Graduation = &applicationDetails.Graduation
 
-		isValidBase64, base64Data, extension = IsValidBase64(applicationDetails.Image)
+		applicationData.Gender = &applicationDetails.Gender
 
-		if isValidBase64 && base64Data != "" {
+		if applicationDetails.CompanyName.IsSet() && applicationDetails.CompanyName.Value() != nil {
 
-			rand_num := strconv.Itoa(int(time.Now().Unix()))
+			applicationData.CompanyName = applicationDetails.CompanyName.Value()
+		}
 
-			imageName = "IMG-" + rand_num + "." + extension
+		applicationData.Experience = &applicationDetails.Experience
 
-			if storageType.SelectedType == "aws" {
+		applicationData.Skills = &applicationDetails.Skills
 
-				fmt.Printf("aws-S3 storage selected\n")
+		if applicationDetails.Image != "" {
 
-				imagePath = "member/" + imageName
+			isValidBase64, base64Data, extension = IsValidBase64(applicationDetails.Image)
 
-				err = storage.UploadFileS3(storageType.Aws, nil, base64Data, imagePath)
-				if err != nil {
+			if isValidBase64 && base64Data != "" {
 
-					fmt.Printf("image upload failed %v\n", err)
+				rand_num := strconv.Itoa(int(time.Now().Unix()))
 
-					return false, ErrUpload
+				if extension == "msword" {
+
+					imageName = "IMG-" + rand_num + "." + "doc"
+
+				} else if extension == "vnd.openxmlformats-officedocument.wordprocessingml.document" {
+
+					imageName = "IMG-" + rand_num + "." + "docx"
+
+				} else {
+
+					imageName = "IMG-" + rand_num + "." + extension
 
 				}
 
-			} else if storageType.SelectedType == "azure" {
+				if storageType.SelectedType == "aws" {
 
-				fmt.Printf("azure storage selected")
+					fmt.Printf("aws-S3 storage selected\n")
 
-			} else if storageType.SelectedType == "drive" {
+					imagePath = "member/" + imageName
 
-				fmt.Println("drive storage selected")
+					err = storage.UploadFileS3(storageType.Aws, nil, base64Data, imagePath)
+					if err != nil {
+
+						fmt.Printf("image upload failed %v\n", err)
+
+						return false, ErrUpload
+
+					}
+
+				} else if storageType.SelectedType == "azure" {
+
+					fmt.Printf("azure storage selected")
+
+				} else if storageType.SelectedType == "drive" {
+
+					fmt.Println("drive storage selected")
+				}
+			} else if strings.Contains(applicationDetails.Image, "image-resize?name") {
+
+				imagePath = strings.ReplaceAll(applicationDetails.Image, "image-resize?name=", "")
+
+			} else {
+
+				ErrorLog.Printf("%v", "illegal base64 data")
+
+				c.AbortWithError(http.StatusNotAcceptable, errors.New("illegal base64 data "))
+
+				return false, errors.New("illegal base64 data ")
+
 			}
-		} else if strings.Contains(applicationDetails.Image, "image-resize?name") {
 
-			imagePath = strings.ReplaceAll(applicationDetails.Image, "image-resize?name=", "")
+			applicationData.ImagePath = &imagePath
 
-		} else {
-
-			ErrorLog.Printf("%v", "illegal base64 data")
-
-			return false, errors.New("illegal base64 data ")
+			applicationData.Image = &imageName
 
 		}
 
-		applicationData.ImagePath = &imagePath
+		isDeleted := 0
 
-		applicationData.Image = &imageName
+		applicationData.IsDeleted = &isDeleted
 
-	}
+		if applicationDetails.CurrentSalary.IsSet() && applicationDetails.CurrentSalary.Value() != nil {
 
-	isDeleted := 0
+			applicationData.CurrentSalary = applicationDetails.CurrentSalary.Value()
+		}
 
-	applicationData.IsDeleted = &isDeleted
+		if applicationDetails.ExpectedSalary.IsSet() && applicationDetails.ExpectedSalary.Value() != nil {
 
-	if applicationDetails.CurrentSalary.IsSet() && applicationDetails.CurrentSalary.Value() != nil {
+			applicationData.ExpectedSalary = applicationDetails.ExpectedSalary.Value()
+		}
 
-		applicationData.CurrentSalary = applicationDetails.CurrentSalary.Value()
-	}
+		if applicationDetails.Resume != "" {
 
-	if applicationDetails.ExpectedSalary.IsSet() && applicationDetails.ExpectedSalary.Value() != nil {
+			isValidBase64, base64Data, extension = IsValidBase64(applicationDetails.Resume)
 
-		applicationData.ExpectedSalary = applicationDetails.ExpectedSalary.Value()
-	}
+			if isValidBase64 && base64Data != "" {
 
-	if applicationDetails.Resume != "" {
+				rand_num := strconv.Itoa(int(time.Now().Unix()))
 
-		isValidBase64, base64Data, extension = IsValidBase64(applicationDetails.Resume)
+				if extension == "msword" {
 
-		if isValidBase64 && base64Data != "" {
+					resumeName = "RES-" + rand_num + "." + "doc"
 
-			rand_num := strconv.Itoa(int(time.Now().Unix()))
+				} else if extension == "vnd.openxmlformats-officedocument.wordprocessingml.document" {
 
-			resumeName = "RES-" + rand_num + "." + extension
+					resumeName = "RES-" + rand_num + "." + "docx"
 
-			if storageType.SelectedType == "aws" {
+				} else {
 
-				fmt.Printf("aws-S3 storage selected\n")
-
-				resumePath = "member/" + resumeName
-
-				err = storage.UploadFileS3(storageType.Aws, nil, base64Data, resumePath)
-				if err != nil {
-
-					fmt.Printf("image upload failed %v\n", err)
-
-					return false, ErrUpload
+					resumeName = "RES-" + rand_num + "." + extension
 
 				}
 
-			} else if storageType.SelectedType == "azure" {
+				if storageType.SelectedType == "aws" {
 
-				fmt.Printf("azure storage selected")
+					fmt.Printf("aws-S3 storage selected\n")
 
-			} else if storageType.SelectedType == "drive" {
+					resumePath = "member/" + resumeName
 
-				fmt.Println("drive storage selected")
+					err = storage.UploadFileS3(storageType.Aws, nil, base64Data, resumePath)
+					if err != nil {
+
+						fmt.Printf("image upload failed %v\n", err)
+
+						return false, ErrUpload
+
+					}
+
+				} else if storageType.SelectedType == "azure" {
+
+					fmt.Printf("azure storage selected")
+
+				} else if storageType.SelectedType == "drive" {
+
+					fmt.Println("drive storage selected")
+				}
+
+			} else if strings.Contains(applicationDetails.Resume, "image-resize?name") {
+
+				resumePath = strings.ReplaceAll(applicationDetails.Resume, "image-resize?name=", "")
+
+			} else {
+
+				ErrorLog.Printf("%v", "illegal base64 data")
+
+				c.AbortWithError(http.StatusNotAcceptable, errors.New("illegal base64 data "))
+
+				return false, errors.New("illegal base64 data ")
+
 			}
 
-		} else if strings.Contains(applicationDetails.Resume, "image-resize?name") {
+			applicationData.ResumePath = &resumePath
 
-			resumePath = strings.ReplaceAll(applicationDetails.Resume, "image-resize?name=", "")
-
-		} else {
-
-			ErrorLog.Printf("%v", "illegal base64 data")
-
-			return false, errors.New("illegal base64 data ")
+			applicationData.ResumeName = &resumeName
 
 		}
 
-		applicationData.ResumePath = &resumePath
+		applicationData.StorageType = &storageType.SelectedType
 
-		applicationData.ResumeName = &resumeName
+		result = db.Debug().Table("tbl_jobs_registers").Create(&applicationData)
+		if result.Error != nil {
 
-	}
+			return false, result.Error
+		}
 
-	applicationData.StorageType = &storageType.SelectedType
+	} else {
 
-	result = db.Debug().Table("tbl_jobs_registers").Create(&applicationData).Omit("member_id")
-	if result.Error != nil {
+		ErrorLog.Printf("%v", "Please use the registered email")
 
-		return false, result.Error
+		return false, errors.New("please use the registered email")
+
 	}
 
 	return true, nil

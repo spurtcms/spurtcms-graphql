@@ -25,6 +25,6 @@ func (r *queryResolver) JobDetail(ctx context.Context, id *int, jobSlug *string)
 }
 
 // ApplicantDetails is the resolver for the applicantDetails field.
-func (r *queryResolver) ApplicantDetails(ctx context.Context) (*model.ApplicantDetails, error) {
-	return ApplicantDetails(r.DB, ctx)
+func (r *queryResolver) ApplicantDetails(ctx context.Context, jobID int, emailID string) (*model.ApplicantDetails, error) {
+	return ApplicantDetails(r.DB, ctx, jobID, emailID)
 }

@@ -493,7 +493,7 @@ func ImageResize(c *gin.Context) {
 
 func IsValidBase64(input string) (isvalid bool, base64Data string, extension string) {
 
-	if !strings.Contains(input, "data:image/png;base64") && !strings.Contains(input, "data:image/jpeg;base64") && !strings.Contains(input, "data:image/jpg;base64") && !strings.Contains(input, "data:image/svg;base64") && !strings.Contains(input, "data:application/pdf;base64") {
+	if !strings.Contains(input, "data:image/png;base64") && !strings.Contains(input, "data:image/jpeg;base64") && !strings.Contains(input, "data:image/jpg;base64") && !strings.Contains(input, "data:image/svg;base64") && !strings.Contains(input, "data:application/pdf;base64") && !strings.Contains(input, "data:application/msword;base64") && !strings.Contains(input, "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64") {
 
 		return false, "", ""
 	}
@@ -508,7 +508,9 @@ func IsValidBase64(input string) (isvalid bool, base64Data string, extension str
 
 	extEndIndex := strings.Index(input, ";base64,")
 
-	var ext = input[11:extEndIndex]
+	startIndex := strings.Index(input, "/")
+
+	var ext = input[startIndex+1 : extEndIndex]
 
 	return true, base64Data, ext
 }

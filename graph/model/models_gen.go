@@ -601,6 +601,7 @@ type ApplicantRegister struct {
 	CreatedOn *time.Time `json:"createdOn,omitempty"`
 	CreatedBy *int       `json:"createdBy,omitempty"`
 	IsDeleted *int       `json:"isDeleted,omitempty"`
+	MemberID  *int       `json:"memberId,omitempty"`
 }
 
 type ApplicationInput struct {

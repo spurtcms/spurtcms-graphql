@@ -464,7 +464,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			}
 		} else if ecomMod == 2 {
 
-			if err := db.Table("tbl_jobs_applicants").Where("is_deleted = 0 and email = ?", input.Email).Count(&count).Error; err != nil {
+			if err := db.Table("tbl_jobs_applicants").Where("is_deleted = 0 and email_id = ?", input.Email).Count(&count).Error; err != nil {
 
 				return false, err
 			}
@@ -532,6 +532,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			CreatedOn: &createdOn,
 			CreatedBy: &memberData.Id,
 			IsDeleted: &isDeleted,
+			MemberID:  &memberData.Id,
 		}
 
 		if err := db.Table("tbl_jobs_applicants").Create(&newApplicant).Error; err != nil {
