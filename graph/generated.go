@@ -69,7 +69,7 @@ type MutationResolver interface {
 	MemberPasswordUpdate(ctx context.Context, oldPassword string, newPassword string, confirmPassword string) (bool, error)
 }
 type QueryResolver interface {
-	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, categoryGroupSlug *string, hierarchyLevel *int, checkEntriesPresence *int) (*model.CategoriesList, error)
+	CategoriesList(ctx context.Context, limit *int, offset *int, categoryGroupID *int, categoryGroupSlug *string, hierarchyLevel *int, excludeGroup *int, excludeParent *int, checkEntriesPresence *int) (*model.CategoriesList, error)
 	ChannelList(ctx context.Context, limit int, offset int) (*model.ChannelDetails, error)
 	ChannelDetail(ctx context.Context, channelID *int, channelSlug *string) (*model.Channel, error)
 	ChannelEntriesList(ctx context.Context, limit int, offset int, filter *model.EntryFilter, requireData *model.RequireData) (*model.ChannelEntriesDetails, error)
@@ -262,7 +262,7 @@ type CategoriesList{
 }
 
 extend type Query{
-    categoriesList(limit: Int,offset: Int,categoryGroupId: Int,categoryGroupSlug: String,hierarchyLevel: Int, checkEntriesPresence: Int): CategoriesList! @auth
+    categoriesList(limit: Int,offset: Int,categoryGroupId: Int,categoryGroupSlug: String,hierarchyLevel: Int,excludeGroup: Int,excludeParent: Int, checkEntriesPresence: Int): CategoriesList! @auth
 }`, BuiltIn: false},
 	{Name: "../schema/channel.graphqls", Input: `# GraphQL schema example
 #
@@ -1441,14 +1441,32 @@ func (ec *executionContext) field_Query_categoriesList_args(ctx context.Context,
 	}
 	args["hierarchyLevel"] = arg4
 	var arg5 *int
-	if tmp, ok := rawArgs["checkEntriesPresence"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("checkEntriesPresence"))
+	if tmp, ok := rawArgs["excludeGroup"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("excludeGroup"))
 		arg5, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["checkEntriesPresence"] = arg5
+	args["excludeGroup"] = arg5
+	var arg6 *int
+	if tmp, ok := rawArgs["excludeParent"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("excludeParent"))
+		arg6, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["excludeParent"] = arg6
+	var arg7 *int
+	if tmp, ok := rawArgs["checkEntriesPresence"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("checkEntriesPresence"))
+		arg7, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["checkEntriesPresence"] = arg7
 	return args, nil
 }
 
@@ -17305,7 +17323,7 @@ func (ec *executionContext) _Query_categoriesList(ctx context.Context, field gra
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().CategoriesList(rctx, fc.Args["limit"].(*int), fc.Args["offset"].(*int), fc.Args["categoryGroupId"].(*int), fc.Args["categoryGroupSlug"].(*string), fc.Args["hierarchyLevel"].(*int), fc.Args["checkEntriesPresence"].(*int))
+			return ec.resolvers.Query().CategoriesList(rctx, fc.Args["limit"].(*int), fc.Args["offset"].(*int), fc.Args["categoryGroupId"].(*int), fc.Args["categoryGroupSlug"].(*string), fc.Args["hierarchyLevel"].(*int), fc.Args["excludeGroup"].(*int), fc.Args["excludeParent"].(*int), fc.Args["checkEntriesPresence"].(*int))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {

@@ -7,6 +7,7 @@ import (
 	memberPkg "github.com/spurtcms/member"
 	teamPkg "github.com/spurtcms/team"
     chanPkg  "github.com/spurtcms/channels"
+	categoryPkg "github.com/spurtcms/categories"
 )
 
 var (
@@ -19,6 +20,7 @@ var (
 	TeamInstance                *teamPkg.Teams
 	ChannelInstance             *chanPkg.Channel
 	ChannelAuthInstance         *chanPkg.Channel
+	CategoryInstance            *categoryPkg.Categories
 	// NewRole                  *role.PermissionConfig
 	// CategoryConfig           *cat.Categories
 	// MemberaccessConfig       *memaccess.AccessControl
@@ -43,6 +45,9 @@ func init(){
 	GetChannelInstanceWithoutAuth()
 
 	GetChannelInstance()
+
+	GetCategoryInstanceWithoutAuth()
+
 }
 
 // AuthCofing
@@ -142,4 +147,16 @@ func GetChannelInstanceWithoutAuth() *chanPkg.Channel{
 	})
 
 	return ChannelInstance
+}
+
+func GetCategoryInstanceWithoutAuth() *categoryPkg.Categories {
+
+	CategoryInstance = categoryPkg.CategoriesSetup(categoryPkg.Config{
+		DB:               DB,
+		AuthEnable:       false,
+		PermissionEnable: false,
+		Auth:             AuthInstance,
+	})
+
+	return CategoryInstance
 }
