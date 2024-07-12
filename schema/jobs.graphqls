@@ -80,6 +80,7 @@ type applicantRegister{
     createdOn : Time
     createdBy: Int
     isDeleted: Int
+    memberId: Int
 
 }
 
@@ -87,7 +88,7 @@ type applicantRegister{
 extend type Query{
     jobsList(limit:Int!,offset: Int!,filter: JobFilter) : JobsList! 
     jobDetail(Id: Int,jobSlug: String):Job!
-    applicantDetails: ApplicantDetails! @auth
+    applicantDetails(jobId :Int!, emailId :String!): ApplicantDetails! @auth
 }
 
 extend type Mutation{

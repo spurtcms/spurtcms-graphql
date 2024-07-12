@@ -84,7 +84,7 @@ type QueryResolver interface {
 	EcommerceOrderStatusNames(ctx context.Context) ([]model.OrderStatusNames, error)
 	JobsList(ctx context.Context, limit int, offset int, filter *model.JobFilter) (*model.JobsList, error)
 	JobDetail(ctx context.Context, id *int, jobSlug *string) (*model.Job, error)
-	ApplicantDetails(ctx context.Context) (*model.ApplicantDetails, error)
+	ApplicantDetails(ctx context.Context, jobID int, emailID string) (*model.ApplicantDetails, error)
 	MemberProfileDetails(ctx context.Context) (*model.MemberProfile, error)
 	GetMemberDetails(ctx context.Context) (*model.Member, error)
 	SpaceList(ctx context.Context, limit int, offset int, categoriesID *int) (*model.SpaceDetails, error)
@@ -832,6 +832,7 @@ type applicantRegister{
     createdOn : Time
     createdBy: Int
     isDeleted: Int
+    memberId: Int
 
 }
 
@@ -839,7 +840,7 @@ type applicantRegister{
 extend type Query{
     jobsList(limit:Int!,offset: Int!,filter: JobFilter) : JobsList! 
     jobDetail(Id: Int,jobSlug: String):Job!
-    applicantDetails: ApplicantDetails! @auth
+    applicantDetails(jobId :Int!, emailId :String!): ApplicantDetails! @auth
 }
 
 extend type Mutation{
@@ -1444,6 +1445,30 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_applicantDetails_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["jobId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobId"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["jobId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["emailId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailId"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["emailId"] = arg1
 	return args, nil
 }
 
@@ -20139,7 +20164,7 @@ func (ec *executionContext) _Query_applicantDetails(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ApplicantDetails(rctx)
+			return ec.resolvers.Query().ApplicantDetails(rctx, fc.Args["jobId"].(int), fc.Args["emailId"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -20244,6 +20269,17 @@ func (ec *executionContext) fieldContext_Query_applicantDetails(ctx context.Cont
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ApplicantDetails", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_applicantDetails_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -24735,6 +24771,47 @@ func (ec *executionContext) _applicantRegister_isDeleted(ctx context.Context, fi
 }
 
 func (ec *executionContext) fieldContext_applicantRegister_isDeleted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "applicantRegister",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _applicantRegister_memberId(ctx context.Context, field graphql.CollectedField, obj *model.ApplicantRegister) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_applicantRegister_memberId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MemberID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_applicantRegister_memberId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "applicantRegister",
 		Field:      field,
@@ -30689,6 +30766,8 @@ func (ec *executionContext) _applicantRegister(ctx context.Context, sel ast.Sele
 			out.Values[i] = ec._applicantRegister_createdBy(ctx, field, obj)
 		case "isDeleted":
 			out.Values[i] = ec._applicantRegister_isDeleted(ctx, field, obj)
+		case "memberId":
+			out.Values[i] = ec._applicantRegister_memberId(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -163,6 +163,6 @@ func EcommerceOrderStatusNames(db *gorm.DB, ctx context.Context) ([]model.OrderS
 	return controller.EcommerceOrderStatusNames(db, ctx)
 }
 
-func ApplicantDetails(db *gorm.DB, ctx context.Context) (*model.ApplicantDetails, error) {
-	return controller.ApplicantDetails(db, ctx)
+func ApplicantDetails(db *gorm.DB, ctx context.Context, jobId int, emailId string) (*model.ApplicantDetails, error) {
+	return controller.ApplicantDetails(db, ctx, jobId, emailId)
 }
