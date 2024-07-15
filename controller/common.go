@@ -4,22 +4,29 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
+	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"log"
 	"net/smtp"
 	"os"
+	"path"
 	"spurtcms-graphql/dbconfig"
 	"spurtcms-graphql/logger"
+	"spurtcms-graphql/models"
 	"spurtcms-graphql/storage"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/nfnt/resize"
 	"github.com/spurtcms/pkgcore/auth"
 	"github.com/spurtcms/pkgcore/member"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	spurtcore "github.com/spurtcms/pkgcore"
@@ -33,50 +40,9 @@ type key string
 
 const ContextKey key = "ginContext"
 
-type MailConfig struct {
-	Emails       []string
-	MailUsername string
-	MailPassword string
-	SmtpPort     string
-	SmtpHost     string
-	Subject      string
-	TimeOut      time.Duration
-}
-
-type MailImages struct {
-	Owndesk   string
-	Twitter   string
-	Facebook  string
-	LinkedIn  string
-	Youtube   string
-	Instagram string
-}
-
-type SocialMedias struct {
-	Linkedin  string
-	Twitter   string
-	Facebook  string
-	Instagram string
-	Youtube   string
-}
-
-type StorageType struct {
-	Id           int
-	Local        string
-	Aws          datatypes.JSONMap `gorm:"type:jsonb"`
-	Azure        datatypes.JSONMap `gorm:"type:jsonb"`
-	Drive        datatypes.JSONMap `gorm:"type:jsonb"`
-	SelectedType string
-}
-
-type EmailConfiguration struct {
-	Id           int
-	SmtpConfig   datatypes.JSONMap `gorm:"type:jsonb"`
-	SelectedType string
-}
-
 var (
 	DB                             *gorm.DB
+	Model                          models.ModelConfig
 	Mem                            member.MemberAuth
 	Auth                           *auth.Authorization
 	TimeZone                       *time.Location
@@ -87,58 +53,16 @@ var (
 	PathUrl                        string
 	EmailImageUrlPrefix            string
 	SmtpPort, SmtpHost             string
-	// OwndeskChannelId               = 108
-	EmailImagePath              MailImages
-	SocialMediaLinks            SocialMedias
-	OwndeskLoginEnquiryTemplate = "owndeskloginenquiry"
-	OwndeskLoginTemplate        = "owndesklogin"
-	OwndeskClaimnowTemplate     = "owndeskclaimrequest"
-	OwndeskClaimSubmitTemplate  = "owndeskclaimsubmit"
-	LocalLoginType              = "member"
-	TokenExpiryTime             = 1
-	ErrorLog                    *log.Logger
-	WarnLog                     *log.Logger
-)
-
-var (
-	ErrInvalidMail           = errors.New("your email is not yet registered in our owndesk platform")
-	ErrSendMail              = errors.New("failed to send unauthorized login attempt mail to admin")
-	ErrclaimAlready          = errors.New("member profile is already claimed")
-	ErrEmptyProfileSlug      = errors.New("profile slug should not be empty")
-	ErrProfileSlugExist      = errors.New("profile slug already exists")
-	ErrMandatory             = errors.New("missing mandatory fields")
-	ErrMemberRegisterPerm    = errors.New("member register permission denied")
-	ErrMemberInactive        = errors.New("inactive member")
-	ErrMemberLoginPerm       = errors.New("member login permission denied")
-	ErrRecordNotFound        = errors.New("record not found")
-	ErrPassHash              = errors.New("hasing password failed")
-	ErrUpload                = errors.New("file upload failed")
-	ErrOldPass               = errors.New("old password mismatched")
-	ErrConfirmPass           = errors.New("new passowrd and confirmation password mismatched")
-	ErrSamePass              = errors.New("old password and new password should not be same")
-	ErrLoginReq              = errors.New("login required")
-	ErrUnauthorize           = errors.New("unauthorized access")
-	ErrGinInstance           = errors.New("Gin instance retrieval context error")
-	ErrMemberSettings        = errors.New("failed to fetch member settings")
-	ErrFetchMailConfig       = errors.New("failed to fetch email configurations")
-	ErrInactiveTemplate      = errors.New("mail template is inactive")
-	ErrParsingHtmlTemplate   = errors.New("failed to parse the html template")
-	ErrExecutingHtmlTemplate = errors.New("failed to execute html template")
-	ErrNoMemberDetails       = errors.New("failed to get the member details")
-	ErrNoOtpUpdate           = errors.New("unable to update otp")
-	ErrFetchAdmin            = errors.New("failed to fetch the admin details")
-	ErrCreatingToken         = errors.New("unable to create token")
-	ErrLoginDataCheck        = errors.New("failed to get member login data")
-	ErrMailExist             = errors.New("email already exists")
-	ErrMobileExist           = errors.New("mobile number already exists")
-	ErrFetchStorageType      = errors.New("failed to fetch the storage type details")
-	ErrIllegalB64            = errors.New("illegal base64 data")
-	ErrJsonUnMarshal         = errors.New("failed to unmarshall the json")
-	ErrClaimMail             = errors.New("failed to send claim request mail to the admin")
-	ErrClaimSubmitMail       = errors.New("failed to send claim request submission status mail to the user")
-	ErrLoginClaimMail        = errors.New("current login email sholuld not be used in another claim")
-	ErrLoginClaimMob         = errors.New("current login mobile number sholuld not be used in another claim")
-	ErrFetchEntries          = errors.New("failed to fetch the channel Entries data")
+	EmailImagePath                 models.MailImages
+	SocialMediaLinks               models.SocialMedias
+	OwndeskLoginEnquiryTemplate    = "owndeskloginenquiry"
+	OwndeskLoginTemplate           = "owndesklogin"
+	OwndeskClaimnowTemplate        = "owndeskclaimrequest"
+	OwndeskClaimSubmitTemplate     = "owndeskclaimsubmit"
+	LocalLoginType                 = "member"
+	TokenExpiryTime                = 1
+	ErrorLog                       *log.Logger
+	WarnLog                        *log.Logger
 )
 
 func init() {
@@ -151,6 +75,8 @@ func init() {
 	}
 
 	DB = dbconfig.SetupDB()
+
+	Model = models.ModelConfig{DB: DB}
 
 	SpecialToken = "%$HEID$#PDGH*&MGEAFCC"
 
@@ -177,7 +103,7 @@ func init() {
 
 	EmailImageUrlPrefix = os.Getenv("EMAIL_IMAGE_PREFIX_URL")
 
-	EmailImagePath = MailImages{
+	EmailImagePath = models.MailImages{
 		Owndesk:   EmailImageUrlPrefix + strings.TrimPrefix("/view/img/own-desk-logo.png", "/"),
 		Twitter:   EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons3.png", "/"),
 		Facebook:  EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons1.png", "/"),
@@ -186,15 +112,13 @@ func init() {
 		Instagram: EmailImageUrlPrefix + strings.TrimPrefix("/view/img/social-media-icons5.png", "/"),
 	}
 
-	SocialMediaLinks = SocialMedias{
+	SocialMediaLinks = models.SocialMedias{
 		Linkedin:  os.Getenv("LINKEDIN"),
 		Twitter:   os.Getenv("TWITTER"),
 		Facebook:  os.Getenv("FACEBOOK"),
 		Instagram: os.Getenv("INSTAGRAM"),
 		Youtube:   os.Getenv("YOUTUBE"),
 	}
-
-	MemberRegisterPermission = os.Getenv("ALLOW_MEMBER_REGISTER")
 
 }
 
@@ -223,7 +147,7 @@ func GetAuthorizationWithoutToken(db *gorm.DB) *auth.Authorization {
 	return &auth
 }
 
-func SendMail(config MailConfig, html_content string, channel chan error) {
+func SendMail(config models.MailConfig, html_content string, channel chan error) {
 
 	// Sender data
 	from := config.MailUsername
@@ -287,18 +211,6 @@ func GetNotifyAdminEmails(db *gorm.DB, adminIds []int) ([]teampkg.TblUser, []str
 	return adminDetails, adminEmails, nil
 }
 
-func GetStorageType(db *gorm.DB) (StorageType, error) {
-
-	var storageType StorageType
-
-	if err := db.Debug().Table("tbl_storage_types").First(&storageType).Error; err != nil {
-
-		return StorageType{}, err
-	}
-
-	return storageType, nil
-}
-
 func IoReadSeekerToBase64(file io.ReadSeeker) (string, error) {
 
 	_, err := file.Seek(0, io.SeekStart)
@@ -336,29 +248,6 @@ func CompareBcryptPassword(hashpass, oldpass string) error {
 	return nil
 }
 
-func GetFilePathsRelatedToStorageTypes(db *gorm.DB, path string) string {
-
-	storageType, _ := GetStorageType(db)
-
-	awsCreds := storageType.Aws
-
-	isExist, _ := storage.CheckS3FileExistence(awsCreds, path)
-
-	if isExist {
-
-		s3FileServeEndpoint := "image-resize"
-
-		s3Path := PathUrl + s3FileServeEndpoint + "?name=" + strings.TrimPrefix(path, "/")
-
-		return s3Path
-
-	}
-
-	localPath := PathUrl + strings.TrimPrefix(path, "/")
-
-	return localPath
-}
-
 func ConvertByteToJson(byteData []byte) (map[string]interface{}, error) {
 
 	var jsonMap map[string]interface{}
@@ -374,16 +263,18 @@ func ConvertByteToJson(byteData []byte) (map[string]interface{}, error) {
 
 }
 
-func GetEmailConfigurations(db *gorm.DB) (MailConfig, error) {
+func GetEmailConfigurations() (models.MailConfig, error) {
 
-	var email_configs EmailConfiguration
+	var email_configs models.EmailConfiguration
 
-	if err := db.Debug().Table("tbl_email_configurations").First(&email_configs).Error; err != nil {
+	err := Model.GetEmailConfig(&email_configs)
 
-		return MailConfig{}, err
+	if err != nil{
+
+		return models.MailConfig{},err
 	}
 
-	var sendMailData MailConfig
+	var sendMailData models.MailConfig
 
 	if email_configs.SelectedType == "environment" {
 
@@ -433,4 +324,106 @@ func IsValidBase64(input string) (isvalid bool, base64Data string, extension str
 	var ext = input[11:extEndIndex]
 
 	return true, base64Data, ext
+}
+
+func ImageResize(c *gin.Context) {
+
+	fileName := c.Query("name")
+
+	filePath := c.Query("path")
+
+	extension := path.Ext(fileName)
+
+	var storageType models.StorageType
+
+	err := Model.GetStorageType(&storageType)
+
+	if err != nil {
+
+		fmt.Println(err)
+
+		c.AbortWithError(500, fmt.Errorf("%v-%v", ErrGetAwsCreds, err))
+
+		return
+	}
+
+	var byteData []byte
+
+	rawObject, err := storage.GetObjectFromS3(storageType.Aws, filePath+fileName)
+
+	if err != nil {
+
+		fmt.Println(err)
+
+		c.AbortWithError(500, fmt.Errorf("%v-%v", ErrGetImage, err))
+
+		return
+	}
+
+	buf := new(bytes.Buffer)
+
+	buf.ReadFrom(rawObject.Body)
+
+	byteData = buf.Bytes()
+
+	extType := strings.Trim(extension, ".")
+
+	if c.Query("width") == "" || c.Query("height") == "" {
+
+		if extType == "svg" {
+
+			extType = "svg+xml"
+		}
+
+		c.Data(200, "image/"+extType, byteData)
+
+		return
+	}
+
+	width, _ := strconv.ParseUint(c.Query("width"), 10, 64)
+
+	height, _ := strconv.ParseUint(c.Query("height"), 10, 64)
+
+	Image, _, err := image.Decode(bytes.NewReader(byteData))
+
+	if err != nil {
+
+		fmt.Println(err)
+
+		c.AbortWithError(500, fmt.Errorf("%v-%v", ErrDecodeImg, err))
+
+		return
+	}
+
+	newImage := resize.Resize(uint(width), uint(height), Image, resize.Lanczos3)
+
+	if extension == ".png" {
+
+		err = png.Encode(c.Writer, newImage)
+
+		if err != nil {
+
+			fmt.Println(err)
+
+			c.AbortWithError(500, fmt.Errorf("%v-%v", ErrImageResize, err))
+
+			return
+		}
+	}
+
+	if extension == ".jpeg" || extension == ".jpg" {
+
+		err = jpeg.Encode(c.Writer, newImage, nil)
+
+		if err != nil {
+
+			fmt.Println(err)
+
+			c.AbortWithError(500, fmt.Errorf("%v-%v", ErrImageResize, err))
+
+			return
+		}
+
+	}
+
 }

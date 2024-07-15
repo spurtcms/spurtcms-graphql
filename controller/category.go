@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"spurtcms-graphql/graph/model"
 
@@ -10,17 +9,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId *int, categoryGroupSlug *string,  hierarchyLevel, excludeGroup, excludeParent, checkEntriesPresence *int) (*model.CategoriesList, error) {
-
-	fmt.Println("dbchk",db.Config.Dialector.Name())
+func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId *int, categoryGroupSlug *string, hierarchyLevel, excludeGroup, excludeParent, checkEntriesPresence *int) (*model.CategoriesList, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
 	var (
-		FinalCategoryList                                                                 []model.Category
-		limitVal, offsetVal, categoryGrpIdVal ,excludeParentVal                           int
-		hierarchyLevelVal, checkEntriesPresenceVal, excludeGroupVal                       int
-		categoryGroupSlugVal                                                              string
+		FinalCategoryList                                           []model.Category
+		limitVal, offsetVal, categoryGrpIdVal, excludeParentVal     int
+		hierarchyLevelVal, checkEntriesPresenceVal, excludeGroupVal int
+		categoryGroupSlugVal                                        string
 	)
 
 	if categoryGroupId != nil {
@@ -28,12 +25,12 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 		categoryGrpIdVal = *categoryGroupId
 	}
 
-	if limit != nil{
+	if limit != nil {
 
 		limitVal = *limit
 	}
 
-	if offset != nil{
+	if offset != nil {
 
 		offsetVal = *offset
 	}
@@ -65,7 +62,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 	// memberid := c.GetInt("memberid")
 
-	categories,count, err := CategoryInstance.CategoryList(limitVal, offsetVal, categoryGrpIdVal, hierarchyLevelVal, checkEntriesPresenceVal,excludeGroupVal,excludeParentVal,categoryGroupSlugVal)
+	categories, count, err := CategoryInstance.CategoryList(limitVal, offsetVal, categoryGrpIdVal, hierarchyLevelVal, checkEntriesPresenceVal, excludeGroupVal, excludeParentVal, categoryGroupSlugVal)
 
 	if err != nil {
 
@@ -80,16 +77,16 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 	for _, category := range categories {
 
 		localCategory := model.Category{
-			ID: category.Id,
+			ID:           category.Id,
 			CategoryName: category.CategoryName,
 			CategorySlug: category.CategorySlug,
-			Description: category.Description,
-			ImagePath: category.ImagePath,
-			CreatedOn: category.CreatedOn,
-			CreatedBy: category.CreatedBy,
-			ModifiedOn: &category.ModifiedOn,
-			ModifiedBy: &category.ModifiedBy,
-			ParentID: category.ParentId,
+			Description:  category.Description,
+			ImagePath:    category.ImagePath,
+			CreatedOn:    category.CreatedOn,
+			CreatedBy:    category.CreatedBy,
+			ModifiedOn:   &category.ModifiedOn,
+			ModifiedBy:   &category.ModifiedBy,
+			ParentID:     category.ParentId,
 		}
 
 		FinalCategoryList = append(FinalCategoryList, localCategory)

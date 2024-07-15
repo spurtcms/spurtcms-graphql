@@ -11,30 +11,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func GraphQLHandler() gin.HandlerFunc {
 
-func GraphQLHandler() gin.HandlerFunc{
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: graph.NewResolver(), Directives: graph.DirectiveRoot{Auth: middleware.AuthMiddleware}}))
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: graph.NewResolver(),Directives: graph.DirectiveRoot{Auth: middleware.AuthMiddleware}}))
+	return func(c *gin.Context) {
 
-	return func(c *gin.Context){
+		ctx := context.WithValue(c.Request.Context(), controller.ContextKey, c)
 
-		gincontext := c
-
-		ctx := context.WithValue(c.Request.Context(),controller.ContextKey,gincontext)
-
-		srv.ServeHTTP(c.Writer,c.Request.WithContext(ctx))
+		srv.ServeHTTP(c.Writer, c.Request.WithContext(ctx))
 	}
 
 }
 
-func PlaygroundHandler() gin.HandlerFunc{
+func PlaygroundHandler() gin.HandlerFunc {
 
 	h := playground.Handler("GraphQL playground", "/query")
 
-	return func(c *gin.Context){
-		
-		h.ServeHTTP(c.Writer,c.Request)
+	return func(c *gin.Context) {
+
+		h.ServeHTTP(c.Writer, c.Request)
 	}
 
 }
-
