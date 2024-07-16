@@ -365,11 +365,9 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	}
 
-	var hashpass string
-
 	if input.Password.IsSet() {
 
-		hashpass, err = HashingPassword(*input.Password.Value())
+		hashpass, err := HashingPassword(*input.Password.Value())
 
 		if err != nil {
 
@@ -482,6 +480,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 	}
 
 	memberDetails.FirstName = input.FirstName
+	memberDetails.Username = strings.ToLower(input.FirstName)
 
 	memberData, isRegistered, err := Mem.MemberRegister(memberDetails)
 
@@ -508,7 +507,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			ProfileImage:     &memberDetails.ProfileImage,
 			ProfileImagePath: &memberDetails.ProfileImagePath,
 			CreatedOn:        createdOn,
-			Password:         hashpass,
+			Password:         memberDetails.Password,
 			MemberID:         &memberData.Id,
 			IsDeleted:        &is_deleted,
 		}
