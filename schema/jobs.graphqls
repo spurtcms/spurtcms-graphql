@@ -81,6 +81,7 @@ type applicantRegister{
     createdBy: Int
     isDeleted: Int
     memberId: Int
+    status: Int
 
 }
 

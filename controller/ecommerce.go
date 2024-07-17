@@ -551,15 +551,31 @@ func EcommerceProductOrdersList(db *gorm.DB, ctx context.Context, limit int, off
 
 	if upcomingOrders == 1 {
 
-		query = query.Where("o.status in (?)", []string{"placed", "Order Confirmed", "shipped"})
+		var upcomingOrdersStatusNames []string
+
+		result := db.Table("tbl_ecom_statuses").Where("is_deleted = 0").Select("status").Order("priority desc").Offset(2).Find(&upcomingOrdersStatusNames)
+		if result.Error != nil {
+
+			return &model.EcommerceProducts{}, result.Error
+		}
+
+		query = query.Where("oe.status in (?)", upcomingOrdersStatusNames)
 
 	} else if orderHistory == 1 {
 
-		query = query.Where("o.status in (?)", []string{"delivered", "cancelled"})
+		var orderHistoryStatusNames []string
+
+		result := db.Table("tbl_ecom_statuses").Where("is_deleted = 0").Select("status").Order("priority desc").Limit(2).Find(&orderHistoryStatusNames)
+		if result.Error != nil {
+
+			return &model.EcommerceProducts{}, result.Error
+		}
+
+		query = query.Where("oe.status in (?)", orderHistoryStatusNames)
 
 	} else if status != "" {
 
-		query = query.Where("o.status = ?", status)
+		query = query.Where("oe.status = ?", status)
 	}
 
 	if startingPrice != 0 && endingPrice != 0 {

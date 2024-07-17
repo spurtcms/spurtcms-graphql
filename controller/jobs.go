@@ -109,11 +109,11 @@ func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *m
 
 	} else if minimumYears != 0 {
 
-		listQuery = listQuery.Where("minimum_years >= ?", minimumYears)
+		listQuery = listQuery.Where("minimum_years = ? or maximum_years = ? or (minimum_years > ? and maximum_years < ?) ", minimumYears, minimumYears, minimumYears, minimumYears)
 
 	} else if maximumYears != 0 {
 
-		listQuery = listQuery.Where("maximum_years <= ?", maximumYears)
+		listQuery = listQuery.Where("maximum_years >= ?", maximumYears)
 	}
 
 	if datePosted != "" {
@@ -307,11 +307,11 @@ func ApplicantDetails(db *gorm.DB, ctx context.Context, jobId int, emailId strin
 
 	}
 
-	if *finalApplicantDetails.StorageType == "aws" && finalApplicantDetails.ImagePath != nil && finalApplicantDetails.StorageType != nil && *finalApplicantDetails.ImagePath != "" {
+	if finalApplicantDetails.StorageType != nil && *finalApplicantDetails.StorageType == "aws" && finalApplicantDetails.ImagePath != nil && *finalApplicantDetails.ImagePath != "" {
 
 		imagePath = "image-resize?name=" + *finalApplicantDetails.ImagePath
 
-	} else if *finalApplicantDetails.StorageType == "local" && finalApplicantDetails.ImagePath != nil && finalApplicantDetails.StorageType != nil && *finalApplicantDetails.ImagePath != "" {
+	} else if finalApplicantDetails.StorageType != nil && *finalApplicantDetails.StorageType == "local" && finalApplicantDetails.ImagePath != nil && *finalApplicantDetails.ImagePath != "" {
 
 		imagePath = *finalApplicantDetails.ImagePath
 
@@ -322,11 +322,11 @@ func ApplicantDetails(db *gorm.DB, ctx context.Context, jobId int, emailId strin
 
 	finalApplicantDetails.ImagePath = &imagePath
 
-	if *finalApplicantDetails.StorageType == "aws" && finalApplicantDetails.ResumePath != nil && finalApplicantDetails.StorageType != nil && *finalApplicantDetails.ResumePath != "" {
+	if finalApplicantDetails.StorageType != nil && *finalApplicantDetails.StorageType == "aws" && finalApplicantDetails.ResumePath != nil && *finalApplicantDetails.ResumePath != "" {
 
 		resumePath = "image-resize?name=" + *finalApplicantDetails.ResumePath
 
-	} else if *finalApplicantDetails.StorageType == "local" && finalApplicantDetails.ResumePath != nil && finalApplicantDetails.StorageType != nil && *finalApplicantDetails.ResumePath != "" {
+	} else if finalApplicantDetails.StorageType != nil && *finalApplicantDetails.StorageType == "local" && finalApplicantDetails.ResumePath != nil && *finalApplicantDetails.ResumePath != "" {
 
 		resumePath = *finalApplicantDetails.ResumePath
 	} else {

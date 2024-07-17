@@ -602,6 +602,7 @@ type ApplicantRegister struct {
 	CreatedBy *int       `json:"createdBy,omitempty"`
 	IsDeleted *int       `json:"isDeleted,omitempty"`
 	MemberID  *int       `json:"memberId,omitempty"`
+	Status    *int       `json:"status,omitempty"`
 }
 
 type ApplicationInput struct {
@@ -640,8 +641,8 @@ type CustomerDetails struct {
 	IsDeleted        *int       `json:"IsDeleted,omitempty"`
 	DeletedOn        *time.Time `json:"DeletedOn,omitempty"`
 	ModifiedBy       *int       `json:"modifiedBy,omitempty"`
-	HouseNo          *string    `json:"houseNo,omitempty"`
-	Area             *string    `json:"Area,omitempty"`
+	HouseNo          *string    `json:"houseNo,omitempty" gorm:"-"`
+	Area             *string    `json:"Area,omitempty" gorm:"-"`
 	City             *string    `json:"city,omitempty"`
 	State            *string    `json:"state,omitempty"`
 	Country          *string    `json:"country,omitempty"`
