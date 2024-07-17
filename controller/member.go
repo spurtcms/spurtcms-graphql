@@ -481,6 +481,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 	memberDetails.FirstName = input.FirstName
 	memberDetails.Username = strings.ToLower(input.FirstName)
+	memberDetails.IsActive = 1
 
 	memberData, isRegistered, err := Mem.MemberRegister(memberDetails)
 
@@ -522,6 +523,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		createdOn, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 		isDeleted := 0
+		status := 1
 
 		var newApplicant = model.ApplicantRegister{
 			Name:      memberDetails.FirstName,
@@ -532,6 +534,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 			CreatedBy: &memberData.Id,
 			IsDeleted: &isDeleted,
 			MemberID:  &memberData.Id,
+			Status:    &status,
 		}
 
 		if err := db.Table("tbl_jobs_applicants").Create(&newApplicant).Error; err != nil {

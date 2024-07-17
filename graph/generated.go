@@ -833,6 +833,7 @@ type applicantRegister{
     createdBy: Int
     isDeleted: Int
     memberId: Int
+    status: Int
 
 }
 
@@ -24824,6 +24825,47 @@ func (ec *executionContext) fieldContext_applicantRegister_memberId(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _applicantRegister_status(ctx context.Context, field graphql.CollectedField, obj *model.ApplicantRegister) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_applicantRegister_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_applicantRegister_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "applicantRegister",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _customerDetails_id(ctx context.Context, field graphql.CollectedField, obj *model.CustomerDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_customerDetails_id(ctx, field)
 	if err != nil {
@@ -30768,6 +30810,8 @@ func (ec *executionContext) _applicantRegister(ctx context.Context, sel ast.Sele
 			out.Values[i] = ec._applicantRegister_isDeleted(ctx, field, obj)
 		case "memberId":
 			out.Values[i] = ec._applicantRegister_memberId(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._applicantRegister_status(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
