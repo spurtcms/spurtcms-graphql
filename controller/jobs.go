@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"spurtcms-graphql/graph/model"
+	"spurtcms-graphql/storage"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spurtcms/jobs"
 	"gorm.io/gorm"
 )
 
@@ -20,302 +20,548 @@ func JobsList(db *gorm.DB, ctx context.Context, limit int, offset int, filter *m
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	var jobs []model.Job
-
-	var count int64
-
-	listQuery := db.Debug().Table("tbl_jobs").Select("tbl_jobs.*,tbl_categories.id as CatId,tbl_categories.category_name,tbl_categories.category_slug").Joins("inner join tbl_categories on tbl_jobs.categories_id = tbl_categories.id").Where("tbl_jobs.is_deleted = 0 AND tbl_jobs.status = 1").Preload("Category")
-
 	var (
-		jobTitle, jobLocation, skill, keyWord, categorySlug, datePosted string
-
-		minimumYears, maximumYears, categoryId                          int
+		jobsLocal  []model.Job
+		job        model.Job
+		count      int64
+		jobsFilter jobs.Filter
+		err        error
 	)
 
 	if filter != nil {
 
 		if filter.JobTitle.IsSet() {
 
-			jobTitle = *filter.JobTitle.Value()
+			jobsFilter.JobTitle = *filter.JobTitle.Value()
 		}
 
 		if filter.KeyWord.IsSet() {
 
-			keyWord = *filter.KeyWord.Value()
+			jobsFilter.KeyWord = *filter.KeyWord.Value()
 		}
 
 		if filter.JobLocation.IsSet() {
 
-			jobLocation = *filter.JobLocation.Value()
+			jobsFilter.JobLocation = *filter.JobLocation.Value()
 		}
 
 		if filter.CategoryID.IsSet() {
 
-			categoryId = *filter.CategoryID.Value()
+			jobsFilter.CategoryId = *filter.CategoryID.Value()
 		}
 
 		if filter.CategorySlug.IsSet() {
 
-			categorySlug = *filter.CategorySlug.Value()
+			jobsFilter.CategorySlug = *filter.CategorySlug.Value()
 		}
 
 		if filter.MaximumYears.IsSet() {
 
-			maximumYears = *filter.MaximumYears.Value()
+			jobsFilter.MaximumYears = *filter.MaximumYears.Value()
 		}
 
 		if filter.MinimumYears.IsSet() {
 
-			minimumYears = *filter.MinimumYears.Value()
+			jobsFilter.MinimumYears = *filter.MinimumYears.Value()
 		}
 
 		if filter.DatePosted.IsSet() {
 
-			datePosted = *filter.DatePosted.Value()
+			jobsFilter.DatePosted = *filter.DatePosted.Value()
 		}
 	}
 
-	if jobTitle != "" {
+	jobsList, count, err := JobsInstance.GetJobsList(limit, offset, jobsFilter)
+	if err != nil {
 
-		listQuery = listQuery.Where("job_title = ?", jobTitle)
+		ErrorLog.Printf("%v: %v", ErrFetchJobsList, err)
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+
+		return &model.JobsList{}, err
 	}
 
-	if keyWord != "" {
+	for _, jobList := range jobsList {
+		job.CategoriesID = jobList.CategoriesId
+		job.Category.CategoryName = jobList.Category.CategoryName
+		job.Category.CategorySlug = jobList.Category.CategorySlug
+		job.Category.CreatedBy = jobList.Category.CreatedBy
+		job.Category.CreatedOn = jobList.Category.CreatedOn
+		job.Category.Description = jobList.Category.Description
+		job.Category.ID = jobList.Category.Id
+		job.Category.ImagePath = jobList.Category.ImagePath
+		job.Category.ModifiedBy = &jobList.Category.ModifiedBy
+		job.Category.ModifiedOn = &jobList.Category.ModifiedOn
+		job.Category.ParentID = jobList.Category.ParentId
+		job.CreatedBy = jobList.CreatedBy
+		job.CreatedOn = jobList.CreatedOn
+		job.DeletedBy = &jobList.DeletedBy
+		job.DeletedOn = &jobList.DeletedOn
+		job.Department = &jobList.Department
+		job.Education = jobList.Education
+		job.Experience = &jobList.Experience
+		job.ID = jobList.Id
+		job.IsDeleted = &jobList.IsDeleted
+		job.JobDescription = jobList.JobDescription
+		job.JobLocation = jobList.JobLocation
+		job.JobSlug = jobList.JobSlug
+		job.JobTitle = jobList.JobTitle
+		job.JobType = jobList.JobType
+		job.Keyword = &jobList.Keywords
+		job.MaximumYears = jobList.MaximumYears
+		job.MinimumYears = jobList.MinimumYears
+		job.ModifiedBy = &jobList.ModifiedBy
+		job.ModifiedOn = &jobList.ModifiedOn
+		job.PostedDate = jobList.PostedDate
+		job.Salary = jobList.Salary
+		job.Skill = jobList.Skill
+		job.Status = jobList.Status
+		job.ValidThrough = jobList.ValidThrough
 
-		listQuery = listQuery.Where("LOWER(TRIM(job_title)) like LOWER(TRIM(?))", "%"+keyWord+"%")
-	}
-
-	if jobLocation != "" {
-
-		listQuery = listQuery.Where("job_location = ?", jobLocation)
-	}
-
-	if categorySlug != "" {
-
-		listQuery = listQuery.Where("tbl_categories.category_slug = ?", categorySlug)
-	}
-
-	if categoryId != 0 {
-
-		listQuery = listQuery.Where("categories_id = ?", categoryId)
-	}
-
-	if skill != "" {
-		listQuery = listQuery.Where("skill = ?", skill)
-	}
-
-	if minimumYears != 0 && maximumYears != 0 {
-
-		listQuery = listQuery.Where("minimum_years >= ? and maximum_years <= ?", minimumYears, maximumYears)
-
-	} else if minimumYears != 0 {
-
-		listQuery = listQuery.Where("minimum_years >= ?", minimumYears)
-
-	} else if maximumYears != 0 {
-
-		listQuery = listQuery.Where("maximum_years <= ?", maximumYears)
-	}
-
-	if datePosted != "" {
-
-		var startDate,endDate time.Time
-
-		var currentDate = time.Now().Local()
-
-		if datePosted == "This Week" {
-
-			currentDay := time.Now().Local().Weekday().String()
-
-			switch currentDay {
-
-			case "Monday":
-				startDate = currentDate
-				endDate = currentDate.AddDate(0, 0, 6)
-
-			case "Tuesday":
-				startDate = currentDate.AddDate(0, 0, -1)
-				endDate = currentDate.AddDate(0, 0, 5)
-
-			case "Wednesday":
-				startDate = currentDate.AddDate(0, 0, -2)
-				endDate = currentDate.AddDate(0, 0, 4)
-
-			case "Thursday":
-				startDate = currentDate.AddDate(0, 0, -3)
-				endDate = currentDate.AddDate(0, 0, 3)
-
-			case "Friday":
-				startDate = currentDate.AddDate(0, 0, -4)
-				endDate = currentDate.AddDate(0, 0, 2)
-
-			case "Saturday":
-				startDate = currentDate.AddDate(0, 0, -5)
-				endDate = currentDate.AddDate(0, 0, 1)
-
-			case "Sunday":
-				startDate = currentDate.AddDate(0, 0, -6)
-				endDate = currentDate
-			}
-
-		}
-
-		if datePosted == "This Month" {
-
-			startDate = time.Date(currentDate.Year(), currentDate.Month(), 1, 0, 0, 0, 0, currentDate.Location())
-			firstDayOfNxtMnth := startDate.AddDate(0, 1, 0)
-			endDate = firstDayOfNxtMnth.Add(-time.Second)
-		}
-
-		if datePosted == "This Year" {
-
-			startDate = time.Date(currentDate.Year(), time.January, 1, 0, 0, 0, 0, currentDate.Location())
-			startofNxtYear := startDate.AddDate(1, 0, 0)
-			endDate = startofNxtYear.Add(-time.Second)
-		}
-
-		if datePosted == "Today" {
-
-			startDate = time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 0, 0, 0, 0, currentDate.Location())
-			nxtDay := startDate.AddDate(0, 0, 1)
-			endDate = nxtDay.Add(-time.Second)
-		}
-
-		listQuery = listQuery.Where("posted_date between (?) and (?)", startDate, endDate)
+		jobsLocal = append(jobsLocal, job)
 
 	}
 
-	listQuery = listQuery.Limit(limit).Offset(offset).Order("tbl_jobs.id desc").Find(&jobs)
-
-	if listQuery.Error != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, listQuery.Error)
-
-		return &model.JobsList{}, listQuery.Error
-	}
-
-	if len(jobs) <= 0 {
-
-		c.AbortWithError(500, ErrRecordNotFound)
-
-		return nil, ErrRecordNotFound
-	}
-
-	countQuery := listQuery.Count(&count)
-
-	if countQuery.Error != nil {
-
-		c.AbortWithError(http.StatusInternalServerError, countQuery.Error)
-
-		return &model.JobsList{}, countQuery.Error
-	}
-
-	return &model.JobsList{Jobs: jobs, Count: int(count)}, nil
+	return &model.JobsList{Jobs: jobsLocal, Count: int(count)}, nil
 }
 
 func JobDetail(db *gorm.DB, ctx context.Context, id *int, jobSlug *string) (*model.Job, error) {
 
 	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	var jobDetail *model.Job
-
-	query := db.Debug().Table("tbl_jobs").Select("tbl_jobs.*,tbl_categories.id as CatId,tbl_categories.category_name,tbl_categories.category_slug").Joins("inner join tbl_categories on tbl_jobs.categories_id = tbl_categories.id").Where("tbl_jobs.is_deleted = 0").Preload("Category")
+	var (
+		jobDetailLocal model.Job
+		jobId          int
+		slug           string
+	)
 
 	if id != nil {
 
-		query = query.Where("tbl_jobs.id = ?", id)
-
+		jobId = *id
 	} else if jobSlug != nil {
 
-		query = query.Where("tbl_jobs.job_slug = ? ", jobSlug)
-
+		slug = *jobSlug
 	}
 
-	query = query.Find(&jobDetail)
+	jobDetails, err := JobsInstance.GetJobDetails(jobId, slug)
+	if err != nil {
 
-	if query.Error != nil {
+		ErrorLog.Printf("%v: %v", ErrFetchJobDetails, err)
 
-		c.AbortWithError(http.StatusInternalServerError, query.Error)
+		c.AbortWithError(http.StatusInternalServerError, err)
 
-		return &model.Job{}, query.Error
+		return &model.Job{}, err
 	}
 
-	return jobDetail, nil
+	jobDetailLocal.CategoriesID = jobDetails.CategoriesId
+	jobDetailLocal.Category.CategoryName = jobDetails.Category.CategoryName
+	jobDetailLocal.Category.CategorySlug = jobDetails.Category.CategorySlug
+	jobDetailLocal.Category.CreatedBy = jobDetails.Category.CreatedBy
+	jobDetailLocal.Category.CreatedOn = jobDetails.Category.CreatedOn
+	jobDetailLocal.Category.Description = jobDetails.Category.Description
+	jobDetailLocal.Category.ID = jobDetails.Category.Id
+	jobDetailLocal.Category.ImagePath = jobDetails.Category.ImagePath
+	jobDetailLocal.Category.ModifiedBy = &jobDetails.Category.ModifiedBy
+	jobDetailLocal.Category.ModifiedOn = &jobDetails.Category.ModifiedOn
+	jobDetailLocal.Category.ParentID = jobDetails.Category.ParentId
+	jobDetailLocal.CreatedBy = jobDetails.CreatedBy
+	jobDetailLocal.CreatedOn = jobDetails.CreatedOn
+	jobDetailLocal.DeletedBy = &jobDetails.DeletedBy
+	jobDetailLocal.DeletedOn = &jobDetails.DeletedOn
+	jobDetailLocal.Department = &jobDetails.Department
+	jobDetailLocal.Education = jobDetails.Education
+	jobDetailLocal.Experience = &jobDetails.Experience
+	jobDetailLocal.ID = jobDetails.Id
+	jobDetailLocal.IsDeleted = &jobDetails.IsDeleted
+	jobDetailLocal.JobDescription = jobDetails.JobDescription
+	jobDetailLocal.JobLocation = jobDetails.JobLocation
+	jobDetailLocal.JobSlug = jobDetails.JobSlug
+	jobDetailLocal.JobTitle = jobDetails.JobTitle
+	jobDetailLocal.JobType = jobDetails.JobType
+	jobDetailLocal.Keyword = &jobDetails.Keywords
+	jobDetailLocal.MaximumYears = jobDetails.MaximumYears
+	jobDetailLocal.MinimumYears = jobDetails.MinimumYears
+	jobDetailLocal.ModifiedBy = &jobDetails.ModifiedBy
+	jobDetailLocal.ModifiedOn = &jobDetails.ModifiedOn
+	jobDetailLocal.PostedDate = jobDetails.PostedDate
+	jobDetailLocal.Salary = jobDetails.Salary
+	jobDetailLocal.Skill = jobDetails.Skill
+	jobDetailLocal.Status = jobDetails.Status
+	jobDetailLocal.ValidThrough = jobDetails.ValidThrough
+
+	return &jobDetailLocal, nil
+}
+
+func ApplicantDetails(db *gorm.DB, ctx context.Context, jobId int, emailId string) (*model.ApplicantDetails, error) {
+
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
+
+	if !ok {
+		ErrorLog.Printf("%v", ErrGettingContext)
+
+		return &model.ApplicantDetails{}, ErrGettingContext
+	}
+
+	memberId := c.GetInt("memberid")
+
+	if memberId == 0 {
+
+		ErrorLog.Printf("%v", ErrGettingMemberId)
+
+		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorizedAccess)
+
+		return &model.ApplicantDetails{}, ErrUnauthorizedAccess
+	}
+
+	var (
+		finalApplicantDetails model.ApplicantDetails
+		err                   error
+		applicantDetails      jobs.ApplicantDetails
+		imagePath, resumePath string
+	)
+
+	applicantDetails, err = JobsAuthInstance.GetApplicantDetails(jobId, memberId, emailId)
+	if err != nil {
+
+		ErrorLog.Printf("%v: %v", ErrGettingApplicantDetail, err)
+
+		c.AbortWithError(http.StatusUnauthorized, ErrGettingApplicantDetail)
+
+		return &model.ApplicantDetails{}, err
+	}
+
+	finalApplicantDetails.ApplicantID = &applicantDetails.ApplicantID
+	finalApplicantDetails.CompanyName = &applicantDetails.CompanyName
+	finalApplicantDetails.CreatedBy = &applicantDetails.CreatedBy
+	finalApplicantDetails.CreatedOn = &applicantDetails.CreatedOn
+	finalApplicantDetails.CurrentSalary = &applicantDetails.CurrentSalary
+	finalApplicantDetails.DeletedBy = &applicantDetails.DeletedBy
+	finalApplicantDetails.DeletedOn = &applicantDetails.DeletedOn
+	finalApplicantDetails.Education = &applicantDetails.Education
+	finalApplicantDetails.EmailID = &applicantDetails.EmailID
+	finalApplicantDetails.ExpectedSalary = &applicantDetails.ExpectedSalary
+	finalApplicantDetails.Experience = &applicantDetails.Experience
+	finalApplicantDetails.Gender = &applicantDetails.Gender
+	finalApplicantDetails.Graduation = &applicantDetails.Graduation
+	finalApplicantDetails.ID = &applicantDetails.ID
+	finalApplicantDetails.Image = &applicantDetails.Image
+	finalApplicantDetails.ImagePath = &applicantDetails.ImagePath
+	finalApplicantDetails.IsDeleted = &applicantDetails.IsDeleted
+	finalApplicantDetails.JobID = &applicantDetails.JobID
+	finalApplicantDetails.JobType = &applicantDetails.JobType
+	finalApplicantDetails.Location = &applicantDetails.Location
+	finalApplicantDetails.MobileNo = &applicantDetails.MobileNo
+	finalApplicantDetails.ModifiedBy = &applicantDetails.ModifiedBy
+	finalApplicantDetails.ModifiedOn = &applicantDetails.ModifiedOn
+	finalApplicantDetails.Name = &applicantDetails.Name
+	finalApplicantDetails.ResumeName = &applicantDetails.ResumeName
+	finalApplicantDetails.ResumePath = &applicantDetails.ResumePath
+	finalApplicantDetails.Skills = &applicantDetails.Skills
+	finalApplicantDetails.Status = &applicantDetails.Status
+	finalApplicantDetails.StorageType = &applicantDetails.StorageType
+
+	if finalApplicantDetails.StorageType != nil && *finalApplicantDetails.StorageType == "aws" && finalApplicantDetails.ImagePath != nil && *finalApplicantDetails.ImagePath != "" {
+
+		imagePath = "image-resize?name=" + *finalApplicantDetails.ImagePath
+
+	} else if finalApplicantDetails.StorageType != nil && *finalApplicantDetails.StorageType == "local" && finalApplicantDetails.ImagePath != nil && *finalApplicantDetails.ImagePath != "" {
+
+		imagePath = *finalApplicantDetails.ImagePath
+
+	} else {
+
+		imagePath = ""
+	}
+
+	finalApplicantDetails.ImagePath = &imagePath
+
+	if finalApplicantDetails.StorageType != nil && *finalApplicantDetails.StorageType == "aws" && finalApplicantDetails.ResumePath != nil && *finalApplicantDetails.ResumePath != "" {
+
+		resumePath = "image-resize?name=" + *finalApplicantDetails.ResumePath
+
+	} else if finalApplicantDetails.StorageType != nil && *finalApplicantDetails.StorageType == "local" && finalApplicantDetails.ResumePath != nil && *finalApplicantDetails.ResumePath != "" {
+
+		resumePath = *finalApplicantDetails.ResumePath
+	} else {
+
+		resumePath = ""
+	}
+
+	finalApplicantDetails.ResumePath = &resumePath
+
+	return &finalApplicantDetails, nil
 }
 
 func JobApplication(db *gorm.DB, ctx context.Context, applicationDetails model.ApplicationInput) (bool, error) {
 
-	applicationInfo := applicationDetails
+	c, ok := ctx.Value(ContextKey).(*gin.Context)
 
-	applicantImage := applicationInfo.ApplicantImage
+	if !ok {
 
-	resume := applicationInfo.Resume
+		ErrorLog.Printf("%v", ErrGettingContext)
 
-	ImgBase64Data, err := io.ReadAll(applicantImage.File)
+		return false, ErrGettingContext
+	}
 
-	resumeBase64Data, err := io.ReadAll(resume.File)
+	memberid := c.GetInt("memberid")
 
+	if memberid == 0 {
+
+		ErrorLog.Printf("%v: %s", ErrGettingMemberId, ErrUnauthorizedAccess)
+
+		c.AbortWithError(http.StatusUnauthorized, ErrUnauthorizedAccess)
+
+		return false, ErrUnauthorizedAccess
+
+	}
+
+	var (
+		applicantDetails                                                    jobs.ApplicantDetails
+		applicationData                                                     jobs.ApplicantDetails
+		imageName, imagePath, resumeName, resumePath, base64Data, extension string
+		storageType                                                         StorageType
+		err                                                                 error
+		isValidBase64                                                       bool
+		registeredApplicant                                                 int64
+	)
+
+	storageType, err = GetStorageType(db)
 	if err != nil {
+		ErrorLog.Printf("%v: %v", ErrFetchStorageType, err)
+
+		c.AbortWithError(http.StatusInternalServerError, err)
 
 		return false, err
 	}
 
-	ImgTargetPath := filepath.Join("uploads/images", applicantImage.Filename)
-
-	// Create the target file
-	out, err := os.Create(ImgTargetPath)
-	if err != nil {
-		return false, errors.New("failed to create file")
-	}
-	defer out.Close()
-
-	// Copy the uploaded file to the target file
-	err = os.WriteFile(fmt.Sprintf("uploads/images/%v", applicantImage.Filename), ImgBase64Data, os.ModePerm)
-
+	applicantDetails, err = JobsInstance.GetApplicantDetails(0, memberid, "")
 	if err != nil {
 
-		return false, errors.New("failed to copy file")
+		ErrorLog.Printf("%v: %v", ErrGettingApplicantDetail, err)
+
+		c.AbortWithError(http.StatusInternalServerError, ErrGettingApplicantDetail)
+
+		return false, err
 	}
 
-	resumeTargetPath := filepath.Join("uploads/resumes", resume.Filename)
+	if applicationDetails.EmailID == applicantDetails.EmailID {
 
-	out, err = os.Create(resumeTargetPath)
+		applicationData.JobID = applicationDetails.JobID
 
-	if err != nil {
+		applicationData.EmailID = applicationDetails.EmailID
 
-		return false, errors.New("failed to create file")
-	}
+		registeredApplicant, err = JobsInstance.CheckAlreadyRegistered(applicationData.JobID, applicationData.EmailID)
+		if err != nil {
 
-	defer out.Close()
+			ErrorLog.Printf("%v: %v", ErrCheckingAlreadyRegistered, err)
 
-	err = os.WriteFile(fmt.Sprintf("uploads/resumes/%v", resume.Filename), resumeBase64Data, os.ModePerm)
+			c.AbortWithError(http.StatusInternalServerError, ErrCheckingAlreadyRegistered)
 
-	if err != nil {
+			return false, err
+		}
 
-		return false, errors.New("failed to copy file")
-	}
+		if registeredApplicant > 0 {
 
-	var newMember model.Member
+			ErrorLog.Printf("%v", ErrApplicantAlreadyRegistered)
 
-	newMember.FirstName = applicationInfo.Name
+			c.AbortWithError(http.StatusInternalServerError, ErrApplicantAlreadyRegistered)
 
-	newMember.Email = applicationInfo.EmailID
+			return false, ErrApplicantAlreadyRegistered
+		}
 
-	newMember.MobileNo = strconv.Itoa(applicationInfo.MobileNo)
+		applicationData.ApplicantID = applicantDetails.ID
 
-	newMember.IsActive = 1
+		applicationData.CreatedBy = applicantDetails.ID
 
-	newMember.MemberGroupID = 1
+		currentTime, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
-	newMember.ProfileImagePath = fmt.Sprintf("uploads/images/%v", applicantImage.Filename)
+		applicationData.CreatedOn = currentTime
 
-	newMember.CreatedOn, _ = time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+		applicationData.Name = applicationDetails.Name
 
-	result := db.Table("tbl_members").Create(&newMember)
+		applicationData.MobileNo = applicationDetails.MobileNo
 
-	if result.Error != nil {
-		
-		return false, result.Error
+		if applicationDetails.JobType.IsSet() && applicationDetails.JobType.Value() != nil {
+
+			applicationData.JobType = *applicationDetails.JobType.Value()
+		}
+
+		applicationData.Location = applicationDetails.Location
+
+		applicationData.Education = applicationDetails.Education
+
+		applicationData.Graduation = applicationDetails.Graduation
+
+		applicationData.Gender = applicationDetails.Gender
+
+		if applicationDetails.CompanyName.IsSet() && applicationDetails.CompanyName.Value() != nil {
+
+			applicationData.CompanyName = *applicationDetails.CompanyName.Value()
+		}
+
+		applicationData.Experience = applicationDetails.Experience
+
+		applicationData.Skills = applicationDetails.Skills
+
+		if applicationDetails.Image != "" {
+
+			isValidBase64, base64Data, extension = IsValidBase64(applicationDetails.Image)
+
+			if isValidBase64 && base64Data != "" {
+
+				rand_num := strconv.Itoa(int(time.Now().Unix()))
+
+				if extension == "msword" {
+
+					imageName = "IMG-" + rand_num + "." + "doc"
+
+				} else if extension == "vnd.openxmlformats-officedocument.wordprocessingml.document" {
+
+					imageName = "IMG-" + rand_num + "." + "docx"
+
+				} else {
+
+					imageName = "IMG-" + rand_num + "." + extension
+
+				}
+
+				if storageType.SelectedType == "aws" {
+
+					fmt.Printf("aws-S3 storage selected\n")
+
+					imagePath = "member/" + imageName
+
+					err = storage.UploadFileS3(storageType.Aws, nil, base64Data, imagePath)
+					if err != nil {
+
+						fmt.Printf("image upload failed %v\n", err)
+
+						return false, ErrUpload
+
+					}
+
+				} else if storageType.SelectedType == "azure" {
+
+					fmt.Printf("azure storage selected")
+
+				} else if storageType.SelectedType == "drive" {
+
+					fmt.Println("drive storage selected")
+				}
+			} else if strings.Contains(applicationDetails.Image, "image-resize?name") {
+
+				imagePath = strings.ReplaceAll(applicationDetails.Image, "image-resize?name=", "")
+
+			} else {
+
+				ErrorLog.Printf("%v", "illegal base64 data")
+
+				c.AbortWithError(http.StatusNotAcceptable, errors.New("illegal base64 data "))
+
+				return false, errors.New("illegal base64 data ")
+
+			}
+
+			applicationData.ImagePath = imagePath
+
+			applicationData.Image = imageName
+
+		}
+
+		isDeleted := 0
+
+		applicationData.IsDeleted = isDeleted
+
+		if applicationDetails.CurrentSalary.IsSet() && applicationDetails.CurrentSalary.Value() != nil {
+
+			applicationData.CurrentSalary = *applicationDetails.CurrentSalary.Value()
+		}
+
+		if applicationDetails.ExpectedSalary.IsSet() && applicationDetails.ExpectedSalary.Value() != nil {
+
+			applicationData.ExpectedSalary = *applicationDetails.ExpectedSalary.Value()
+		}
+
+		if applicationDetails.Resume != "" {
+
+			isValidBase64, base64Data, extension = IsValidBase64(applicationDetails.Resume)
+
+			if isValidBase64 && base64Data != "" {
+
+				rand_num := strconv.Itoa(int(time.Now().Unix()))
+
+				if extension == "msword" {
+
+					resumeName = "RES-" + rand_num + "." + "doc"
+
+				} else if extension == "vnd.openxmlformats-officedocument.wordprocessingml.document" {
+
+					resumeName = "RES-" + rand_num + "." + "docx"
+
+				} else {
+
+					resumeName = "RES-" + rand_num + "." + extension
+
+				}
+
+				if storageType.SelectedType == "aws" {
+
+					fmt.Printf("aws-S3 storage selected\n")
+
+					resumePath = "member/" + resumeName
+
+					err = storage.UploadFileS3(storageType.Aws, nil, base64Data, resumePath)
+					if err != nil {
+
+						fmt.Printf("image upload failed %v\n", err)
+
+						return false, ErrUpload
+
+					}
+
+				} else if storageType.SelectedType == "azure" {
+
+					fmt.Printf("azure storage selected")
+
+				} else if storageType.SelectedType == "drive" {
+
+					fmt.Println("drive storage selected")
+				}
+
+			} else if strings.Contains(applicationDetails.Resume, "image-resize?name") {
+
+				resumePath = strings.ReplaceAll(applicationDetails.Resume, "image-resize?name=", "")
+
+			} else {
+
+				ErrorLog.Printf("%v", "illegal base64 data")
+
+				c.AbortWithError(http.StatusNotAcceptable, errors.New("illegal base64 data "))
+
+				return false, errors.New("illegal base64 data ")
+
+			}
+
+			applicationData.ResumePath = resumePath
+
+			applicationData.ResumeName = resumeName
+
+		}
+
+		applicationData.StorageType = storageType.SelectedType
+
+		err = JobsAuthInstance.CreateJobApplication(applicationData)
+		if err != nil {
+
+			return false, err
+		}
+
+	} else {
+
+		ErrorLog.Printf("%v", "Please use the registered email")
+
+		return false, errors.New("please use the registered email")
+
 	}
 
 	return true, nil

@@ -9,7 +9,7 @@ type EcommerceProducts{
 
 type EcommerceProduct{
 	id:                        Int!
-	categoriesId:              Int!
+	categoriesId:              String!
 	productName:               String!
 	productSlug:               String!
 	productDescription:        String!
@@ -153,6 +153,7 @@ type EcomOrderedProductDetails{
 type OrderStatusNames{
 	id:              Int!
 	status:          String!
+	priority :       Int!
 	description:     String
 	isActive:        Int!
 	createdBy:       Int!

@@ -2,95 +2,107 @@ package controller
 
 import (
 	"context"
-	"net/http"
 	"spurtcms-graphql/graph/model"
-
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId *int, categoryGroupSlug *string, hierarchyLevel, excludeGroup, excludeParent, checkEntriesPresence *int) (*model.CategoriesList, error) {
 
-	c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	var (
-		FinalCategoryList                                           []model.Category
-		limitVal, offsetVal, categoryGrpIdVal, excludeParentVal     int
-		hierarchyLevelVal, checkEntriesPresenceVal, excludeGroupVal int
-		categoryGroupSlugVal                                        string
-	)
+	// fmt.Println("dbchk",db.Config.Dialector.Name())
 
-	if categoryGroupId != nil {
 
-		categoryGrpIdVal = *categoryGroupId
-	}
+	// c, _ := ctx.Value(ContextKey).(*gin.Context)
 
-	if limit != nil {
 
-		limitVal = *limit
-	}
+	// var (
+	// 	FinalCategoryList                                                                 []model.Category
+	// 	limitVal, offsetVal, categoryGrpIdVal ,excludeParentVal                           int
+	// 	hierarchyLevelVal, checkEntriesPresenceVal, excludeGroupVal                       int
+	// 	categoryGroupSlugVal                                                              string
+	// )
 
-	if offset != nil {
 
-		offsetVal = *offset
-	}
+	// if categoryGroupId != nil {
 
-	if categoryGroupSlug != nil {
+	// 	categoryGrpIdVal = *categoryGroupId
+	// }
 
-		categoryGroupSlugVal = *categoryGroupSlug
-	}
+	// if limit != nil{
 
-	if hierarchyLevel != nil {
+	// 	limitVal = *limit
+	// }
 
-		hierarchyLevelVal = *hierarchyLevel
-	}
 
-	if checkEntriesPresence != nil {
+	// if offset != nil{
 
-		checkEntriesPresenceVal = *checkEntriesPresence
-	}
 
-	if excludeGroup != nil {
 
-		excludeGroupVal = *excludeGroup
-	}
+	// 	offsetVal = *offset
+	// }
 
-	if excludeParent != nil {
+	// if categoryGroupSlug != nil {
 
-		excludeParentVal = *excludeParent
-	}
+	// 	categoryGroupSlugVal = *categoryGroupSlug
+	// }
 
-	// memberid := c.GetInt("memberid")
+	// if hierarchyLevel != nil {
 
-	categories, count, err := CategoryInstance.CategoryList(limitVal, offsetVal, categoryGrpIdVal, hierarchyLevelVal, checkEntriesPresenceVal, excludeGroupVal, excludeParentVal, categoryGroupSlugVal)
+	// 	hierarchyLevelVal = *hierarchyLevel
+	// }
 
-	if err != nil {
+	// if checkEntriesPresence != nil {
 
-		ErrorLog.Printf("category list retrieval error: %s", err)
+	// 	checkEntriesPresenceVal = *checkEntriesPresence
+	// }
 
-		c.AbortWithError(http.StatusInternalServerError, err)
+	// if excludeGroup != nil {
 
-		return &model.CategoriesList{}, err
+	// 	excludeGroupVal = *excludeGroup
+	// }
 
-	}
+	// if excludeParent != nil {
 
-	for _, category := range categories {
+	// 	excludeParentVal = *excludeParent
+	// }
 
-		localCategory := model.Category{
-			ID:           category.Id,
-			CategoryName: category.CategoryName,
-			CategorySlug: category.CategorySlug,
-			Description:  category.Description,
-			ImagePath:    category.ImagePath,
-			CreatedOn:    category.CreatedOn,
-			CreatedBy:    category.CreatedBy,
-			ModifiedOn:   &category.ModifiedOn,
-			ModifiedBy:   &category.ModifiedBy,
-			ParentID:     category.ParentId,
-		}
+	// // memberid := c.GetInt("memberid")
 
-		FinalCategoryList = append(FinalCategoryList, localCategory)
-	}
+	// categories,count, err := CategoryInstance.CategoryList(limitVal, offsetVal, categoryGrpIdVal, hierarchyLevelVal, checkEntriesPresenceVal,excludeGroupVal,excludeParentVal,categoryGroupSlugVal)
 
-	return &model.CategoriesList{Categories: FinalCategoryList, Count: count}, nil
+
+	// if err != nil {
+
+	// 	ErrorLog.Printf("category list retrieval error: %s", err)
+
+	// 	c.AbortWithError(http.StatusInternalServerError, err)
+
+	// 	return &model.CategoriesList{}, err
+
+	// }
+
+	// for _, category := range categories {
+
+
+	// 	localCategory := model.Category{
+	// 		ID: category.Id,
+	// 		CategoryName: category.CategoryName,
+	// 		CategorySlug: category.CategorySlug,
+	// 		Description: category.Description,
+	// 		ImagePath: category.ImagePath,
+	// 		CreatedOn: category.CreatedOn,
+	// 		CreatedBy: category.CreatedBy,
+	// 		ModifiedOn: &category.ModifiedOn,
+	// 		ModifiedBy: &category.ModifiedBy,
+	// 		ParentID: category.ParentId,
+	// 	}
+
+
+	// 	FinalCategoryList = append(FinalCategoryList, localCategory)
+	// }
+
+	// return &model.CategoriesList{Categories: FinalCategoryList, Count: count}, nil
+
+	return &model.CategoriesList{}, nil
+
 }

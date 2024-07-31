@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"spurtcms-graphql/graph/model"
 
@@ -59,423 +58,423 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 }
 
 // this function provides the published channel entries list under a channel and channel entry details for a particular channeel entry by using its id
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, limit, offset int, filter *model.EntryFilter, requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, limit, offset int, filter *model.EntryFilter, requireData *model.RequireData) (channelEntryDetails *model.ChannelEntriesDetails, err error) {
 
-	c, ok := ctx.Value(ContextKey).(*gin.Context)
+	// c, ok := ctx.Value(ContextKey).(*gin.Context)
 
-	if !ok {
+	// if !ok {
 
-		fmtErr := fmt.Errorf("%v: %v", ErrGinInstance, ok)
+	// 	fmtErr := fmt.Errorf("%v: %v", ErrGinInstance, ok)
 
-		ErrorLog.Printf("%v", fmtErr)
+	// 	ErrorLog.Printf("%v", fmtErr)
 
-		return &model.ChannelEntriesDetails{}, fmtErr
-	}
+	// 	return &model.ChannelEntriesDetails{}, fmtErr
+	// }
 
-	var (
-		channelId, categoryId int
+	// var (
+	// 	channelId, categoryId int
 
-		title, keyword, categorySlug, status string
+	// 	title, keyword, categorySlug, status string
 
-		linkChildCategories, memberprofileflg, authorflg, categoriesflg, fieldsflg bool
-	)
+	// 	linkChildCategories, memberprofileflg, authorflg, categoriesflg, fieldsflg bool
+	// )
 
-	if filter != nil {
+	// if filter != nil {
 
-		if filter.ChannelID.IsSet() && filter.ChannelID.Value() != nil {
+	// 	if filter.ChannelID.IsSet() && filter.ChannelID.Value() != nil {
 
-			channelId = *filter.ChannelID.Value()
-		}
+	// 		channelId = *filter.ChannelID.Value()
+	// 	}
 
-		if filter.CategoryID.IsSet() && filter.CategoryID.Value() != nil {
+	// 	if filter.CategoryID.IsSet() && filter.CategoryID.Value() != nil {
 
-			categoryId = *filter.CategoryID.Value()
-		}
+	// 		categoryId = *filter.CategoryID.Value()
+	// 	}
 
-		if filter.Title.IsSet() && filter.Title.Value() != nil {
+	// 	if filter.Title.IsSet() && filter.Title.Value() != nil {
 
-			title = *filter.Title.Value()
-		}
+	// 		title = *filter.Title.Value()
+	// 	}
 
-		if filter.Keyword.IsSet() && filter.Keyword.Value() != nil {
+	// 	if filter.Keyword.IsSet() && filter.Keyword.Value() != nil {
 
-			keyword = *filter.Keyword.Value()
-		}
+	// 		keyword = *filter.Keyword.Value()
+	// 	}
 
-		if filter.CategorySlug.IsSet() && filter.CategorySlug.Value() != nil {
+	// 	if filter.CategorySlug.IsSet() && filter.CategorySlug.Value() != nil {
 
-			categorySlug = *filter.CategorySlug.Value()
-		}
+	// 		categorySlug = *filter.CategorySlug.Value()
+	// 	}
 
-		if filter.LinkChildCategories.IsSet() && filter.LinkChildCategories.Value() != nil {
+	// 	if filter.LinkChildCategories.IsSet() && filter.LinkChildCategories.Value() != nil {
 
-			linkChildCategories = *filter.LinkChildCategories.Value()
-		}
+	// 		linkChildCategories = *filter.LinkChildCategories.Value()
+	// 	}
 
-	}
+	// }
 
-	if requireData != nil {
+	// if requireData != nil {
 
-		if requireData.MemberProfile.IsSet() && requireData.MemberProfile.Value() != nil {
+	// 	if requireData.MemberProfile.IsSet() && requireData.MemberProfile.Value() != nil {
 
-			memberprofileflg = *requireData.MemberProfile.Value()
-		}
+	// 		memberprofileflg = *requireData.MemberProfile.Value()
+	// 	}
 
-		if requireData.AuthorDetails.IsSet() && requireData.AuthorDetails.Value() != nil {
+	// 	if requireData.AuthorDetails.IsSet() && requireData.AuthorDetails.Value() != nil {
 
-			authorflg = *requireData.AuthorDetails.Value()
-		}
+	// 		authorflg = *requireData.AuthorDetails.Value()
+	// 	}
 
-		if requireData.Categories.IsSet() && requireData.Categories.Value() != nil {
+	// 	if requireData.Categories.IsSet() && requireData.Categories.Value() != nil {
 
-			categoriesflg = *requireData.Categories.Value()
-		}
+	// 		categoriesflg = *requireData.Categories.Value()
+	// 	}
 
-		if requireData.AdditionalFields.IsSet() && requireData.AdditionalFields.Value() != nil {
+	// 	if requireData.AdditionalFields.IsSet() && requireData.AdditionalFields.Value() != nil {
 
-			fieldsflg = *requireData.AdditionalFields.Value()
-		}
-	}
+	// 		fieldsflg = *requireData.AdditionalFields.Value()
+	// 	}
+	// }
 
-	EntryInputs := channels.EntriesInputs{
-		ChannelId:              channelId,
-		Limit:                  limit,
-		Offset:                 offset,
-		Keyword:                keyword,
-		Title:                  title,
-		Status:                 status,
-		CategoryId:             categoryId,
-		CategorySlug:           categorySlug,
-		SelectedCategoryFilter: linkChildCategories,
-		SectionFieldTypeId:     SectionTypeId,
-		MemberFieldTypeId:      MemberFieldTypeId,
-		TotalCount:             true,
-		GetMemberProfile:       memberprofileflg,
-		GetAdditionalFields:    fieldsflg,
-		GetAuthorDetails:       authorflg,
-		GetLinkedCategories:    categoriesflg,
-	}
+	// EntryInputs := channels.EntriesInputs{
+	// 	ChannelId:              channelId,
+	// 	Limit:                  limit,
+	// 	Offset:                 offset,
+	// 	Keyword:                keyword,
+	// 	Title:                  title,
+	// 	Status:                 status,
+	// 	CategoryId:             categoryId,
+	// 	CategorySlug:           categorySlug,
+	// 	SelectedCategoryFilter: linkChildCategories,
+	// 	SectionFieldTypeId:     SectionTypeId,
+	// 	MemberFieldTypeId:      MemberFieldTypeId,
+	// 	TotalCount:             true,
+	// 	GetMemberProfile:       memberprofileflg,
+	// 	GetAdditionalFields:    fieldsflg,
+	// 	GetAuthorDetails:       authorflg,
+	// 	GetLinkedCategories:    categoriesflg,
+	// }
 
-	ChannelEntries, count, _, err := ChannelInstance.FlexibleChannelEntriesList(EntryInputs)
+	// ChannelEntries, count, _, err := ChannelInstance.FlexibleChannelEntriesList(EntryInputs)
 
-	if err != nil {
+	// if err != nil {
 
-		fmtErr := fmt.Errorf("%v: %v", ErrFetchEntries, err)
+	// 	fmtErr := fmt.Errorf("%v: %v", ErrFetchEntries, err)
 
-		ErrorLog.Printf("%v", fmtErr)
+	// 	ErrorLog.Printf("%v", fmtErr)
 
-		c.AbortWithError(500, fmtErr)
+	// 	c.AbortWithError(500, fmtErr)
 
-		return &model.ChannelEntriesDetails{}, err
-	}
+	// 	return &model.ChannelEntriesDetails{}, err
+	// }
 
-	conv_channelEntries := make([]model.ChannelEntries,len(ChannelEntries))
+	// conv_channelEntries := make([]model.ChannelEntries,len(ChannelEntries))
 
-	for index, entry := range ChannelEntries {
+	// for index, entry := range ChannelEntries {
 
-		conv_categories := make([][]model.Category, len(entry.Categories))
+	// 	conv_categories := make([][]model.Category, len(entry.Categories))
 
-		for cat_index, categories := range entry.Categories {
+	// 	for cat_index, categories := range entry.Categories {
 
-			conv_categoryz := make([]model.Category, len(categories))
+	// 		conv_categoryz := make([]model.Category, len(categories))
 
-			for i, category := range categories {
+	// 		for i, category := range categories {
 
-				categoryModon := category.ModifiedOn
+	// 			categoryModon := category.ModifiedOn
 
-				categoryModBy := category.ModifiedBy
+	// 			categoryModBy := category.ModifiedBy
 
-				conv_category := model.Category{
-					ID:           category.Id,
-					CategoryName: category.CategoryName,
-					CategorySlug: category.CategorySlug,
-					Description:  category.Description,
-					ImagePath:    category.ImagePath,
-					CreatedOn:    category.CreatedOn,
-					CreatedBy:    category.CreatedBy,
-					ModifiedOn:   &categoryModon,
-					ModifiedBy:   &categoryModBy,
-					ParentID:     category.ParentId,
-				}
+	// 			conv_category := model.Category{
+	// 				ID:           category.Id,
+	// 				CategoryName: category.CategoryName,
+	// 				CategorySlug: category.CategorySlug,
+	// 				Description:  category.Description,
+	// 				ImagePath:    category.ImagePath,
+	// 				CreatedOn:    category.CreatedOn,
+	// 				CreatedBy:    category.CreatedBy,
+	// 				ModifiedOn:   &categoryModon,
+	// 				ModifiedBy:   &categoryModBy,
+	// 				ParentID:     category.ParentId,
+	// 			}
 
-				conv_categoryz[i] = conv_category
+	// 			conv_categoryz[i] = conv_category
 
-			}
+	// 		}
 
-			conv_categories[cat_index] = conv_categoryz
-		}
+	// 		conv_categories[cat_index] = conv_categoryz
+	// 	}
 
-		conv_channelEntries[index].Categories = conv_categories
+	// 	conv_channelEntries[index].Categories = conv_categories
 
-		authorMobnumber := entry.AuthorDetail.MobileNo
+	// 	authorMobnumber := entry.AuthorDetail.MobileNo
 
-		authorIsActive := entry.AuthorDetail.IsActive
+	// 	authorIsActive := entry.AuthorDetail.IsActive
 
-		var authorProfileImage string
+	// 	var authorProfileImage string
 
-		if entry.AuthorDetail.ProfileImagePath != "" && entry.AuthorDetail.StorageType == "aws"{
+	// 	if entry.AuthorDetail.ProfileImagePath != "" && entry.AuthorDetail.StorageType == "aws"{
 
-			authorProfileImage = "image-resize?name=" + entry.AuthorDetail.ProfileImagePath
+	// 		authorProfileImage = "image-resize?name=" + entry.AuthorDetail.ProfileImagePath
 
-		}else{
+	// 	}else{
 
-			authorProfileImage = entry.AuthorDetail.ProfileImagePath
-		}
+	// 		authorProfileImage = entry.AuthorDetail.ProfileImagePath
+	// 	}
 
-		authorDetails := model.Author{
-			AuthorID:         entry.AuthorDetail.Id,
-			FirstName:        entry.AuthorDetail.FirstName,
-			LastName:         entry.AuthorDetail.LastName,
-			Email:            entry.AuthorDetail.Email,
-			MobileNo:         &authorMobnumber,
-			IsActive:         &authorIsActive,
-			ProfileImagePath: &authorProfileImage,
-			CreatedOn:        entry.AuthorDetail.CreatedOn,
-			CreatedBy:        entry.AuthorDetail.CreatedBy,
-		}
+	// 	authorDetails := model.Author{
+	// 		AuthorID:         entry.AuthorDetail.Id,
+	// 		FirstName:        entry.AuthorDetail.FirstName,
+	// 		LastName:         entry.AuthorDetail.LastName,
+	// 		Email:            entry.AuthorDetail.Email,
+	// 		MobileNo:         &authorMobnumber,
+	// 		IsActive:         &authorIsActive,
+	// 		ProfileImagePath: &authorProfileImage,
+	// 		CreatedOn:        entry.AuthorDetail.CreatedOn,
+	// 		CreatedBy:        entry.AuthorDetail.CreatedBy,
+	// 	}
 
-		conv_channelEntries[index].AuthorDetails = &authorDetails
+	// 	conv_channelEntries[index].AuthorDetails = &authorDetails
 
-		conv_sections := make([]model.Section, len(entry.Sections))
+	// 	conv_sections := make([]model.Section, len(entry.Sections))
 
-		for section_index, section := range entry.Sections {
+	// 	for section_index, section := range entry.Sections {
 
-			sectionId := section.Id
+	// 		sectionId := section.Id
 
-			sectionModon := section.ModifiedOn
+	// 		sectionModon := section.ModifiedOn
 
-			sectionModBy := section.ModifiedBy
+	// 		sectionModBy := section.ModifiedBy
 
-			conv_section := model.Section{
-				SectionID:     &sectionId,
-				SectionName:   section.FieldName,
-				SectionTypeID: section.FieldTypeId,
-				CreatedOn:     section.CreatedOn,
-				CreatedBy:     section.CreatedBy,
-				ModifiedOn:    &sectionModon,
-				ModifiedBy:    &sectionModBy,
-				OrderIndex:    section.OrderIndex,
-			}
+	// 		conv_section := model.Section{
+	// 			SectionID:     &sectionId,
+	// 			SectionName:   section.FieldName,
+	// 			SectionTypeID: section.FieldTypeId,
+	// 			CreatedOn:     section.CreatedOn,
+	// 			CreatedBy:     section.CreatedBy,
+	// 			ModifiedOn:    &sectionModon,
+	// 			ModifiedBy:    &sectionModBy,
+	// 			OrderIndex:    section.OrderIndex,
+	// 		}
 
-			conv_sections[section_index] = conv_section
+	// 		conv_sections[section_index] = conv_section
 
-		}
+	// 	}
 
-		conv_fields := make([]model.Field, len(entry.Fields))
+	// 	conv_fields := make([]model.Field, len(entry.Fields))
 
-		for field_index, field := range entry.Fields {
+	// 	for field_index, field := range entry.Fields {
 
-			fieldValueModon := field.FieldValue.ModifiedOn
+	// 		fieldValueModon := field.FieldValue.ModifiedOn
 
-			fieldValueModBy := field.FieldValue.ModifiedBy
+	// 		fieldValueModBy := field.FieldValue.ModifiedBy
 
-			conv_field_value := model.FieldValue{
-				ID:         field.FieldValue.FieldId,
-				FieldValue: field.FieldValue.FieldValue,
-				CreatedOn:  field.FieldValue.CreatedOn,
-				CreatedBy:  field.FieldValue.CreatedBy,
-				ModifiedOn: &fieldValueModon,
-				ModifiedBy: &fieldValueModBy,
-			}
+	// 		conv_field_value := model.FieldValue{
+	// 			ID:         field.FieldValue.FieldId,
+	// 			FieldValue: field.FieldValue.FieldValue,
+	// 			CreatedOn:  field.FieldValue.CreatedOn,
+	// 			CreatedBy:  field.FieldValue.CreatedBy,
+	// 			ModifiedOn: &fieldValueModon,
+	// 			ModifiedBy: &fieldValueModBy,
+	// 		}
 
-			conv_fieldOptions := make([]model.FieldOptions, len(field.FieldOptions))
+	// 		conv_fieldOptions := make([]model.FieldOptions, len(field.FieldOptions))
 
-			for option_index, field_option := range field.FieldOptions {
+	// 		for option_index, field_option := range field.FieldOptions {
 
-				optionModOn := field_option.ModifiedOn
+	// 			optionModOn := field_option.ModifiedOn
 
-				optionModBy := field_option.ModifiedBy
+	// 			optionModBy := field_option.ModifiedBy
 
-				conv_fieldOption := model.FieldOptions{
-					ID:          field_option.Id,
-					OptionName:  field_option.OptionName,
-					OptionValue: field_option.OptionValue,
-					CreatedOn:   field_option.CreatedOn,
-					CreatedBy:   field_option.CreatedBy,
-					ModifiedOn:  &optionModOn,
-					ModifiedBy:  &optionModBy,
-				}
+	// 			conv_fieldOption := model.FieldOptions{
+	// 				ID:          field_option.Id,
+	// 				OptionName:  field_option.OptionName,
+	// 				OptionValue: field_option.OptionValue,
+	// 				CreatedOn:   field_option.CreatedOn,
+	// 				CreatedBy:   field_option.CreatedBy,
+	// 				ModifiedOn:  &optionModOn,
+	// 				ModifiedBy:  &optionModBy,
+	// 			}
 
-				conv_fieldOptions[option_index] = conv_fieldOption
-			}
+	// 			conv_fieldOptions[option_index] = conv_fieldOption
+	// 		}
 
-			fieldModon := field.ModifiedOn
+	// 		fieldModon := field.ModifiedOn
 
-			fieldModBy := field.ModifiedBy
+	// 		fieldModBy := field.ModifiedBy
 
-			fieldDateTime := field.DatetimeFormat
+	// 		fieldDateTime := field.DatetimeFormat
 
-			fieldTime := field.TimeFormat
+	// 		fieldTime := field.TimeFormat
 
-			fieldSectionParentId := field.SectionParentId
+	// 		fieldSectionParentId := field.SectionParentId
 
-			fieldCharAllowed := field.CharacterAllowed
+	// 		fieldCharAllowed := field.CharacterAllowed
 
-			conv_field := model.Field{
-				FieldID:          field.Id,
-				FieldName:        field.FieldName,
-				FieldTypeID:      field.FieldTypeId,
-				MandatoryField:   field.MandatoryField,
-				OptionExist:      field.OptionExist,
-				CreatedOn:        field.CreatedOn,
-				CreatedBy:        field.CreatedBy,
-				ModifiedOn:       &fieldModon,
-				ModifiedBy:       &fieldModBy,
-				FieldDesc:        field.FieldDesc,
-				OrderIndex:       field.OrderIndex,
-				ImagePath:        field.ImagePath,
-				DatetimeFormat:   &fieldDateTime,
-				TimeFormat:       &fieldTime,
-				SectionParentID:  &fieldSectionParentId,
-				CharacterAllowed: &fieldCharAllowed,
-				FieldTypeName:    field.FieldTypeName,
-				FieldValue:       &conv_field_value,
-				FieldOptions:     conv_fieldOptions,
-			}
+	// 		conv_field := model.Field{
+	// 			FieldID:          field.Id,
+	// 			FieldName:        field.FieldName,
+	// 			FieldTypeID:      field.FieldTypeId,
+	// 			MandatoryField:   field.MandatoryField,
+	// 			OptionExist:      field.OptionExist,
+	// 			CreatedOn:        field.CreatedOn,
+	// 			CreatedBy:        field.CreatedBy,
+	// 			ModifiedOn:       &fieldModon,
+	// 			ModifiedBy:       &fieldModBy,
+	// 			FieldDesc:        field.FieldDesc,
+	// 			OrderIndex:       field.OrderIndex,
+	// 			ImagePath:        field.ImagePath,
+	// 			DatetimeFormat:   &fieldDateTime,
+	// 			TimeFormat:       &fieldTime,
+	// 			SectionParentID:  &fieldSectionParentId,
+	// 			CharacterAllowed: &fieldCharAllowed,
+	// 			FieldTypeName:    field.FieldTypeName,
+	// 			FieldValue:       &conv_field_value,
+	// 			FieldOptions:     conv_fieldOptions,
+	// 		}
 
-			conv_fields[field_index] = conv_field
+	// 		conv_fields[field_index] = conv_field
 
-		}
+	// 	}
 
-		additionalFields := model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
+	// 	additionalFields := model.AdditionalFields{Sections: conv_sections, Fields: conv_fields}
 
-		conv_channelEntries[index].AdditionalFields = &additionalFields
+	// 	conv_channelEntries[index].AdditionalFields = &additionalFields
 
-		var memberProfileComLogo string
+	// 	var memberProfileComLogo string
 
-		if entry.MemberProfiles.CompanyLogo != "" && entry.MemberProfiles.StorageType == "aws" {
+	// 	if entry.MemberProfiles.CompanyLogo != "" && entry.MemberProfiles.StorageType == "aws" {
 
-			memberProfileComLogo = "image-resize?name=" + entry.MemberProfiles.CompanyLogo
+	// 		memberProfileComLogo = "image-resize?name=" + entry.MemberProfiles.CompanyLogo
 
-		}else{
+	// 	}else{
 
-			memberProfileComLogo = entry.MemberProfiles.CompanyLogo
-		}
+	// 		memberProfileComLogo = entry.MemberProfiles.CompanyLogo
+	// 	}
 
-		memberProfileId := entry.MemberProfiles.Id
-		memberProfileMemId := entry.MemberProfiles.MemberId
-		memberProfileName := entry.MemberProfiles.ProfileName
-		memberProfileSlug := entry.MemberProfiles.ProfileSlug
-		memberProfilePage := entry.MemberProfiles.ProfilePage
-		memberProfileMemDetails := entry.MemberProfiles.MemberDetails
-		memberProfileComName := entry.MemberProfiles.CompanyName
-		memberProfileComLocation := entry.MemberProfiles.CompanyLocation
-		memberProfileAbout := entry.MemberProfiles.About
-		memberProfileSeoTitle := entry.MemberProfiles.SeoTitle
-		memberProfileSeoDesc := entry.MemberProfiles.SeoDescription
-		memberProfileSeoKey := entry.MemberProfiles.SeoKeyword
-		memberProfileCreateBy := entry.MemberProfiles.CreatedBy
-		memberProfileCreateOn := entry.MemberProfiles.CreatedOn
-		memberProfileModon := entry.MemberProfiles.ModifiedOn
-		memberProfileModBy := entry.MemberProfiles.ModifiedBy
-		memberProfileLinkedin := entry.MemberProfiles.Linkedin
-		memberProfileTwitter := entry.MemberProfiles.Twitter
-		memberProfileWeb := entry.MemberProfiles.Website
-		memberProfileClaim := entry.MemberProfiles.ClaimStatus
+	// 	memberProfileId := entry.MemberProfiles.Id
+	// 	memberProfileMemId := entry.MemberProfiles.MemberId
+	// 	memberProfileName := entry.MemberProfiles.ProfileName
+	// 	memberProfileSlug := entry.MemberProfiles.ProfileSlug
+	// 	memberProfilePage := entry.MemberProfiles.ProfilePage
+	// 	memberProfileMemDetails := entry.MemberProfiles.MemberDetails
+	// 	memberProfileComName := entry.MemberProfiles.CompanyName
+	// 	memberProfileComLocation := entry.MemberProfiles.CompanyLocation
+	// 	memberProfileAbout := entry.MemberProfiles.About
+	// 	memberProfileSeoTitle := entry.MemberProfiles.SeoTitle
+	// 	memberProfileSeoDesc := entry.MemberProfiles.SeoDescription
+	// 	memberProfileSeoKey := entry.MemberProfiles.SeoKeyword
+	// 	memberProfileCreateBy := entry.MemberProfiles.CreatedBy
+	// 	memberProfileCreateOn := entry.MemberProfiles.CreatedOn
+	// 	memberProfileModon := entry.MemberProfiles.ModifiedOn
+	// 	memberProfileModBy := entry.MemberProfiles.ModifiedBy
+	// 	memberProfileLinkedin := entry.MemberProfiles.Linkedin
+	// 	memberProfileTwitter := entry.MemberProfiles.Twitter
+	// 	memberProfileWeb := entry.MemberProfiles.Website
+	// 	memberProfileClaim := entry.MemberProfiles.ClaimStatus
 
-		MemberProfile := model.MemberProfile{
-			ID:              &memberProfileId,
-			MemberID:        &memberProfileMemId,
-			ProfileName:     &memberProfileName,
-			ProfileSlug:     &memberProfileSlug,
-			ProfilePage:     &memberProfilePage,
-			MemberDetails:   &memberProfileMemDetails,
-			CompanyName:     &memberProfileComName,
-			CompanyLocation: &memberProfileComLocation,
-			CompanyLogo:     &memberProfileComLogo,
-			About:           &memberProfileAbout,
-			SeoTitle:        &memberProfileSeoTitle,
-			SeoDescription:  &memberProfileSeoDesc,
-			SeoKeyword:      &memberProfileSeoKey,
-			CreatedBy:       &memberProfileCreateBy,
-			CreatedOn:       &memberProfileCreateOn,
-			ModifiedOn:      &memberProfileModon,
-			ModifiedBy:      &memberProfileModBy,
-			Linkedin:        &memberProfileLinkedin,
-			Twitter:         &memberProfileTwitter,
-			Website:         &memberProfileWeb,
-			ClaimStatus:     &memberProfileClaim,
-		}
+	// 	MemberProfile := model.MemberProfile{
+	// 		ID:              &memberProfileId,
+	// 		MemberID:        &memberProfileMemId,
+	// 		ProfileName:     &memberProfileName,
+	// 		ProfileSlug:     &memberProfileSlug,
+	// 		ProfilePage:     &memberProfilePage,
+	// 		MemberDetails:   &memberProfileMemDetails,
+	// 		CompanyName:     &memberProfileComName,
+	// 		CompanyLocation: &memberProfileComLocation,
+	// 		CompanyLogo:     &memberProfileComLogo,
+	// 		About:           &memberProfileAbout,
+	// 		SeoTitle:        &memberProfileSeoTitle,
+	// 		SeoDescription:  &memberProfileSeoDesc,
+	// 		SeoKeyword:      &memberProfileSeoKey,
+	// 		CreatedBy:       &memberProfileCreateBy,
+	// 		CreatedOn:       &memberProfileCreateOn,
+	// 		ModifiedOn:      &memberProfileModon,
+	// 		ModifiedBy:      &memberProfileModBy,
+	// 		Linkedin:        &memberProfileLinkedin,
+	// 		Twitter:         &memberProfileTwitter,
+	// 		Website:         &memberProfileWeb,
+	// 		ClaimStatus:     &memberProfileClaim,
+	// 	}
 
-		conv_channelEntries[index].MemberProfile = &MemberProfile
+	// 	conv_channelEntries[index].MemberProfile = &MemberProfile
 
-		conv_channelEntries[index].Author = &entry.Author
+	// 	conv_channelEntries[index].Author = &entry.Author
 
-		conv_channelEntries[index].CategoriesID = entry.CategoriesId
+	// 	conv_channelEntries[index].CategoriesID = entry.CategoriesId
 
-		conv_channelEntries[index].ChannelID = entry.ChannelId
+	// 	conv_channelEntries[index].ChannelID = entry.ChannelId
 
-		conv_channelEntries[index].CoverImage = entry.CoverImage
+	// 	conv_channelEntries[index].CoverImage = entry.CoverImage
 
-		conv_channelEntries[index].CreateTime = &entry.CreateTime
+	// 	conv_channelEntries[index].CreateTime = &entry.CreateTime
 
-		conv_channelEntries[index].CreatedBy = entry.CreatedBy
+	// 	conv_channelEntries[index].CreatedBy = entry.CreatedBy
 
-		conv_channelEntries[index].CreatedOn = entry.CreatedOn
+	// 	conv_channelEntries[index].CreatedOn = entry.CreatedOn
 
-		conv_channelEntries[index].Description = entry.Description
+	// 	conv_channelEntries[index].Description = entry.Description
 
-		conv_channelEntries[index].Excerpt = &entry.Excerpt
+	// 	conv_channelEntries[index].Excerpt = &entry.Excerpt
 
-		conv_channelEntries[index].FeaturedEntry = entry.Feature
+	// 	conv_channelEntries[index].FeaturedEntry = entry.Feature
 
-		conv_channelEntries[index].ID = entry.Id
+	// 	conv_channelEntries[index].ID = entry.Id
 
-		conv_channelEntries[index].IsActive = entry.IsActive
+	// 	conv_channelEntries[index].IsActive = entry.IsActive
 
-		conv_channelEntries[index].Keyword = entry.Keyword
+	// 	conv_channelEntries[index].Keyword = entry.Keyword
 
-		conv_channelEntries[index].MetaDescription = entry.MetaDescription
+	// 	conv_channelEntries[index].MetaDescription = entry.MetaDescription
 
-		conv_channelEntries[index].MetaTitle = entry.MetaTitle
+	// 	conv_channelEntries[index].MetaTitle = entry.MetaTitle
 
-		modifiedBy := entry.ModifiedBy
+	// 	modifiedBy := entry.ModifiedBy
 
-		conv_channelEntries[index].ModifiedBy = &modifiedBy
+	// 	conv_channelEntries[index].ModifiedBy = &modifiedBy
 
-		modifiedOn := entry.ModifiedOn
+	// 	modifiedOn := entry.ModifiedOn
 
-		conv_channelEntries[index].ModifiedOn = &modifiedOn
+	// 	conv_channelEntries[index].ModifiedOn = &modifiedOn
 
-		publishedOn := entry.PublishedTime
+	// 	publishedOn := entry.PublishedTime
 
-		conv_channelEntries[index].PublishedTime = &publishedOn
+	// 	conv_channelEntries[index].PublishedTime = &publishedOn
 
-		readingTime := entry.ReadingTime
+	// 	readingTime := entry.ReadingTime
 
-		conv_channelEntries[index].ReadingTime = &readingTime
+	// 	conv_channelEntries[index].ReadingTime = &readingTime
 
-		conv_channelEntries[index].RelatedArticles = entry.RelatedArticles
+	// 	conv_channelEntries[index].RelatedArticles = entry.RelatedArticles
 
-		conv_channelEntries[index].Slug = entry.Slug
+	// 	conv_channelEntries[index].Slug = entry.Slug
 
-		sortOrder := entry.SortOrder
+	// 	sortOrder := entry.SortOrder
 
-		conv_channelEntries[index].SortOrder = &sortOrder
+	// 	conv_channelEntries[index].SortOrder = &sortOrder
 
-		conv_channelEntries[index].Status = entry.Status
+	// 	conv_channelEntries[index].Status = entry.Status
 
-		tags := entry.Tags
+	// 	tags := entry.Tags
 
-		conv_channelEntries[index].Tags = &tags
+	// 	conv_channelEntries[index].Tags = &tags
 
-		conv_channelEntries[index].ThumbnailImage = entry.ThumbnailImage
+	// 	conv_channelEntries[index].ThumbnailImage = entry.ThumbnailImage
 
-		conv_channelEntries[index].Title = entry.Title
+	// 	conv_channelEntries[index].Title = entry.Title
 
-		conv_channelEntries[index].UserID = entry.UserId
+	// 	conv_channelEntries[index].UserID = entry.UserId
 
-		conv_channelEntries[index].ViewCount = entry.ViewCount
+	// 	conv_channelEntries[index].ViewCount = entry.ViewCount
 
-		imageAltTag := entry.ImageAltTag
+	// 	imageAltTag := entry.ImageAltTag
 
-		conv_channelEntries[index].ImageAltTag = &imageAltTag
+	// 	conv_channelEntries[index].ImageAltTag = &imageAltTag
 
-	}
+	// }
 
-	channelEntryDetails := model.ChannelEntriesDetails{ChannelEntriesList: conv_channelEntries, Count: int(count)}
+	// channelEntryDetails := model.ChannelEntriesDetails{ChannelEntriesList: conv_channelEntries, Count: int(count)}
 
-	return &channelEntryDetails, nil
+	return channelEntryDetails, nil
 
 }
 

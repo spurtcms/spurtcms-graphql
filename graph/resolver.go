@@ -31,7 +31,7 @@ func Channellist(db *gorm.DB, ctx context.Context, limit, offset int) (*model.Ch
 	return controller.Channellist(db, ctx, limit, offset)
 }
 
-func ChannelEntriesList(db *gorm.DB, ctx context.Context, limit, offset int, filter *model.EntryFilter ,requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
+func ChannelEntriesList(db *gorm.DB, ctx context.Context, limit, offset int, filter *model.EntryFilter, requireData *model.RequireData) (*model.ChannelEntriesDetails, error) {
 	return controller.ChannelEntriesList(db, ctx, limit, offset, filter, requireData)
 }
 
@@ -83,8 +83,8 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, pro
 	return controller.VerifyProfileName(db, ctx, profileSlug, profileID)
 }
 
-func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string) (string, error) {
-	return controller.TemplateMemberLogin(db, ctx, username, email, password)
+func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string, module *int) (string, error) {
+	return controller.TemplateMemberLogin(db, ctx, username, email, password, module)
 }
 
 func EcommerceProductDetails(db *gorm.DB, ctx context.Context, productID *int, productSlug *string) (*model.EcommerceProduct, error) {
@@ -161,4 +161,8 @@ func GetMemberDetails(db *gorm.DB, ctx context.Context) (*model.Member, error) {
 
 func EcommerceOrderStatusNames(db *gorm.DB, ctx context.Context) ([]model.OrderStatusNames, error) {
 	return controller.EcommerceOrderStatusNames(db, ctx)
+}
+
+func ApplicantDetails(db *gorm.DB, ctx context.Context, jobId int, emailId string) (*model.ApplicantDetails, error) {
+	return controller.ApplicantDetails(db, ctx, jobId, emailId)
 }

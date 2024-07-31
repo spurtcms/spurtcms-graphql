@@ -13,6 +13,7 @@ require (
 	github.com/spurtcms/categories v0.0.4
 	github.com/spurtcms/channels v0.0.12
 	github.com/spurtcms/ecommerce v0.0.1
+	github.com/spurtcms/jobs v0.0.12
 	github.com/spurtcms/member v0.0.13
 	github.com/spurtcms/pkgcontent v1.1.15
 	github.com/spurtcms/pkgcore v1.0.84
@@ -20,7 +21,8 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.11
 	golang.org/x/crypto v0.21.0
 	gorm.io/datatypes v1.2.0
-	gorm.io/driver/postgres v1.5.7
+	gorm.io/driver/mysql v1.5.2
+	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.10
 )
 
@@ -76,5 +78,4 @@ require (
 	golang.org/x/tools v0.19.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/mysql v1.5.2 // indirect
 )

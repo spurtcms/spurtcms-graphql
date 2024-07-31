@@ -2,38 +2,42 @@ package controller
 
 import (
 	"os"
+
 	authPkg "github.com/spurtcms/auth"
+	categoryPkg "github.com/spurtcms/categories"
+	chanPkg "github.com/spurtcms/channels"
 	ecomPkg "github.com/spurtcms/ecommerce"
+	jobsPkg "github.com/spurtcms/jobs"
 	memberPkg "github.com/spurtcms/member"
 	teamPkg "github.com/spurtcms/team"
-    chanPkg  "github.com/spurtcms/channels"
-	categoryPkg "github.com/spurtcms/categories"
 )
 
 var (
-	AuthInstance                *authPkg.Auth
-	TeamAuthInstance            *teamPkg.Teams
-	MemberAuthInstance          *memberPkg.Member
-	EcomAuthInstance            *ecomPkg.Ecommerce
-	EcomInstance                *ecomPkg.Ecommerce
-	MemberInstance              *memberPkg.Member
-	TeamInstance                *teamPkg.Teams
-	ChannelInstance             *chanPkg.Channel
-	ChannelAuthInstance         *chanPkg.Channel
-	CategoryInstance            *categoryPkg.Categories
+	AuthInstance        *authPkg.Auth
+	TeamAuthInstance    *teamPkg.Teams
+	MemberAuthInstance  *memberPkg.Member
+	EcomAuthInstance    *ecomPkg.Ecommerce
+	EcomInstance        *ecomPkg.Ecommerce
+	MemberInstance      *memberPkg.Member
+	TeamInstance        *teamPkg.Teams
+	ChannelInstance     *chanPkg.Channel
+	ChannelAuthInstance *chanPkg.Channel
+	CategoryInstance    *categoryPkg.Categories
 	// NewRole                  *role.PermissionConfig
 	// CategoryConfig           *cat.Categories
 	// MemberaccessConfig       *memaccess.AccessControl
+	JobsInstance     *jobsPkg.Jobs
+	JobsAuthInstance *jobsPkg.Jobs
 )
 
-func init(){
+func init() {
 
 	AuthConfig()
 
 	GetMemberInstance()
 
 	GetMemberInstanceWithoutAuth()
-	
+
 	GetEcomInstance()
 
 	GetEcomInstanceWithoutAuth()
@@ -47,6 +51,10 @@ func init(){
 	GetChannelInstance()
 
 	GetCategoryInstanceWithoutAuth()
+
+	GetJobsInstance()
+
+	GetJobsAuthInstance()
 
 }
 
@@ -76,73 +84,73 @@ func GetMemberInstance() *memberPkg.Member {
 func GetMemberInstanceWithoutAuth() *memberPkg.Member {
 
 	MemberInstance = memberPkg.MemberSetup(memberPkg.Config{
-		DB:               DB,
-		Auth:             AuthInstance,
+		DB:   DB,
+		Auth: AuthInstance,
 	})
 
 	return MemberInstance
 }
 
-func GetEcomInstance() *ecomPkg.Ecommerce{
+func GetEcomInstance() *ecomPkg.Ecommerce {
 
 	EcomAuthInstance = ecomPkg.EcommerceSetup(ecomPkg.Config{
-		AuthEnable: true,
+		AuthEnable:       true,
 		PermissionEnable: false,
-		DB: DB,
-		Auth: AuthInstance,
+		DB:               DB,
+		Auth:             AuthInstance,
 	})
 
 	return EcomAuthInstance
 }
 
-func GetEcomInstanceWithoutAuth() *ecomPkg.Ecommerce{
+func GetEcomInstanceWithoutAuth() *ecomPkg.Ecommerce {
 
 	EcomInstance = ecomPkg.EcommerceSetup(ecomPkg.Config{
-		DB: DB,
+		DB:   DB,
 		Auth: AuthInstance,
 	})
 
 	return EcomInstance
 }
 
-func GetTeamInstance() *teamPkg.Teams{
+func GetTeamInstance() *teamPkg.Teams {
 
 	TeamAuthInstance = teamPkg.TeamSetup(teamPkg.Config{
-		DB: DB,
-		AuthEnable: true,
+		DB:               DB,
+		AuthEnable:       true,
 		PermissionEnable: false,
-		Auth: AuthInstance,
+		Auth:             AuthInstance,
 	})
 
 	return TeamAuthInstance
 }
 
-func GetTeamInstanceWithoutAuth() *teamPkg.Teams{
+func GetTeamInstanceWithoutAuth() *teamPkg.Teams {
 
 	TeamInstance = teamPkg.TeamSetup(teamPkg.Config{
-		DB: DB,
+		DB:   DB,
 		Auth: AuthInstance,
 	})
 
 	return TeamInstance
 }
 
-func GetChannelInstance() *chanPkg.Channel{
+func GetChannelInstance() *chanPkg.Channel {
 
-	ChannelAuthInstance =  chanPkg.ChannelSetup(chanPkg.Config{
-		DB: DB,
-		AuthEnable: true,
+	ChannelAuthInstance = chanPkg.ChannelSetup(chanPkg.Config{
+		DB:               DB,
+		AuthEnable:       true,
 		PermissionEnable: false,
-		Auth: AuthInstance,
+		Auth:             AuthInstance,
 	})
 
 	return ChannelAuthInstance
 }
 
-func GetChannelInstanceWithoutAuth() *chanPkg.Channel{
+func GetChannelInstanceWithoutAuth() *chanPkg.Channel {
 
-	ChannelInstance =  chanPkg.ChannelSetup(chanPkg.Config{
-		DB: DB,
+	ChannelInstance = chanPkg.ChannelSetup(chanPkg.Config{
+		DB:   DB,
 		Auth: AuthInstance,
 	})
 
@@ -159,4 +167,28 @@ func GetCategoryInstanceWithoutAuth() *categoryPkg.Categories {
 	})
 
 	return CategoryInstance
+}
+
+func GetJobsInstance() *jobsPkg.Jobs {
+
+	JobsInstance = jobsPkg.JobsSetup(jobsPkg.Config{
+		DB:               DB,
+		AuthEnable:       false,
+		PermissionEnable: false,
+		Auth:             AuthInstance,
+	})
+
+	return JobsInstance
+}
+
+func GetJobsAuthInstance() *jobsPkg.Jobs {
+
+	JobsAuthInstance = jobsPkg.JobsSetup(jobsPkg.Config{
+		DB:               DB,
+		AuthEnable:       true,
+		PermissionEnable: false,
+		Auth:             AuthInstance,
+	})
+
+	return JobsAuthInstance
 }
