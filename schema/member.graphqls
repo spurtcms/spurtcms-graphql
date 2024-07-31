@@ -101,7 +101,7 @@ extend type Mutation{
 	memberProfileUpdate(profiledata: ProfileData!):Boolean! @auth
 	memberclaimnow(input: ClaimData!,profileId: Int,profileSlug: String): Boolean! @auth
 	profileNameVerification(profileSlug: String!, profileId: Int!): Boolean! @auth
-    templateMemberLogin(username: String,email: String,password: String!): String! 
+    templateMemberLogin(username: String,email: String,password: String!,Module: Int): String! 
     memberRegister(input: MemberDetails!,ecomModule: Int): Boolean!
     memberUpdate(memberdata: MemberDetails!): Boolean! @auth
     memberPasswordUpdate(oldPassword: String!,newPassword: String!,confirmPassword: String!): Boolean! @auth

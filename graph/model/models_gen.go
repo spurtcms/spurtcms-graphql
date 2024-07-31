@@ -13,6 +13,38 @@ type AdditionalFields struct {
 	Fields   []Field   `json:"fields,omitempty"`
 }
 
+type ApplicantDetails struct {
+	ID             *int       `json:"id,omitempty"`
+	JobID          *int       `json:"jobId,omitempty"`
+	ApplicantID    *int       `json:"applicantId,omitempty"`
+	Name           *string    `json:"name,omitempty"`
+	EmailID        *string    `json:"emailId,omitempty"`
+	MobileNo       *string    `json:"mobileNo,omitempty"`
+	JobType        *string    `json:"jobType,omitempty"`
+	Gender         *string    `json:"gender,omitempty"`
+	Location       *string    `json:"location,omitempty"`
+	Education      *string    `json:"education,omitempty"`
+	Graduation     *int       `json:"graduation,omitempty"`
+	CompanyName    *string    `json:"companyName,omitempty"`
+	Experience     *int       `json:"experience,omitempty"`
+	Skills         *string    `json:"skills,omitempty"`
+	ImagePath      *string    `json:"imagePath,omitempty"`
+	Image          *string    `json:"image,omitempty"`
+	CreatedOn      *time.Time `json:"createdOn,omitempty"`
+	CreatedBy      *int       `json:"createdBy,omitempty"`
+	ModifiedOn     *time.Time `json:"modifiedOn,omitempty"`
+	ModifiedBy     *int       `json:"modifiedBy,omitempty"`
+	IsDeleted      *int       `json:"isDeleted,omitempty"`
+	DeletedOn      *time.Time `json:"deletedOn,omitempty"`
+	DeletedBy      *int       `json:"deletedBy,omitempty"`
+	CurrentSalary  *int       `json:"currentSalary,omitempty"`
+	ExpectedSalary *int       `json:"expectedSalary,omitempty"`
+	Status         *int       `json:"status,omitempty"`
+	ResumePath     *string    `json:"resumePath,omitempty"`
+	ResumeName     *string    `json:"resumeName,omitempty"`
+	StorageType    *string    `json:"storageType,omitempty"`
+}
+
 type Author struct {
 	AuthorID         int       `json:"AuthorId" gorm:"column:id"`
 	FirstName        string    `json:"FirstName"`
@@ -156,7 +188,7 @@ type EcommerceOrder struct {
 
 type EcommerceProduct struct {
 	ID                 int            `json:"id"`
-	CategoriesID       int            `json:"categoriesId"`
+	CategoriesID       string         `json:"categoriesId"`
 	ProductName        string         `json:"productName"`
 	ProductSlug        string         `json:"productSlug"`
 	ProductDescription string         `json:"productDescription"`
@@ -267,7 +299,7 @@ type FieldValue struct {
 type Job struct {
 	ID             int        `json:"id"`
 	CategoriesID   int        `json:"categoriesId"`
-	Category       *Category `json:"category,omitempty" gorm:"foreignKey:CategoriesID;references:ID"`
+	Category       Category   `json:"category" gorm:"foreignKey:CategoriesID;references:ID"`
 	JobTitle       string     `json:"jobTitle"`
 	JobSlug        string     `json:"jobSlug"`
 	JobDescription string     `json:"jobDescription"`
@@ -415,6 +447,7 @@ type OrderStatus struct {
 type OrderStatusNames struct {
 	ID          int        `json:"id"`
 	Status      string     `json:"status"`
+	Priority    int        `json:"priority"`
 	Description *string    `json:"description,omitempty"`
 	IsActive    int        `json:"isActive"`
 	CreatedBy   int        `json:"createdBy"`
@@ -562,9 +595,10 @@ type SubPage struct {
 
 type ApplicationInput struct {
 	Name           string                     `json:"name"`
+	JobID          int                        `json:"jobId"`
 	EmailID        string                     `json:"emailId"`
-	MobileNo       int                        `json:"mobileNo"`
-	JobType        string                     `json:"jobType"`
+	MobileNo       string                     `json:"mobileNo"`
+	JobType        graphql.Omittable[*string] `json:"jobType,omitempty"`
 	Gender         string                     `json:"gender"`
 	Location       string                     `json:"location"`
 	Education      string                     `json:"education"`
@@ -572,10 +606,10 @@ type ApplicationInput struct {
 	CompanyName    graphql.Omittable[*string] `json:"companyName,omitempty"`
 	Experience     int                        `json:"experience"`
 	Skills         string                     `json:"skills"`
-	ApplicantImage graphql.Upload             `json:"applicantImage"`
+	Image          string                     `json:"image"`
 	CurrentSalary  graphql.Omittable[*int]    `json:"currentSalary,omitempty"`
-	ExpectedSalary int                        `json:"expectedSalary"`
-	Resume         graphql.Upload             `json:"resume"`
+	ExpectedSalary graphql.Omittable[*int]    `json:"expectedSalary,omitempty"`
+	Resume         string                     `json:"resume"`
 }
 
 type CustomerDetails struct {
@@ -606,19 +640,19 @@ type CustomerDetails struct {
 }
 
 type CustomerInput struct {
-	FirstName     string                             `json:"firstName"`
-	LastName      graphql.Omittable[*string]         `json:"lastName,omitempty"`
-	MobileNo      graphql.Omittable[*string]         `json:"mobileNo,omitempty"`
-	Email         string                             `json:"email"`
-	Username      graphql.Omittable[*string]         `json:"username,omitempty"`
-	Password      graphql.Omittable[*string]         `json:"password,omitempty"`
-	IsActive      graphql.Omittable[*int]            `json:"isActive,omitempty"`
-	ProfileImage  graphql.Omittable[*string]         `json:"profileImage,omitempty"`
-	City          graphql.Omittable[*string]         `json:"city,omitempty"`
-	State         graphql.Omittable[*string]         `json:"state,omitempty"`
-	Country       graphql.Omittable[*string]         `json:"country,omitempty"`
-	ZipCode       graphql.Omittable[*string]         `json:"zipCode,omitempty"`
-	StreetAddress graphql.Omittable[*string]         `json:"streetAddress,omitempty"`
+	FirstName     string                     `json:"firstName"`
+	LastName      graphql.Omittable[*string] `json:"lastName,omitempty"`
+	MobileNo      graphql.Omittable[*string] `json:"mobileNo,omitempty"`
+	Email         string                     `json:"email"`
+	Username      graphql.Omittable[*string] `json:"username,omitempty"`
+	Password      graphql.Omittable[*string] `json:"password,omitempty"`
+	IsActive      graphql.Omittable[*int]    `json:"isActive,omitempty"`
+	ProfileImage  graphql.Omittable[*string] `json:"profileImage,omitempty"`
+	City          graphql.Omittable[*string] `json:"city,omitempty"`
+	State         graphql.Omittable[*string] `json:"state,omitempty"`
+	Country       graphql.Omittable[*string] `json:"country,omitempty"`
+	ZipCode       graphql.Omittable[*string] `json:"zipCode,omitempty"`
+	StreetAddress graphql.Omittable[*string] `json:"streetAddress,omitempty"`
 }
 
 type OrderFilter struct {
@@ -653,4 +687,9 @@ type OrderProduct struct {
 type OrderSort struct {
 	Price graphql.Omittable[*int] `json:"price,omitempty"`
 	Date  graphql.Omittable[*int] `json:"date,omitempty"`
+}
+
+func(Category) TableName() string{
+
+	return "tbl_categories"
 }

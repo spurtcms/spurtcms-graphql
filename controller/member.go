@@ -468,7 +468,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		memberDetails.Email = input.Email
 
-		isExist,_, err := MemberInstance.CheckEmailInMember(0, input.Email)
+		isExist, _, err := MemberInstance.CheckEmailInMember(0, input.Email)
 
 		if !isExist || err == nil {
 
@@ -485,7 +485,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		memberDetails.MobileNo = *input.Mobile.Value()
 
-		isExist,_, err := MemberInstance.CheckNumberInMember(0, *input.Mobile.Value())
+		isExist, _, err := MemberInstance.CheckNumberInMember(0, *input.Mobile.Value())
 
 		if !isExist || err == nil {
 
@@ -497,7 +497,7 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 		}
 	}
 
-	if input.ProfileImagePath.IsSet() && input.ProfileImagePath.Value() != nil{
+	if input.ProfileImagePath.IsSet() && input.ProfileImagePath.Value() != nil {
 
 		var fileName, filePath string
 
@@ -666,14 +666,14 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 	}
 
-	emailExist,_,_ := MemberInstance.CheckEmailInMember(memberid, memberdata.Email)
+	emailExist, _, _ := MemberInstance.CheckEmailInMember(memberid, memberdata.Email)
 
 	if emailExist {
 
 		return false, ErrMailExist
 	}
 
-	mobExist,_,_ := MemberInstance.CheckNumberInMember(memberid, *memberdata.Mobile.Value())
+	mobExist, _, _ := MemberInstance.CheckNumberInMember(memberid, *memberdata.Mobile.Value())
 
 	if mobExist {
 
@@ -821,7 +821,7 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 }
 
-func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string) (string, error) {
+func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *string, password string, module *int) (string, error) {
 
 	c, ok := ctx.Value(ContextKey).(*gin.Context)
 
@@ -856,11 +856,11 @@ func TemplateMemberLogin(db *gorm.DB, ctx context.Context, username, email *stri
 
 	if username != nil && *username != "" {
 
-		member, err = AuthInstance.CheckMemberLogin(authPkg.MemberLoginCheck{Username: *username, Password: password, UsernameWithPassword: true})
+		member, err = AuthInstance.CheckMemberLogin(authPkg.MemberLoginCheck{Username: *username, Password: password, UsernameWithPassword: true, Module: *module})
 
 	} else if email != nil && *email != "" {
 
-		member, err = AuthInstance.CheckMemberLogin(authPkg.MemberLoginCheck{Email: *email, Password: password, EmailwithPassword: true})
+		member, err = AuthInstance.CheckMemberLogin(authPkg.MemberLoginCheck{Email: *email, Password: password, EmailwithPassword: true, Module: *module})
 
 	}
 
@@ -1345,13 +1345,14 @@ func VerifyProfileName(db *gorm.DB, ctx context.Context, profileSlug string, pro
 	}
 
 	slugPresence, err := MemberInstance.CheckProfileSlug(profileSlug, profileID)
+	fmt.Println("slugPresence", slugPresence)
 
 	if err != nil {
-		
+
 		return false, err
 	}
 
-	return slugPresence, nil
+	return true, nil
 }
 
 func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimData, profileId *int, profileSlug *string) (bool, error) {
@@ -1390,7 +1391,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 		ErrorLog.Printf("%v", fmtErr)
 
-		c.AbortWithError(500,fmtErr)
+		c.AbortWithError(500, fmtErr)
 
 		return false, fmtErr
 	}
@@ -1400,12 +1401,12 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, ErrclaimAlready
 	}
 
-	if MemberDetails.Id != 0 &&  MemberDetails.IsActive != 1 {
+	if MemberDetails.Id != 0 && MemberDetails.IsActive != 1 {
 
 		return false, ErrMemberInactive
 	}
 
-	_,memberData,_ := MemberInstance.CheckEmailInMember(MemberDetails.Id, profileData.WorkMail)
+	_, memberData, _ := MemberInstance.CheckEmailInMember(MemberDetails.Id, profileData.WorkMail)
 
 	if memberData.Id != 0 {
 
@@ -1419,7 +1420,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	}
 
-	_,memData, _ := MemberInstance.CheckNumberInMember(MemberDetails.Id, profileData.CompanyNumber)
+	_, memData, _ := MemberInstance.CheckNumberInMember(MemberDetails.Id, profileData.CompanyNumber)
 
 	if memData.Id != 0 {
 
