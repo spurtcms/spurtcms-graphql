@@ -47,11 +47,15 @@ func main() {
 
 	r.GET("/apidocs",controller.GetDocumentationView)
 
-	r.POST("/query", ginhandler.GraphQLHandler())
-
 	r.GET("/play", controller.GetPlayGroundView)
 
 	r.GET("/", ginhandler.PlaygroundHandler())
+
+	r.GET("image-resize", controller.ImageResize)
+
+	r.Use(middleware.ApiKeyAuth())
+
+	r.POST("/query", ginhandler.GraphQLHandler())
 
 	r.Run(":" + port)
 }

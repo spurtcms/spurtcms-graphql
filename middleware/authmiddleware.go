@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"spurtcms-graphql/controller"
+	"spurtcms-graphql/models"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gin-gonic/gin"
@@ -66,3 +68,48 @@ func AuthMiddleware(ctx context.Context, obj interface{}, next graphql.Resolver)
 
 	return next(ctx)
 }
+
+func ApiKeyAuth () gin.HandlerFunc{
+
+	return func(c *gin.Context) {
+
+		err := AuthenticateApiKey(c)
+
+		if err != nil {
+
+			controller.ErrorLog.Printf("%v", err)
+
+			c.AbortWithError(401, err)
+
+			return
+		}
+	}
+}
+
+func AuthenticateApiKey(c *gin.Context) error {
+
+	apiKey := c.GetHeader("ApiKey")
+
+	if apiKey == "" {
+
+		return controller.ErrReqApiKey
+	}
+
+	var graphqlSettings models.TblGraphqlSettings
+
+	err := controller.Model.GetApiSettings(apiKey, &graphqlSettings)
+
+	if err != nil {
+
+		return controller.ErrInvalidApiKey
+	}
+
+	if time.Now().After(graphqlSettings.ExpiryTime) && graphqlSettings.Duration != "Unlimited" {
+
+		return controller.ErrExpireApiKey
+	}
+
+	return nil
+
+}
+

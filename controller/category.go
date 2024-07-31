@@ -3,15 +3,17 @@ package controller
 import (
 	"context"
 	"spurtcms-graphql/graph/model"
-
 	"gorm.io/gorm"
 )
 
 func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGroupId *int, categoryGroupSlug *string, hierarchyLevel, excludeGroup, excludeParent, checkEntriesPresence *int) (*model.CategoriesList, error) {
 
+
 	// fmt.Println("dbchk",db.Config.Dialector.Name())
 
+
 	// c, _ := ctx.Value(ContextKey).(*gin.Context)
+
 
 	// var (
 	// 	FinalCategoryList                                                                 []model.Category
@@ -19,6 +21,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 	// 	hierarchyLevelVal, checkEntriesPresenceVal, excludeGroupVal                       int
 	// 	categoryGroupSlugVal                                                              string
 	// )
+
 
 	// if categoryGroupId != nil {
 
@@ -30,7 +33,10 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 	// 	limitVal = *limit
 	// }
 
+
 	// if offset != nil{
+
+
 
 	// 	offsetVal = *offset
 	// }
@@ -64,6 +70,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 
 	// categories,count, err := CategoryInstance.CategoryList(limitVal, offsetVal, categoryGrpIdVal, hierarchyLevelVal, checkEntriesPresenceVal,excludeGroupVal,excludeParentVal,categoryGroupSlugVal)
 
+
 	// if err != nil {
 
 	// 	ErrorLog.Printf("category list retrieval error: %s", err)
@@ -75,6 +82,7 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 	// }
 
 	// for _, category := range categories {
+
 
 	// 	localCategory := model.Category{
 	// 		ID: category.Id,
@@ -89,10 +97,12 @@ func CategoriesList(db *gorm.DB, ctx context.Context, limit, offset, categoryGro
 	// 		ParentID: category.ParentId,
 	// 	}
 
+
 	// 	FinalCategoryList = append(FinalCategoryList, localCategory)
 	// }
 
 	// return &model.CategoriesList{Categories: FinalCategoryList, Count: count}, nil
 
 	return &model.CategoriesList{}, nil
+
 }

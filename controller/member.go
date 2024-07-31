@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"spurtcms-graphql/graph/model"
+	"spurtcms-graphql/models"
 	"spurtcms-graphql/storage"
 	"strconv"
 	"strings"
@@ -67,7 +68,7 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 		return false, fmtErr
 	}
 
-	sendMailData, err := GetEmailConfigurations(db)
+	sendMailData, err := GetEmailConfigurations()
 
 	if err != nil {
 
@@ -84,7 +85,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 		var loginEnquiryTemplate model.EmailTemplate
 
-		if err := db.Debug().Table("tbl_email_templates").Where("is_deleted = 0 and template_slug = ?", OwndeskLoginEnquiryTemplate).First(&loginEnquiryTemplate).Error; err != nil {
+		err  = Model.GetEmailTemplate(OwndeskLoginEnquiryTemplate,&loginEnquiryTemplate)
+
+		if err != nil {
 
 			fmtErr := fmt.Errorf("%v: %v", loginEnquiryTemplate.TemplateName, err)
 
@@ -239,7 +242,9 @@ func MemberLogin(db *gorm.DB, ctx context.Context, email string) (bool, error) {
 
 	var loginTemplate model.EmailTemplate
 
-	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_slug = ?", OwndeskLoginTemplate).First(&loginTemplate).Error; err != nil {
+	err = Model.GetEmailTemplate(OwndeskLoginTemplate,&loginTemplate)
+
+	if err != nil {
 
 		fmtErr := fmt.Errorf("%v: %v", ErrNoOtpUpdate, err)
 
@@ -503,9 +508,9 @@ func MemberRegister(db *gorm.DB, ctx context.Context, input model.MemberDetails,
 
 		var imageData = *input.ProfileImagePath.Value()
 
-		var storageType StorageType
+		var storageType models.StorageType
 
-		storageType, err = GetStorageType(db)
+		err := Model.GetStorageType(&storageType)
 
 		if err != nil {
 
@@ -701,9 +706,9 @@ func UpdateMember(db *gorm.DB, ctx context.Context, memberdata model.MemberDetai
 
 		var imageData = *memberdata.ProfileImagePath.Value()
 
-		var storageType StorageType
+		var storageType models.StorageType
 
-		storageType, err = GetStorageType(db)
+		err := Model.GetStorageType(&storageType)
 
 		if err != nil {
 
@@ -1197,9 +1202,9 @@ func MemberProfileUpdate(db *gorm.DB, ctx context.Context, profiledata model.Pro
 
 		var imageData = *profiledata.CompanyLogo.Value()
 
-		var storageType StorageType
+		var storageType models.StorageType
 
-		storageType, err = GetStorageType(db)
+		err := Model.GetStorageType(&storageType)
 
 		if err != nil {
 
@@ -1447,7 +1452,7 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 		return false, fmtErr
 	}
 
-	sendMailData, err := GetEmailConfigurations(db)
+	sendMailData, err := GetEmailConfigurations()
 
 	if err != nil {
 
@@ -1488,7 +1493,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	var claimTemplate model.EmailTemplate
 
-	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_slug = ?", OwndeskClaimnowTemplate).First(&claimTemplate).Error; err != nil {
+	err = Model.GetEmailTemplate(OwndeskClaimSubmitTemplate,&claimTemplate)
+
+	if err != nil {
 
 		c.AbortWithError(http.StatusInternalServerError, err)
 
@@ -1574,7 +1581,9 @@ func Memberclaimnow(db *gorm.DB, ctx context.Context, profileData model.ClaimDat
 
 	var claimSubmitTemplate model.EmailTemplate
 
-	if err := db.Debug().Table("tbl_email_templates").Where("is_deleted=0 and template_slug = ?", OwndeskClaimSubmitTemplate).First(&claimSubmitTemplate).Error; err != nil {
+	err = Model.GetEmailTemplate(OwndeskClaimSubmitTemplate,&claimSubmitTemplate)
+
+	if err != nil {
 
 		fmtErr := fmt.Errorf("%v: %v", claimSubmitTemplate.TemplateName, err)
 
